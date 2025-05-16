@@ -15,7 +15,7 @@
       "value": "~7.2"
     },
     "appServicePlanSku": {
-      "value": "Y1"
+      "value": "P1V2"
     },
     "deploySampleFunction": {
       "value": true

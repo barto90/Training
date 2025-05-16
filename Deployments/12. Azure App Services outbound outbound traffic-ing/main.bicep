@@ -25,13 +25,12 @@ param functionRuntimeVersion string = '~7.2'
   'P1V2' // Premium V2
   'P1V3' // Premium V3
 ])
-param appServicePlanSku string = 'Y1'
+param appServicePlanSku string = 'P1V2'
 
 @description('Deploy a sample HTTP trigger function')
 param deploySampleFunction bool = true
 
 var hostingPlanName = 'plan-${functionAppName}'
-var applicationInsightsName = 'ai-${functionAppName}'
 var functionWorkerRuntime = functionRuntime
 var location = resourceGroup().location
 
@@ -51,26 +50,26 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   }
 }
 
-// App Service Plan (consumption for Azure Functions)
+// App Service Plan (Premium for networking features including static outbound IP)
 resource hostingPlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: hostingPlanName
   location: location
   sku: {
     name: appServicePlanSku
+    tier: 'PremiumV2'
+    size: appServicePlanSku
+    family: 'Pv2'
+    capacity: 1
   }
-  properties: {}
-}
-
-// Application Insights
-resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
-  name: applicationInsightsName
-  location: location
-  kind: 'web'
   properties: {
-    Application_Type: 'web'
-    Request_Source: 'rest'
-    publicNetworkAccessForIngestion: 'Enabled'
-    publicNetworkAccessForQuery: 'Enabled'
+    perSiteScaling: false
+    maximumElasticWorkerCount: 1
+    isSpot: false
+    reserved: false
+    isXenon: false
+    hyperV: false
+    targetWorkerCount: 0
+    targetWorkerSizeId: 0
   }
 }
 
@@ -103,14 +102,6 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
         {
           name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
           value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
-        }
-        {
-          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-          value: applicationInsights.properties.InstrumentationKey
-        }
-        {
-          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-          value: applicationInsights.properties.ConnectionString
         }
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'

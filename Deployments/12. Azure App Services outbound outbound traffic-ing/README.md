@@ -3,8 +3,7 @@
 This Bicep template deploys an Azure Function App with the following resources:
 
 - Storage Account (for Function App storage)
-- App Service Plan (Consumption by default)
-- Application Insights (for monitoring)
+- App Service Plan (Premium V2 tier)
 - Function App with system-assigned managed identity
 - Sample HTTP trigger function (optional)
 
@@ -31,10 +30,21 @@ Replace `YOUR_USERNAME` and `YOUR_REPO` with your actual GitHub username and rep
 | storageAccountName | The name of the storage account | *Empty (required)* |
 | functionRuntime | Runtime stack (powershell, dotnet, node, python, java) | powershell |
 | functionRuntimeVersion | The version of the runtime | ~7.2 |
-| appServicePlanSku | The App Service Plan SKU | Y1 (Consumption) |
+| appServicePlanSku | The SKU of the App Service Plan | P1V2 (Premium V2) |
 | deploySampleFunction | Whether to deploy a sample HTTP trigger function | true |
 
 Note: All resources will be deployed in the same location as the resource group.
+
+## Premium Tier Benefits
+
+The deployment uses a Premium V2 (P1V2) tier App Service Plan which provides:
+
+- Ability to configure static outbound IP addresses
+- Better performance and scalability
+- Virtual Network integration capability
+- Enhanced security features
+
+After deployment, you can configure the networking settings in the Azure Portal to enable static outbound IP addresses according to your requirements.
 
 ## Sample HTTP Trigger Function
 

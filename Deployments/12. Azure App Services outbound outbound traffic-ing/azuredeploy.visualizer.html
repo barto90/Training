@@ -64,6 +64,12 @@
             padding: 15px;
             border-left: 4px solid #0078d4;
         }
+        .function {
+            background-color: #f0fff4;
+            padding: 15px;
+            border-left: 4px solid #107c10;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -81,25 +87,25 @@
                 <text x="70" y="80" font-size="16" fill="#0078d4">Resource Group</text>
                 
                 <!-- Storage Account -->
-                <rect x="100" y="120" width="150" height="80" fill="#e6f2ff" stroke="#0078d4" stroke-width="2" rx="5"/>
-                <text x="120" y="160" font-size="14" fill="#0078d4">Storage Account</text>
+                <rect x="100" y="120" width="160" height="80" fill="#e6f2ff" stroke="#0078d4" stroke-width="2" rx="5"/>
+                <text x="130" y="160" font-size="14" fill="#0078d4">Storage Account</text>
                 
                 <!-- App Service Plan -->
-                <rect x="330" y="120" width="150" height="80" fill="#e6f2ff" stroke="#0078d4" stroke-width="2" rx="5"/>
-                <text x="350" y="160" font-size="14" fill="#0078d4">App Service Plan</text>
-                
-                <!-- Application Insights -->
-                <rect x="580" y="120" width="150" height="80" fill="#e6f2ff" stroke="#0078d4" stroke-width="2" rx="5"/>
-                <text x="590" y="160" font-size="14" fill="#0078d4">Application Insights</text>
+                <rect x="360" y="120" width="160" height="80" fill="#e6f2ff" stroke="#0078d4" stroke-width="2" rx="5"/>
+                <text x="380" y="160" font-size="14" fill="#0078d4">App Service Plan</text>
                 
                 <!-- Function App -->
                 <rect x="300" y="240" width="200" height="80" fill="#dff6dd" stroke="#107c10" stroke-width="2" rx="5"/>
                 <text x="350" y="280" font-size="16" fill="#107c10">Function App</text>
                 
+                <!-- HTTP Trigger Function -->
+                <rect x="530" y="240" width="160" height="80" fill="#deecf9" stroke="#0078d4" stroke-width="2" rx="5"/>
+                <text x="550" y="280" font-size="14" fill="#0078d4">HTTP Trigger</text>
+                
                 <!-- Connection Lines -->
                 <line x1="160" y1="200" x2="300" y2="260" stroke="#666666" stroke-width="1.5"/>
-                <line x1="400" y1="200" x2="400" y2="240" stroke="#666666" stroke-width="1.5"/>
-                <line x1="640" y1="200" x2="500" y2="260" stroke="#666666" stroke-width="1.5"/>
+                <line x1="440" y1="200" x2="400" y2="240" stroke="#666666" stroke-width="1.5"/>
+                <line x1="500" y1="280" x2="530" y2="280" stroke="#666666" stroke-width="1.5"/>
             </svg>
         </div>
         
@@ -124,23 +130,55 @@
             </div>
             
             <div class="resource">
-                <h3>Application Insights</h3>
-                <p>Monitoring and analytics</p>
-                <div class="config">
-                    <div>- Performance tracking</div>
-                    <div>- Error reporting</div>
-                </div>
-            </div>
-            
-            <div class="resource">
                 <h3>Function App</h3>
                 <p>Serverless compute for your code</p>
                 <div class="config">
                     <div>- Managed Identity</div>
-                    <div>- Language: Node.js</div>
-                    <div>- Outbound Network Config</div>
+                    <div>- CORS Enabled: *</div>
+                    <div>- PowerShell Runtime</div>
                 </div>
             </div>
+            
+            <div class="resource">
+                <h3>HTTP Trigger Function</h3>
+                <p>Sample HTTP API endpoint</p>
+                <div class="config">
+                    <div>- Anonymous Auth</div>
+                    <div>- GET/POST Methods</div>
+                    <div>- Returns Public IP</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="function">
+            <h3>Sample HTTP Trigger Function</h3>
+            <p>The deployment includes a PowerShell HTTP trigger function that returns the public IP address of the function instance:</p>
+            <pre>
+using namespace System.Net
+
+# Input bindings are passed in via param block.
+param($Request, $TriggerMetadata)
+
+write-host "Checking public IP";
+
+$publicIPAddress = (Invoke-RestMethod -Uri "https://api.ipify.org?format=json").ip
+
+$body = "";
+if ($publicIPAddress) {
+    $body = "Public IP: $publicIPAddress"
+} else {
+    $body = "Unable to validate public IP";
+}
+
+write-host $body;
+
+# Associate values to output bindings by calling 'Push-OutputBinding'.
+Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
+    StatusCode = [HttpStatusCode]::OK
+    Body = $body
+})
+            </pre>
+            <p>You can access this function at: <code>https://&lt;functionAppName&gt;.azurewebsites.net/api/HttpTrigger</code></p>
         </div>
         
         <div class="security">
@@ -153,6 +191,7 @@
                 <li>Storage account with HTTPS-only traffic</li>
                 <li>Default OAuth authentication</li>
                 <li>Blob public access disabled</li>
+                <li>CORS configured for all origins (*)</li>
             </ul>
         </div>
     </div>

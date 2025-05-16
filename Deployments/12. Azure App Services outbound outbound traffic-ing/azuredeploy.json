@@ -46,7 +46,7 @@
     },
     "appServicePlanSku": {
       "type": "string",
-      "defaultValue": "Y1",
+      "defaultValue": "P1V2",
       "allowedValues": [
         "Y1",
         "B1",
@@ -68,7 +68,6 @@
   },
   "variables": {
     "hostingPlanName": "[format('plan-{0}', parameters('functionAppName'))]",
-    "applicationInsightsName": "[format('ai-{0}', parameters('functionAppName'))]",
     "functionWorkerRuntime": "[parameters('functionRuntime')]",
     "location": "[resourceGroup().location]",
     "httpTriggerPsCode": "using namespace System.Net\n\n# Input bindings are passed in via param block.\nparam($Request, $TriggerMetadata)\n\nwrite-host \"Checking public IP\";\n\n$publicIPAddress = (Invoke-RestMethod -Uri \"https://api.ipify.org?format=json\").ip\n\n$body = \"\";\nif ($publicIPAddress) {\n    $body = \"Public IP: $publicIPAddress\"\n} else {\n    $body = \"Unable to validate public IP\";\n}\n\nwrite-host $body;\n\n# Associate values to output bindings by calling 'Push-OutputBinding'.\nPush-OutputBinding -Name Response -Value ([HttpResponseContext]@{\n    StatusCode = [HttpStatusCode]::OK\n    Body = $body\n})\n"
@@ -96,21 +95,21 @@
       "name": "[variables('hostingPlanName')]",
       "location": "[variables('location')]",
       "sku": {
-        "name": "[parameters('appServicePlanSku')]"
+        "name": "[parameters('appServicePlanSku')]",
+        "tier": "PremiumV2",
+        "size": "[parameters('appServicePlanSku')]",
+        "family": "Pv2",
+        "capacity": 1
       },
-      "properties": {}
-    },
-    {
-      "type": "Microsoft.Insights/components",
-      "apiVersion": "2020-02-02",
-      "name": "[variables('applicationInsightsName')]",
-      "location": "[variables('location')]",
-      "kind": "web",
       "properties": {
-        "Application_Type": "web",
-        "Request_Source": "rest",
-        "publicNetworkAccessForIngestion": "Enabled",
-        "publicNetworkAccessForQuery": "Enabled"
+        "perSiteScaling": false,
+        "maximumElasticWorkerCount": 1,
+        "isSpot": false,
+        "reserved": false,
+        "isXenon": false,
+        "hyperV": false,
+        "targetWorkerCount": 0,
+        "targetWorkerSizeId": 0
       }
     },
     {
@@ -145,14 +144,6 @@
               "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('storageAccountName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2022-09-01').keys[0].value)]"
             },
             {
-              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-              "value": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))).InstrumentationKey]"
-            },
-            {
-              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-              "value": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))).ConnectionString]"
-            },
-            {
               "name": "FUNCTIONS_EXTENSION_VERSION",
               "value": "~4"
             },
@@ -168,7 +159,6 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]",
         "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
       ]
