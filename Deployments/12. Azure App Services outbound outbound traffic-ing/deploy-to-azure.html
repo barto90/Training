@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploy Azure Function App</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1, h2 {
+            color: #0078d4;
+        }
+        .deploy-button {
+            display: inline-block;
+            background-color: #0078d4;
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: background-color 0.3s;
+        }
+        .deploy-button:hover {
+            background-color: #0063b1;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .note {
+            background-color: #f0f7ff;
+            border-left: 4px solid #0078d4;
+            padding: 10px 15px;
+            margin: 20px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Azure Function App Deployment</h1>
+    
+    <p>This template deploys an Azure Function App with the following resources:</p>
+    <ul>
+        <li>Storage Account (for Function App storage)</li>
+        <li>App Service Plan (Consumption by default)</li>
+        <li>Application Insights (for monitoring)</li>
+        <li>Function App with system-assigned managed identity</li>
+        <li>Network configuration for outbound traffic</li>
+    </ul>
+
+    <h2>Deploy to Azure</h2>
+    <p>Click the button below to deploy this Function App to your Azure subscription:</p>
+    
+    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYOUR_USERNAME%2FYOUR_REPO%2Fmain%2FDeployments%2F12.%20Azure%20App%20Services%20outbound%20outbound%20traffic-ing%2Fazuredeploy.json" target="_blank" class="deploy-button">
+        <img src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure">
+    </a>
+
+    <div class="note">
+        <strong>Note:</strong> You'll need to replace <code>YOUR_USERNAME</code> and <code>YOUR_REPO</code> in the URL with your actual GitHub username and repository name where you've hosted these files.
+    </div>
+
+    <h2>Parameters</h2>
+    <p>When deploying, you can customize the following parameters:</p>
+    
+    <table>
+        <tr>
+            <th>Parameter Name</th>
+            <th>Description</th>
+            <th>Default Value</th>
+        </tr>
+        <tr>
+            <td>functionAppName</td>
+            <td>The name of the Function App</td>
+            <td>func-[uniqueString]</td>
+        </tr>
+        <tr>
+            <td>storageAccountName</td>
+            <td>The name of the storage account</td>
+            <td>st[uniqueString]</td>
+        </tr>
+        <tr>
+            <td>location</td>
+            <td>The Azure region for deployment</td>
+            <td>Resource Group location</td>
+        </tr>
+        <tr>
+            <td>functionRuntime</td>
+            <td>Runtime stack (node, dotnet, python, java)</td>
+            <td>node</td>
+        </tr>
+        <tr>
+            <td>functionRuntimeVersion</td>
+            <td>The version of the runtime</td>
+            <td>~18</td>
+        </tr>
+        <tr>
+            <td>appServicePlanSku</td>
+            <td>The App Service Plan SKU</td>
+            <td>Y1 (Consumption)</td>
+        </tr>
+    </table>
+
+    <h2>Other Deployment Options</h2>
+    <p>For programmatic deployments, you can also use:</p>
+    
+    <h3>PowerShell</h3>
+    <pre>New-AzResourceGroupDeployment `
+  -ResourceGroupName &lt;resource-group-name&gt; `
+  -TemplateUri "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/Deployments/12.%20Azure%20App%20Services%20outbound%20outbound%20traffic-ing/azuredeploy.json"</pre>
+    
+    <h3>Azure CLI</h3>
+    <pre>az deployment group create \
+  --resource-group &lt;resource-group-name&gt; \
+  --template-uri "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/Deployments/12.%20Azure%20App%20Services%20outbound%20outbound%20traffic-ing/azuredeploy.json"</pre>
+
+    <div class="note">
+        <strong>Security Note:</strong> This deployment follows Azure best practices for security including:
+        <ul>
+            <li>System-assigned managed identity</li>
+            <li>HTTPS only communication</li>
+            <li>TLS 1.2 minimum</li>
+            <li>FTPS disabled</li>
+            <li>Storage account with HTTPS-only traffic</li>
+        </ul>
+    </div>
+</body>
+</html> 

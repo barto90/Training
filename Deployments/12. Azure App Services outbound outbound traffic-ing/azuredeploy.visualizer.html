@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Function App - Template Visualization</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            background-color: #f8f8f8;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0078d4;
+            font-size: 24px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .architecture {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .resources {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .resource {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #fafafa;
+        }
+        .resource h3 {
+            margin-top: 0;
+            color: #0078d4;
+            font-size: 18px;
+        }
+        .config {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: Consolas, monospace;
+            font-size: 14px;
+        }
+        .security {
+            margin-top: 20px;
+            background-color: #e6f7ff;
+            padding: 15px;
+            border-left: 4px solid #0078d4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Azure Function App Deployment</h1>
+        
+        <div class="architecture-diagram">
+            <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" class="architecture">
+                <!-- Architecture Diagram -->
+                <!-- Background -->
+                <rect x="0" y="0" width="800" height="400" fill="#f0f0f0"/>
+                
+                <!-- Resource Group Box -->
+                <rect x="50" y="50" width="700" height="300" fill="#ffffff" stroke="#cccccc" stroke-width="2" rx="10"/>
+                <text x="70" y="80" font-size="16" fill="#0078d4">Resource Group</text>
+                
+                <!-- Storage Account -->
+                <rect x="100" y="120" width="150" height="80" fill="#e6f2ff" stroke="#0078d4" stroke-width="2" rx="5"/>
+                <text x="120" y="160" font-size="14" fill="#0078d4">Storage Account</text>
+                
+                <!-- App Service Plan -->
+                <rect x="330" y="120" width="150" height="80" fill="#e6f2ff" stroke="#0078d4" stroke-width="2" rx="5"/>
+                <text x="350" y="160" font-size="14" fill="#0078d4">App Service Plan</text>
+                
+                <!-- Application Insights -->
+                <rect x="580" y="120" width="150" height="80" fill="#e6f2ff" stroke="#0078d4" stroke-width="2" rx="5"/>
+                <text x="590" y="160" font-size="14" fill="#0078d4">Application Insights</text>
+                
+                <!-- Function App -->
+                <rect x="300" y="240" width="200" height="80" fill="#dff6dd" stroke="#107c10" stroke-width="2" rx="5"/>
+                <text x="350" y="280" font-size="16" fill="#107c10">Function App</text>
+                
+                <!-- Connection Lines -->
+                <line x1="160" y1="200" x2="300" y2="260" stroke="#666666" stroke-width="1.5"/>
+                <line x1="400" y1="200" x2="400" y2="240" stroke="#666666" stroke-width="1.5"/>
+                <line x1="640" y1="200" x2="500" y2="260" stroke="#666666" stroke-width="1.5"/>
+            </svg>
+        </div>
+        
+        <div class="resources">
+            <div class="resource">
+                <h3>Storage Account</h3>
+                <p>Provides secure storage for the Function App</p>
+                <div class="config">
+                    <div>- Standard_LRS</div>
+                    <div>- HTTPS-only</div>
+                    <div>- TLS 1.2</div>
+                </div>
+            </div>
+            
+            <div class="resource">
+                <h3>App Service Plan</h3>
+                <p>Hosting infrastructure for the Function App</p>
+                <div class="config">
+                    <div>- SKU: Y1 (Consumption)</div>
+                    <div>- Scalable & Serverless</div>
+                </div>
+            </div>
+            
+            <div class="resource">
+                <h3>Application Insights</h3>
+                <p>Monitoring and analytics</p>
+                <div class="config">
+                    <div>- Performance tracking</div>
+                    <div>- Error reporting</div>
+                </div>
+            </div>
+            
+            <div class="resource">
+                <h3>Function App</h3>
+                <p>Serverless compute for your code</p>
+                <div class="config">
+                    <div>- Managed Identity</div>
+                    <div>- Language: Node.js</div>
+                    <div>- Outbound Network Config</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="security">
+            <h3>Security Features</h3>
+            <ul>
+                <li>System-assigned managed identity</li>
+                <li>HTTPS-only communication</li>
+                <li>TLS 1.2 minimum version enforcement</li>
+                <li>FTPS disabled</li>
+                <li>Storage account with HTTPS-only traffic</li>
+                <li>Default OAuth authentication</li>
+                <li>Blob public access disabled</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,137 @@
+@description('The name of the function app that you wish to create.')
+param functionAppName string = 'func-${uniqueString(resourceGroup().id)}'
+
+@description('The name of the storage account that will be used by the Function App')
+param storageAccountName string = 'st${uniqueString(resourceGroup().id)}'
+
+@description('Location for all resources.')
+param location string = resourceGroup().location
+
+@description('The runtime stack of the Function App')
+@allowed([
+  'dotnet'
+  'node'
+  'python'
+  'java'
+])
+param functionRuntime string = 'node'
+
+@description('The version of the selected runtime stack')
+param functionRuntimeVersion string = '~18'
+
+@description('The SKU of the App Service Plan')
+@allowed([
+  'Y1' // Consumption
+  'B1' // Basic
+  'S1' // Standard
+  'P1V2' // Premium V2
+  'P1V3' // Premium V3
+])
+param appServicePlanSku string = 'Y1'
+
+var hostingPlanName = 'plan-${functionAppName}'
+var applicationInsightsName = 'ai-${functionAppName}'
+var functionWorkerRuntime = functionRuntime
+
+// Storage Account
+resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
+  name: storageAccountName
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  kind: 'StorageV2'
+  properties: {
+    supportsHttpsTrafficOnly: true
+    defaultToOAuthAuthentication: true
+    minimumTlsVersion: 'TLS1_2'
+    allowBlobPublicAccess: false
+  }
+}
+
+// App Service Plan (consumption for Azure Functions)
+resource hostingPlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+  name: hostingPlanName
+  location: location
+  sku: {
+    name: appServicePlanSku
+  }
+  properties: {}
+}
+
+// Application Insights
+resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: applicationInsightsName
+  location: location
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    Request_Source: 'rest'
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
+  }
+}
+
+// Function App
+resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
+  name: functionAppName
+  location: location
+  kind: 'functionapp'
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    serverFarmId: hostingPlan.id
+    httpsOnly: true
+    siteConfig: {
+      ftpsState: 'Disabled'
+      minTlsVersion: '1.2'
+      http20Enabled: true
+      appSettings: [
+        {
+          name: 'AzureWebJobsStorage'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
+        }
+        {
+          name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
+        }
+        {
+          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
+          value: applicationInsights.properties.InstrumentationKey
+        }
+        {
+          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+          value: applicationInsights.properties.ConnectionString
+        }
+        {
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: '~4'
+        }
+        {
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: functionWorkerRuntime
+        }
+        {
+          name: 'WEBSITE_NODE_DEFAULT_VERSION'
+          value: functionRuntimeVersion
+        }
+      ]
+    }
+  }
+}
+
+// Configure network settings for outbound traffic
+resource functionAppNetworkConfig 'Microsoft.Web/sites/config@2022-03-01' = {
+  parent: functionApp
+  name: 'virtualNetwork'
+  properties: {
+    subnetResourceId: null // Set to a subnet ID if you want to integrate with VNET
+    swiftSupported: true
+  }
+}
+
+// Outputs
+output functionAppName string = functionApp.name
+output functionAppHostName string = functionApp.properties.defaultHostName
+output functionAppIdentityPrincipalId string = functionApp.identity.principalId
