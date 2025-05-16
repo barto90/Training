@@ -89,6 +89,12 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
       http20Enabled: true
+      cors: {
+        allowedOrigins: [
+          '*'
+        ]
+        supportCredentials: false
+      }
       appSettings: [
         {
           name: 'AzureWebJobsStorage'

@@ -42,14 +42,20 @@ The template includes an option to deploy a sample HTTP trigger function that:
 
 - Accepts GET or POST requests
 - Uses anonymous authentication (no key required)
-- Returns a greeting message with an optional name parameter
+- Returns the public IP address of the function app instance
 
 You can test the function by navigating to:
 ```
-https://{functionAppName}.azurewebsites.net/api/HttpTrigger?name=YourName
+https://{functionAppName}.azurewebsites.net/api/HttpTrigger
 ```
 
 To disable the sample function deployment, set the `deploySampleFunction` parameter to `false`.
+
+## CORS Configuration
+
+The Function App is configured with Cross-Origin Resource Sharing (CORS) enabled for all origins (`*`), allowing any website to make requests to your API functions. This makes it easier to use your functions from web applications hosted on different domains.
+
+If you need more restrictive CORS settings for production, you can modify the template to specify only particular domains that are allowed to access your API.
 
 ## Deployment Instructions
 

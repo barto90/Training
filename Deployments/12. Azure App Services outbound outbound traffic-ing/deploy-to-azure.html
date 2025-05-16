@@ -66,6 +66,7 @@
         <li>App Service Plan (Consumption by default)</li>
         <li>Application Insights (for monitoring)</li>
         <li>Function App with system-assigned managed identity</li>
+        <li>Sample HTTP trigger function (optional)</li>
     </ul>
 
     <h2>Deploy to Azure</h2>
@@ -113,10 +114,26 @@
             <td>The App Service Plan SKU</td>
             <td>Y1 (Consumption)</td>
         </tr>
+        <tr>
+            <td>deploySampleFunction</td>
+            <td>Whether to deploy a sample HTTP trigger function</td>
+            <td>true</td>
+        </tr>
     </table>
-
+    
     <div class="note">
         <strong>Note:</strong> All resources will be deployed in the same location as the resource group.
+    </div>
+    
+    <div class="note">
+        <strong>Sample Function:</strong> The template includes a PowerShell HTTP trigger function that you can access at
+        <code>https://&lt;functionAppName&gt;.azurewebsites.net/api/HttpTrigger</code>. It displays the public IP address of the function app.
+    </div>
+
+    <div class="note">
+        <strong>CORS Configuration:</strong> Cross-Origin Resource Sharing (CORS) is enabled for all origins (*),
+        allowing any website to access your function APIs. This is great for development but you might want to
+        restrict it to specific domains in production.
     </div>
 
     <h2>Other Deployment Options</h2>

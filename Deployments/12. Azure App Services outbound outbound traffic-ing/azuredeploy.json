@@ -71,7 +71,7 @@
     "applicationInsightsName": "[format('ai-{0}', parameters('functionAppName'))]",
     "functionWorkerRuntime": "[parameters('functionRuntime')]",
     "location": "[resourceGroup().location]",
-    "httpTriggerPsCode": "using namespace System.Net\n\n# Input bindings are passed in via param block.\nparam($Request, $TriggerMetadata)\n\n# Write to the Azure Functions log stream.\nWrite-Host \"PowerShell HTTP trigger function processed a request.\"\n\n# Interact with query parameters or the body of the request.\n$name = $Request.Query.Name\nif (-not $name) {\n    $name = $Request.Body.Name\n}\n\n$body = \"This function was deployed via Azure ARM template deployment!\"\n\nif ($name) {\n    $body = \"Hello, $name! $body\"\n}\n\n# Associate values to output bindings by calling 'Push-OutputBinding'.\nPush-OutputBinding -Name Response -Value ([HttpResponseContext]@{\n    StatusCode = [HttpStatusCode]::OK\n    Body = $body\n})"
+    "httpTriggerPsCode": "using namespace System.Net\n\n# Input bindings are passed in via param block.\nparam($Request, $TriggerMetadata)\n\nwrite-host \"Checking public IP\";\n\n$publicIPAddress = (Invoke-RestMethod -Uri \"https://api.ipify.org?format=json\").ip\n\n$body = \"\";\nif ($publicIPAddress) {\n    $body = \"Public IP: $publicIPAddress\"\n} else {\n    $body = \"Unable to validate public IP\";\n}\n\nwrite-host $body;\n\n# Associate values to output bindings by calling 'Push-OutputBinding'.\nPush-OutputBinding -Name Response -Value ([HttpResponseContext]@{\n    StatusCode = [HttpStatusCode]::OK\n    Body = $body\n})\n"
   },
   "resources": [
     {
@@ -129,6 +129,12 @@
           "ftpsState": "Disabled",
           "minTlsVersion": "1.2",
           "http20Enabled": true,
+          "cors": {
+            "allowedOrigins": [
+              "*"
+            ],
+            "supportCredentials": false
+          },
           "appSettings": [
             {
               "name": "AzureWebJobsStorage",
