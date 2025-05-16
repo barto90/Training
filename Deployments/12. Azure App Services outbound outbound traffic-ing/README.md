@@ -27,11 +27,11 @@ Replace `YOUR_USERNAME` and `YOUR_REPO` with your actual GitHub username and rep
 
 | Parameter Name | Description | Default Value |
 |----------------|-------------|---------------|
-| functionAppName | The name of the Function App | func-[uniqueString] |
-| storageAccountName | The name of the storage account | st[uniqueString] |
-| location | The Azure region for deployment | Resource Group location |
-| functionRuntime | Runtime stack (node, dotnet, python, java) | node |
-| functionRuntimeVersion | The version of the runtime | ~18 |
+| functionAppName | The name of the Function App | *Empty (required)* |
+| storageAccountName | The name of the storage account | *Empty (required)* |
+| location | Location for all resources | Resource Group location |
+| functionRuntime | Runtime stack (powershell, dotnet, node, python, java) | powershell |
+| functionRuntimeVersion | The version of the runtime | ~7.2 |
 | appServicePlanSku | The App Service Plan SKU | Y1 (Consumption) |
 
 ## Deployment Instructions

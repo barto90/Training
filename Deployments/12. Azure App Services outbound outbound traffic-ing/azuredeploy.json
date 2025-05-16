@@ -11,14 +11,14 @@
   "parameters": {
     "functionAppName": {
       "type": "string",
-      "defaultValue": "[format('func-{0}', uniqueString(resourceGroup().id))]",
+      "defaultValue": "",
       "metadata": {
         "description": "The name of the function app that you wish to create."
       }
     },
     "storageAccountName": {
       "type": "string",
-      "defaultValue": "[format('st{0}', uniqueString(resourceGroup().id))]",
+      "defaultValue": "",
       "metadata": {
         "description": "The name of the storage account that will be used by the Function App"
       }
@@ -32,12 +32,13 @@
     },
     "functionRuntime": {
       "type": "string",
-      "defaultValue": "node",
+      "defaultValue": "powershell",
       "allowedValues": [
         "dotnet",
         "node",
         "python",
-        "java"
+        "java",
+        "powershell"
       ],
       "metadata": {
         "description": "The runtime stack of the Function App"
@@ -45,7 +46,7 @@
     },
     "functionRuntimeVersion": {
       "type": "string",
-      "defaultValue": "~18",
+      "defaultValue": "~7.2",
       "metadata": {
         "description": "The version of the selected runtime stack"
       }

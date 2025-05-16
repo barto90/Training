@@ -1,8 +1,8 @@
 @description('The name of the function app that you wish to create.')
-param functionAppName string = 'func-${uniqueString(resourceGroup().id)}'
+param functionAppName string = ''
 
 @description('The name of the storage account that will be used by the Function App')
-param storageAccountName string = 'st${uniqueString(resourceGroup().id)}'
+param storageAccountName string = ''
 
 @description('Location for all resources.')
 param location string = resourceGroup().location
@@ -13,11 +13,12 @@ param location string = resourceGroup().location
   'node'
   'python'
   'java'
+  'powershell'
 ])
-param functionRuntime string = 'node'
+param functionRuntime string = 'powershell'
 
 @description('The version of the selected runtime stack')
-param functionRuntimeVersion string = '~18'
+param functionRuntimeVersion string = '~7.2'
 
 @description('The SKU of the App Service Plan')
 @allowed([
