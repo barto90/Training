@@ -16,6 +16,9 @@
     },
     "appServicePlanSku": {
       "value": "Y1"
+    },
+    "deploySampleFunction": {
+      "value": true
     }
   }
 } 

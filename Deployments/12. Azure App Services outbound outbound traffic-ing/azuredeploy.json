@@ -57,13 +57,21 @@
       "metadata": {
         "description": "The SKU of the App Service Plan"
       }
+    },
+    "deploySampleFunction": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Deploy a sample HTTP trigger function"
+      }
     }
   },
   "variables": {
     "hostingPlanName": "[format('plan-{0}', parameters('functionAppName'))]",
     "applicationInsightsName": "[format('ai-{0}', parameters('functionAppName'))]",
     "functionWorkerRuntime": "[parameters('functionRuntime')]",
-    "location": "[resourceGroup().location]"
+    "location": "[resourceGroup().location]",
+    "httpTriggerPsCode": "using namespace System.Net\n\n# Input bindings are passed in via param block.\nparam($Request, $TriggerMetadata)\n\n# Write to the Azure Functions log stream.\nWrite-Host \"PowerShell HTTP trigger function processed a request.\"\n\n# Interact with query parameters or the body of the request.\n$name = $Request.Query.Name\nif (-not $name) {\n    $name = $Request.Body.Name\n}\n\n$body = \"This function was deployed via Azure ARM template deployment!\"\n\nif ($name) {\n    $body = \"Hello, $name! $body\"\n}\n\n# Associate values to output bindings by calling 'Push-OutputBinding'.\nPush-OutputBinding -Name Response -Value ([HttpResponseContext]@{\n    StatusCode = [HttpStatusCode]::OK\n    Body = $body\n})"
   },
   "resources": [
     {
@@ -160,12 +168,34 @@
       ]
     },
     {
-      "type": "Microsoft.Web/sites/config",
+      "condition": "[parameters('deploySampleFunction')]",
+      "type": "Microsoft.Web/sites/functions",
       "apiVersion": "2022-03-01",
-      "name": "[format('{0}/{1}', parameters('functionAppName'), 'virtualNetwork')]",
+      "name": "[format('{0}/{1}', parameters('functionAppName'), 'HttpTrigger')]",
       "properties": {
-        "subnetResourceId": null,
-        "swiftSupported": true
+        "config": {
+          "disabled": false,
+          "bindings": [
+            {
+              "authLevel": "anonymous",
+              "type": "httpTrigger",
+              "direction": "in",
+              "name": "Request",
+              "methods": [
+                "get",
+                "post"
+              ]
+            },
+            {
+              "type": "http",
+              "direction": "out",
+              "name": "Response"
+            }
+          ]
+        },
+        "files": {
+          "run.ps1": "[variables('httpTriggerPsCode')]"
+        }
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]"
@@ -184,6 +214,10 @@
     "functionAppIdentityPrincipalId": {
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2022-03-01', 'full').identity.principalId]"
+    },
+    "httpTriggerUrl": {
+      "type": "string",
+      "value": "[if(parameters('deploySampleFunction'), format('https://{0}/api/HttpTrigger', reference(resourceId('Microsoft.Web/sites', parameters('functionAppName'))).defaultHostName), '')]"
     }
   }
 } 

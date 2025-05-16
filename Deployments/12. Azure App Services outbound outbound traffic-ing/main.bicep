@@ -27,6 +27,9 @@ param functionRuntimeVersion string = '~7.2'
 ])
 param appServicePlanSku string = 'Y1'
 
+@description('Deploy a sample HTTP trigger function')
+param deploySampleFunction bool = true
+
 var hostingPlanName = 'plan-${functionAppName}'
 var applicationInsightsName = 'ai-${functionAppName}'
 var functionWorkerRuntime = functionRuntime
@@ -120,13 +123,34 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
   }
 }
 
-// Configure network settings for outbound traffic
-resource functionAppNetworkConfig 'Microsoft.Web/sites/config@2022-03-01' = {
+// Deploy sample HTTP trigger function if enabled
+resource httpTriggerFunction 'Microsoft.Web/sites/functions@2022-03-01' = if (deploySampleFunction) {
   parent: functionApp
-  name: 'virtualNetwork'
+  name: 'HttpTrigger'
   properties: {
-    subnetResourceId: null // Set to a subnet ID if you want to integrate with VNET
-    swiftSupported: true
+    config: {
+      disabled: false
+      bindings: [
+        {
+          authLevel: 'anonymous'
+          type: 'httpTrigger'
+          direction: 'in'
+          name: 'Request'
+          methods: [
+            'get'
+            'post'
+          ]
+        }
+        {
+          type: 'http'
+          direction: 'out'
+          name: 'Response'
+        }
+      ]
+    }
+    files: {
+      'run.ps1': loadTextContent('HttpTriggerFunction/run.ps1')
+    }
   }
 }
 
@@ -134,3 +158,4 @@ resource functionAppNetworkConfig 'Microsoft.Web/sites/config@2022-03-01' = {
 output functionAppName string = functionApp.name
 output functionAppHostName string = functionApp.properties.defaultHostName
 output functionAppIdentityPrincipalId string = functionApp.identity.principalId
+output httpTriggerUrl string = deploySampleFunction ? 'https://${functionApp.properties.defaultHostName}/api/HttpTrigger' : ''

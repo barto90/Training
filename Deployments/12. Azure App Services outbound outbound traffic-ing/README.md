@@ -6,7 +6,7 @@ This Bicep template deploys an Azure Function App with the following resources:
 - App Service Plan (Consumption by default)
 - Application Insights (for monitoring)
 - Function App with system-assigned managed identity
-- Network configuration for outbound traffic
+- Sample HTTP trigger function (optional)
 
 ## Deploy to Azure Button
 
@@ -32,8 +32,24 @@ Replace `YOUR_USERNAME` and `YOUR_REPO` with your actual GitHub username and rep
 | functionRuntime | Runtime stack (powershell, dotnet, node, python, java) | powershell |
 | functionRuntimeVersion | The version of the runtime | ~7.2 |
 | appServicePlanSku | The App Service Plan SKU | Y1 (Consumption) |
+| deploySampleFunction | Whether to deploy a sample HTTP trigger function | true |
 
 Note: All resources will be deployed in the same location as the resource group.
+
+## Sample HTTP Trigger Function
+
+The template includes an option to deploy a sample HTTP trigger function that:
+
+- Accepts GET or POST requests
+- Uses anonymous authentication (no key required)
+- Returns a greeting message with an optional name parameter
+
+You can test the function by navigating to:
+```
+https://{functionAppName}.azurewebsites.net/api/HttpTrigger?name=YourName
+```
+
+To disable the sample function deployment, set the `deploySampleFunction` parameter to `false`.
 
 ## Deployment Instructions
 
@@ -86,18 +102,6 @@ Note: All resources will be deployed in the same location as the resource group.
      -TemplateFile main.bicep `
      -TemplateParameterFile parameters.json
    ```
-
-## Network Considerations for Outbound Traffic
-
-This template includes configuration for outbound traffic from the Function App. By default, it:
-
-- Enables HTTPS-only access
-- Sets minimum TLS version to 1.2
-- Configures network settings via the `virtualNetwork` resource
-
-To integrate with a Virtual Network:
-1. Create a Virtual Network and subnet
-2. Update the `subnetResourceId` parameter in the `functionAppNetworkConfig` resource
 
 ## Security Best Practices
 
