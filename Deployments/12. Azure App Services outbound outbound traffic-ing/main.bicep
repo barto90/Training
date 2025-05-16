@@ -4,9 +4,6 @@ param functionAppName string = ''
 @description('The name of the storage account that will be used by the Function App')
 param storageAccountName string = ''
 
-@description('Location for all resources.')
-param location string = resourceGroup().location
-
 @description('The runtime stack of the Function App')
 @allowed([
   'dotnet'
@@ -33,6 +30,7 @@ param appServicePlanSku string = 'Y1'
 var hostingPlanName = 'plan-${functionAppName}'
 var applicationInsightsName = 'ai-${functionAppName}'
 var functionWorkerRuntime = functionRuntime
+var location = resourceGroup().location
 
 // Storage Account
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {

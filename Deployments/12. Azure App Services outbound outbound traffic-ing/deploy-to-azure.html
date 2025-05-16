@@ -100,11 +100,6 @@
             <td><em>Empty (required)</em></td>
         </tr>
         <tr>
-            <td>location</td>
-            <td>Location for all resources</td>
-            <td>Resource Group location (automatically used)</td>
-        </tr>
-        <tr>
             <td>functionRuntime</td>
             <td>Runtime stack (powershell, dotnet, node, python, java)</td>
             <td>powershell</td>
@@ -120,6 +115,10 @@
             <td>Y1 (Consumption)</td>
         </tr>
     </table>
+
+    <div class="note">
+        <strong>Note:</strong> All resources will be deployed in the same location as the resource group.
+    </div>
 
     <h2>Other Deployment Options</h2>
     <p>For programmatic deployments, you can also use:</p>

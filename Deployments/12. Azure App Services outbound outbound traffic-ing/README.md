@@ -29,10 +29,11 @@ Replace `YOUR_USERNAME` and `YOUR_REPO` with your actual GitHub username and rep
 |----------------|-------------|---------------|
 | functionAppName | The name of the Function App | *Empty (required)* |
 | storageAccountName | The name of the storage account | *Empty (required)* |
-| location | Location for all resources | Resource Group location |
 | functionRuntime | Runtime stack (powershell, dotnet, node, python, java) | powershell |
 | functionRuntimeVersion | The version of the runtime | ~7.2 |
 | appServicePlanSku | The App Service Plan SKU | Y1 (Consumption) |
+
+Note: All resources will be deployed in the same location as the resource group.
 
 ## Deployment Instructions
 
