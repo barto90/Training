@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploy Azure Function App</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #0078d4;
+        }
+        h1 {
+            border-bottom: 2px solid #0078d4;
+            padding-bottom: 10px;
+        }
+        .deploy-button {
+            display: inline-block;
+            background-color: #0078d4;
+            color: white;
+            padding: 15px 25px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,120,212,0.3);
+        }
+        .deploy-button:hover {
+            background-color: #0063b1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,120,212,0.4);
+        }
+        .deploy-button img {
+            vertical-align: middle;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            border-left: 4px solid #0078d4;
+        }
+        .note {
+            background-color: #f0f7ff;
+            border-left: 4px solid #0078d4;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        .security-note {
+            background-color: #f0fff4;
+            border-left: 4px solid #107c10;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #0078d4;
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .feature-item {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #0078d4;
+        }
+        code {
+            background-color: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Azure Function App Deployment</h1>
+        
+        <p>This template deploys a secure Azure Function App with the following resources:</p>
+        
+        <div class="feature-list">
+            <div class="feature-item">
+                <strong>📦 Storage Account</strong><br>
+                Secure storage with HTTPS-only and TLS 1.2
+            </div>
+            <div class="feature-item">
+                <strong>⚡ App Service Plan</strong><br>
+                Consumption plan (serverless) by default
+            </div>
+            <div class="feature-item">
+                <strong>🔧 Function App</strong><br>
+                With system-assigned managed identity
+            </div>
+            <div class="feature-item">
+                <strong>📊 Application Insights</strong><br>
+                Built-in monitoring and telemetry
+            </div>
+            <div class="feature-item">
+                <strong>🌐 HTTP Trigger</strong><br>
+                Sample C# function (optional)
+            </div>
+        </div>
+
+        <h2>🎯 Deploy to Azure</h2>
+        <p>Click the button below to deploy this Function App to your Azure subscription:</p>
+        
+        <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fbarto90%2FTraining%2Fmain%2FDeployments%2F13.%20Securing%20Azure%20Functions%2Fazuredeploy.json" target="_blank" class="deploy-button">
+            <img src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure">
+        </a>
+
+        <div class="note">
+            <strong>💡 Note:</strong> The URL uses the raw GitHub content URL format (raw.githubusercontent.com) which is required for ARM template deployments.
+        </div>
+
+        <h2>⚙️ Parameters</h2>
+        <p>When deploying, you can customize the following parameters:</p>
+        
+        <table>
+            <tr>
+                <th>Parameter Name</th>
+                <th>Description</th>
+                <th>Default Value</th>
+            </tr>
+            <tr>
+                <td>functionAppName</td>
+                <td>The name of the Function App</td>
+                <td>func-{uniqueString}</td>
+            </tr>
+            <tr>
+                <td>storageAccountName</td>
+                <td>The name of the storage account</td>
+                <td>st{uniqueString}</td>
+            </tr>
+            <tr>
+                <td>functionRuntime</td>
+                <td>Runtime stack (dotnet, node, python, java, powershell)</td>
+                <td>dotnet</td>
+            </tr>
+            <tr>
+                <td>functionRuntimeVersion</td>
+                <td>The version of the runtime</td>
+                <td>6</td>
+            </tr>
+            <tr>
+                <td>appServicePlanSku</td>
+                <td>The App Service Plan SKU</td>
+                <td>Y1 (Consumption)</td>
+            </tr>
+            <tr>
+                <td>deploySampleFunction</td>
+                <td>Whether to deploy a sample HTTP trigger function</td>
+                <td>true</td>
+            </tr>
+        </table>
+        
+        <div class="note">
+            <strong>📍 Location:</strong> All resources will be deployed in the same location as the resource group.
+        </div>
+        
+        <div class="note">
+            <strong>🔗 Sample Function:</strong> The template includes a C# HTTP trigger function that you can access at
+            <code>https://&lt;functionAppName&gt;.azurewebsites.net/api/HttpTrigger</code>. It accepts a "name" parameter and returns a personalized greeting.
+        </div>
+
+        <div class="note">
+            <strong>🌐 CORS Configuration:</strong> Cross-Origin Resource Sharing (CORS) is enabled for all origins (*),
+            allowing any website to access your function APIs. This is great for development but you might want to
+            restrict it to specific domains in production.
+        </div>
+
+        <h2>🛠️ Other Deployment Options</h2>
+        <p>For programmatic deployments, you can also use:</p>
+        
+        <h3>PowerShell</h3>
+        <pre>New-AzResourceGroupDeployment `
+  -ResourceGroupName &lt;resource-group-name&gt; `
+  -TemplateUri "https://raw.githubusercontent.com/barto90/Training/main/Deployments/13.%20Securing%20Azure%20Functions/azuredeploy.json"</pre>
+        
+        <h3>Azure CLI</h3>
+        <pre>az deployment group create \
+  --resource-group &lt;resource-group-name&gt; \
+  --template-uri "https://raw.githubusercontent.com/barto90/Training/main/Deployments/13.%20Securing%20Azure%20Functions/azuredeploy.json"</pre>
+
+        <div class="security-note">
+            <strong>🔒 Security Features:</strong> This deployment follows Azure best practices for security including:
+            <ul>
+                <li>✅ System-assigned managed identity</li>
+                <li>✅ HTTPS only communication</li>
+                <li>✅ TLS 1.2 minimum</li>
+                <li>✅ FTPS disabled</li>
+                <li>✅ Storage account with HTTPS-only traffic</li>
+                <li>✅ Application Insights for monitoring</li>
+                <li>✅ Blob public access disabled</li>
+                <li>✅ Network access controls configured</li>
+            </ul>
+        </div>
+
+        <h2>📈 Monitoring & Insights</h2>
+        <p>The deployment includes Application Insights for comprehensive monitoring:</p>
+        <ul>
+            <li>Function execution metrics</li>
+            <li>Performance monitoring</li>
+            <li>Error tracking and diagnostics</li>
+            <li>Custom telemetry support</li>
+        </ul>
+
+        <h2>💰 Cost Optimization</h2>
+        <p>The default configuration uses a Consumption plan which offers:</p>
+        <ul>
+            <li>Pay-per-execution pricing model</li>
+            <li>Automatic scaling based on demand</li>
+            <li>No charges when functions are not running</li>
+            <li>1 million free executions per month</li>
+        </ul>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,243 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.10.61.36676",
+      "templateHash": "18103254037286431329"
+    }
+  },
+  "parameters": {
+    "functionAppName": {
+      "type": "string",
+      "defaultValue": "[format('func-{0}', uniqueString(resourceGroup().id))]",
+      "metadata": {
+        "description": "The name of the function app that you wish to create."
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "defaultValue": "[format('st{0}', uniqueString(resourceGroup().id))]",
+      "metadata": {
+        "description": "The name of the storage account that will be used by the Function App"
+      }
+    },
+    "functionRuntime": {
+      "type": "string",
+      "defaultValue": "dotnet",
+      "allowedValues": [
+        "dotnet",
+        "node",
+        "python",
+        "java",
+        "powershell"
+      ],
+      "metadata": {
+        "description": "The runtime stack of the Function App"
+      }
+    },
+    "functionRuntimeVersion": {
+      "type": "string",
+      "defaultValue": "6",
+      "metadata": {
+        "description": "The version of the selected runtime stack"
+      }
+    },
+    "appServicePlanSku": {
+      "type": "string",
+      "defaultValue": "Y1",
+      "allowedValues": [
+        "Y1",
+        "B1",
+        "S1",
+        "P1V2",
+        "P1V3"
+      ],
+      "metadata": {
+        "description": "The SKU of the App Service Plan (Y1 = Consumption Plan)"
+      }
+    },
+    "deploySampleFunction": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Deploy a sample HTTP trigger function"
+      }
+    }
+  },
+  "variables": {
+    "hostingPlanName": "[format('plan-{0}', parameters('functionAppName'))]",
+    "functionWorkerRuntime": "[parameters('functionRuntime')]",
+    "location": "[resourceGroup().location]",
+    "applicationInsightsName": "[format('ai-{0}', parameters('functionAppName'))]",
+    "httpTriggerCSharpCode": "using System;\\nusing System.IO;\\nusing System.Threading.Tasks;\\nusing Microsoft.AspNetCore.Mvc;\\nusing Microsoft.Azure.WebJobs;\\nusing Microsoft.Azure.WebJobs.Extensions.Http;\\nusing Microsoft.AspNetCore.Http;\\nusing Microsoft.Extensions.Logging;\\nusing Newtonsoft.Json;\\n\\nnamespace Company.Function\\n{\\n    public static class HttpTrigger\\n    {\\n        [FunctionName(\\\"HttpTrigger\\\")]\\n        public static async Task<IActionResult> Run(\\n            [HttpTrigger(AuthorizationLevel.Anonymous, \\\"get\\\", \\\"post\\\", Route = null)] HttpRequest req,\\n            ILogger log)\\n        {\\n            log.LogInformation(\\\"C# HTTP trigger function processed a request.\\\");\\n\\n            string name = req.Query[\\\"name\\\"];\\n\\n            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();\\n            dynamic data = JsonConvert.DeserializeObject(requestBody);\\n            name = name ?? data?.name;\\n\\n            string responseMessage = string.IsNullOrEmpty(name)\\n                ? \\\"This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.\\\"\\n                : $\\\"Hello, {name}. This HTTP triggered function executed successfully.\\\";\\n\\n            return new OkObjectResult(responseMessage);\\n        }\\n    }\\n}"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2022-09-01",
+      "name": "[parameters('storageAccountName')]",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "supportsHttpsTrafficOnly": true,
+        "defaultToOAuthAuthentication": true,
+        "minimumTlsVersion": "TLS1_2",
+        "allowBlobPublicAccess": false,
+        "networkAcls": {
+          "defaultAction": "Allow"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "[variables('applicationInsightsName')]",
+      "location": "[variables('location')]",
+      "kind": "web",
+      "properties": {
+        "Application_Type": "web",
+        "Request_Source": "rest"
+      }
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2022-03-01",
+      "name": "[variables('hostingPlanName')]",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "[parameters('appServicePlanSku')]",
+        "tier": "[if(equals(parameters('appServicePlanSku'), 'Y1'), 'Dynamic', 'PremiumV2')]",
+        "size": "[parameters('appServicePlanSku')]",
+        "family": "[if(equals(parameters('appServicePlanSku'), 'Y1'), 'Y', 'Pv2')]",
+        "capacity": "[if(equals(parameters('appServicePlanSku'), 'Y1'), 0, 1)]"
+      },
+      "properties": {
+        "perSiteScaling": false,
+        "maximumElasticWorkerCount": "[if(equals(parameters('appServicePlanSku'), 'Y1'), 200, 1)]",
+        "isSpot": false,
+        "reserved": false,
+        "isXenon": false,
+        "hyperV": false,
+        "targetWorkerCount": 0,
+        "targetWorkerSizeId": 0
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2022-03-01",
+      "name": "[parameters('functionAppName')]",
+      "location": "[variables('location')]",
+      "kind": "functionapp",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "httpsOnly": true,
+        "siteConfig": {
+          "ftpsState": "Disabled",
+          "minTlsVersion": "1.2",
+          "http20Enabled": true,
+          "cors": {
+            "allowedOrigins": [
+              "*"
+            ],
+            "supportCredentials": false
+          },
+          "appSettings": [
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('storageAccountName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2022-09-01').keys[0].value)]"
+            },
+            {
+              "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('storageAccountName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2022-09-01').keys[0].value)]"
+            },
+            {
+              "name": "WEBSITE_CONTENTSHARE",
+              "value": "[toLower(parameters('functionAppName'))]"
+            },
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~4"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "[variables('functionWorkerRuntime')]"
+            },
+            {
+              "name": "WEBSITE_NODE_DEFAULT_VERSION",
+              "value": "[if(equals(parameters('functionRuntime'), 'node'), '~18', parameters('functionRuntimeVersion'))]"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))).InstrumentationKey]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))).ConnectionString]"
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+        "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]"
+      ]
+    },
+    {
+      "condition": "[parameters('deploySampleFunction')]",
+      "type": "Microsoft.Web/sites/functions",
+      "apiVersion": "2022-03-01",
+      "name": "[format('{0}/{1}', parameters('functionAppName'), 'HttpTrigger')]",
+      "properties": {
+        "config": {
+          "disabled": false,
+          "bindings": [
+            {
+              "authLevel": "anonymous",
+              "type": "httpTrigger",
+              "direction": "in",
+              "name": "req",
+              "methods": [
+                "get",
+                "post"
+              ]
+            },
+            {
+              "type": "http",
+              "direction": "out",
+              "name": "$return"
+            }
+          ]
+        },
+        "files": {
+          "run.csx": "[variables('httpTriggerCSharpCode')]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "functionAppName": {
+      "type": "string",
+      "value": "[parameters('functionAppName')]"
+    },
+    "functionAppUrl": {
+      "type": "string",
+      "value": "[format('https://{0}.azurewebsites.net', parameters('functionAppName'))]"
+    },
+    "httpTriggerUrl": {
+      "type": "string",
+      "value": "[format('https://{0}.azurewebsites.net/api/HttpTrigger', parameters('functionAppName'))]"
+    }
+  }
+} 

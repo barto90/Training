@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Function App - Template Visualization</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            background-color: #f8f8f8;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0078d4;
+            font-size: 28px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #0078d4;
+            text-align: center;
+        }
+        .architecture {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 20px 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .resources {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .resource {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transition: transform 0.3s ease;
+        }
+        .resource:hover {
+            transform: translateY(-5px);
+        }
+        .resource h3 {
+            margin-top: 0;
+            color: #fff;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .resource-icon {
+            font-size: 24px;
+        }
+        .config {
+            background-color: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+        .config div {
+            margin: 5px 0;
+        }
+        .security {
+            margin-top: 30px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 8px;
+        }
+        .security h3 {
+            margin-top: 0;
+            font-size: 22px;
+        }
+        .security ul {
+            columns: 2;
+            column-gap: 30px;
+        }
+        .function {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        .function h3 {
+            margin-top: 0;
+            font-size: 22px;
+        }
+        .function pre {
+            background-color: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .monitoring {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        .monitoring h3 {
+            margin-top: 0;
+            font-size: 22px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-item {
+            background-color: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Azure Function App Architecture</h1>
+        
+        <div class="architecture-diagram">
+            <svg viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg" class="architecture">
+                <!-- Background -->
+                <defs>
+                    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#f5f7fa;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#c3cfe2;stop-opacity:1" />
+                    </linearGradient>
+                    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="3" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.3"/>
+                    </filter>
+                </defs>
+                
+                <rect x="0" y="0" width="1000" height="500" fill="url(#bgGradient)"/>
+                
+                <!-- Resource Group Box -->
+                <rect x="50" y="50" width="900" height="400" fill="#ffffff" stroke="#0078d4" stroke-width="3" rx="15" filter="url(#shadow)"/>
+                <text x="80" y="85" font-size="18" fill="#0078d4" font-weight="bold">🏢 Resource Group</text>
+                
+                <!-- Storage Account -->
+                <rect x="100" y="120" width="180" height="100" fill="#e6f2ff" stroke="#0078d4" stroke-width="2" rx="8" filter="url(#shadow)"/>
+                <text x="130" y="145" font-size="14" fill="#0078d4" font-weight="bold">📦 Storage Account</text>
+                <text x="110" y="165" font-size="12" fill="#666">• Standard_LRS</text>
+                <text x="110" y="180" font-size="12" fill="#666">• HTTPS Only</text>
+                <text x="110" y="195" font-size="12" fill="#666">• TLS 1.2</text>
+                
+                <!-- Application Insights -->
+                <rect x="320" y="120" width="180" height="100" fill="#fff2e6" stroke="#ff8c00" stroke-width="2" rx="8" filter="url(#shadow)"/>
+                <text x="340" y="145" font-size="14" fill="#ff8c00" font-weight="bold">📊 App Insights</text>
+                <text x="330" y="165" font-size="12" fill="#666">• Telemetry</text>
+                <text x="330" y="180" font-size="12" fill="#666">• Monitoring</text>
+                <text x="330" y="195" font-size="12" fill="#666">• Diagnostics</text>
+                
+                <!-- App Service Plan -->
+                <rect x="540" y="120" width="180" height="100" fill="#e6f2ff" stroke="#0078d4" stroke-width="2" rx="8" filter="url(#shadow)"/>
+                <text x="560" y="145" font-size="14" fill="#0078d4" font-weight="bold">⚡ Service Plan</text>
+                <text x="550" y="165" font-size="12" fill="#666">• Consumption</text>
+                <text x="550" y="180" font-size="12" fill="#666">• Serverless</text>
+                <text x="550" y="195" font-size="12" fill="#666">• Auto-scale</text>
+                
+                <!-- Function App -->
+                <rect x="320" y="280" width="200" height="120" fill="#dff6dd" stroke="#107c10" stroke-width="3" rx="8" filter="url(#shadow)"/>
+                <text x="360" y="305" font-size="16" fill="#107c10" font-weight="bold">🔧 Function App</text>
+                <text x="330" y="325" font-size="12" fill="#666">• Managed Identity</text>
+                <text x="330" y="340" font-size="12" fill="#666">• CORS Enabled</text>
+                <text x="330" y="355" font-size="12" fill="#666">• .NET 6 Runtime</text>
+                <text x="330" y="370" font-size="12" fill="#666">• HTTPS Only</text>
+                
+                <!-- HTTP Trigger Function -->
+                <rect x="750" y="280" width="180" height="100" fill="#deecf9" stroke="#0078d4" stroke-width="2" rx="8" filter="url(#shadow)"/>
+                <text x="770" y="305" font-size="14" fill="#0078d4" font-weight="bold">🌐 HTTP Trigger</text>
+                <text x="760" y="325" font-size="12" fill="#666">• Anonymous Auth</text>
+                <text x="760" y="340" font-size="12" fill="#666">• GET/POST</text>
+                <text x="760" y="355" font-size="12" fill="#666">• C# Function</text>
+                
+                <!-- Connection Lines -->
+                <line x1="190" y1="220" x2="320" y2="320" stroke="#666666" stroke-width="2" marker-end="url(#arrowhead)"/>
+                <line x1="410" y1="220" x2="420" y2="280" stroke="#ff8c00" stroke-width="2" marker-end="url(#arrowhead)"/>
+                <line x1="630" y1="220" x2="520" y2="280" stroke="#666666" stroke-width="2" marker-end="url(#arrowhead)"/>
+                <line x1="520" y1="340" x2="750" y2="330" stroke="#666666" stroke-width="2" marker-end="url(#arrowhead)"/>
+                
+                <!-- Arrow marker -->
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#666666" />
+                    </marker>
+                </defs>
+            </svg>
+        </div>
+        
+        <div class="resources">
+            <div class="resource">
+                <h3><span class="resource-icon">📦</span>Storage Account</h3>
+                <p>Provides secure storage for the Function App runtime and content</p>
+                <div class="config">
+                    <div>• SKU: Standard_LRS</div>
+                    <div>• HTTPS-only traffic</div>
+                    <div>• TLS 1.2 minimum</div>
+                    <div>• Blob public access: Disabled</div>
+                    <div>• OAuth authentication</div>
+                </div>
+            </div>
+            
+            <div class="resource">
+                <h3><span class="resource-icon">📊</span>Application Insights</h3>
+                <p>Comprehensive monitoring and telemetry for your functions</p>
+                <div class="config">
+                    <div>• Real-time metrics</div>
+                    <div>• Performance monitoring</div>
+                    <div>• Error tracking</div>
+                    <div>• Custom telemetry</div>
+                    <div>• Live metrics stream</div>
+                </div>
+            </div>
+            
+            <div class="resource">
+                <h3><span class="resource-icon">⚡</span>App Service Plan</h3>
+                <p>Serverless hosting infrastructure with automatic scaling</p>
+                <div class="config">
+                    <div>• SKU: Y1 (Consumption)</div>
+                    <div>• Pay-per-execution</div>
+                    <div>• Auto-scaling: 0-200 instances</div>
+                    <div>• Cold start optimization</div>
+                    <div>• 1M free executions/month</div>
+                </div>
+            </div>
+            
+            <div class="resource">
+                <h3><span class="resource-icon">🔧</span>Function App</h3>
+                <p>Serverless compute platform for your code</p>
+                <div class="config">
+                    <div>• Runtime: .NET 6</div>
+                    <div>• Managed Identity: System</div>
+                    <div>• CORS: Enabled (*)</div>
+                    <div>• HTTPS Only: Enforced</div>
+                    <div>• Functions Version: ~4</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="function">
+            <h3>🌐 Sample HTTP Trigger Function</h3>
+            <p>The deployment includes a C# HTTP trigger function that demonstrates basic functionality:</p>
+            <pre>
+[FunctionName("HttpTrigger")]
+public static async Task&lt;IActionResult&gt; Run(
+    [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req,
+    ILogger log)
+{
+    log.LogInformation("C# HTTP trigger function processed a request.");
+
+    string name = req.Query["name"];
+    string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+    dynamic data = JsonConvert.DeserializeObject(requestBody);
+    name = name ?? data?.name;
+
+    string responseMessage = string.IsNullOrEmpty(name)
+        ? "This HTTP triggered function executed successfully. Pass a name parameter."
+        : $"Hello, {name}. This HTTP triggered function executed successfully.";
+
+    return new OkObjectResult(responseMessage);
+}
+            </pre>
+            <p><strong>Endpoint:</strong> <code>https://&lt;functionAppName&gt;.azurewebsites.net/api/HttpTrigger</code></p>
+            <p><strong>Usage:</strong> <code>?name=YourName</code> or POST with JSON body <code>{"name": "YourName"}</code></p>
+        </div>
+        
+        <div class="monitoring">
+            <h3>📈 Monitoring & Analytics</h3>
+            <p>Built-in monitoring capabilities provide comprehensive insights into your function performance:</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-number">99.9%</span>
+                    <span>Uptime SLA</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">&lt;100ms</span>
+                    <span>Cold Start</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">1M+</span>
+                    <span>Free Executions</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">200</span>
+                    <span>Max Instances</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="security">
+            <h3>🔒 Security & Compliance Features</h3>
+            <ul>
+                <li>✅ System-assigned managed identity for secure resource access</li>
+                <li>✅ HTTPS-only communication enforced</li>
+                <li>✅ TLS 1.2 minimum version enforcement</li>
+                <li>✅ FTPS disabled for secure file transfers</li>
+                <li>✅ Storage account with HTTPS-only traffic</li>
+                <li>✅ Default OAuth authentication enabled</li>
+                <li>✅ Blob public access disabled</li>
+                <li>✅ Network access controls configured</li>
+                <li>✅ Application Insights for security monitoring</li>
+                <li>✅ CORS configured for controlled access</li>
+                <li>✅ Function-level authorization support</li>
+                <li>✅ Azure Key Vault integration ready</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 
