@@ -1,8 +1,8 @@
 @description('The name of the function app that you wish to create.')
-param functionAppName string = 'func-${uniqueString(resourceGroup().id)}'
+param functionAppName string
 
 @description('The name of the storage account that will be used by the Function App')
-param storageAccountName string = 'st${uniqueString(resourceGroup().id)}'
+param storageAccountName string
 
 @description('The runtime stack of the Function App')
 @allowed([

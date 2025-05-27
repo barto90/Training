@@ -29,8 +29,8 @@ Replace `YOUR_USERNAME` and `YOUR_REPO` with your actual GitHub username and rep
 
 | Parameter Name | Description | Default Value | Allowed Values |
 |----------------|-------------|---------------|----------------|
-| functionAppName | The name of the Function App | func-{uniqueString} | Any valid Azure resource name |
-| storageAccountName | The name of the storage account | st{uniqueString} | 3-24 characters, lowercase letters and numbers |
+| functionAppName | The name of the Function App | *Required* | Any valid Azure resource name |
+| storageAccountName | The name of the storage account | *Required* | 3-24 characters, lowercase letters and numbers |
 | functionRuntime | Runtime stack for the Function App | dotnet | dotnet, node, python, java, powershell |
 | functionRuntimeVersion | The version of the runtime | 6 | Depends on runtime choice |
 | appServicePlanSku | The SKU of the App Service Plan | Y1 (Consumption) | Y1, B1, S1, P1V2, P1V3 |
