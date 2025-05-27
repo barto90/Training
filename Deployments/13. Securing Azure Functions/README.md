@@ -6,9 +6,9 @@ This ARM template deploys a secure Azure Function App with comprehensive securit
 
 - **Storage Account** - Secure storage with HTTPS-only and TLS 1.2
 - **Application Insights** - Comprehensive monitoring and telemetry
-- **App Service Plan** - Consumption plan (serverless) by default
+- **App Service Plan** - Premium V2 plan with enhanced performance by default
 - **Function App** - With system-assigned managed identity and security hardening
-- **Sample HTTP Trigger Function** - Optional C# function for testing (optional)
+- **Sample HTTP Trigger Function** - Optional PowerShell function for testing (optional)
 
 ## 🎯 Deploy to Azure Button
 
@@ -31,9 +31,9 @@ Replace `YOUR_USERNAME` and `YOUR_REPO` with your actual GitHub username and rep
 |----------------|-------------|---------------|----------------|
 | functionAppName | The name of the Function App | *Required* | Any valid Azure resource name |
 | storageAccountName | The name of the storage account | *Required* | 3-24 characters, lowercase letters and numbers |
-| functionRuntime | Runtime stack for the Function App | dotnet | dotnet, node, python, java, powershell |
-| functionRuntimeVersion | The version of the runtime | 6 | Depends on runtime choice |
-| appServicePlanSku | The SKU of the App Service Plan | Y1 (Consumption) | Y1, B1, S1, P1V2, P1V3 |
+| functionRuntime | Runtime stack for the Function App | powershell | dotnet, node, python, java, powershell |
+| functionRuntimeVersion | The version of the runtime | ~7.2 | Depends on runtime choice |
+| appServicePlanSku | The SKU of the App Service Plan | P1V2 (Premium V2) | Y1, B1, S1, P1V2, P1V3 |
 | deploySampleFunction | Whether to deploy a sample HTTP trigger function | true | true, false |
 
 **Note:** All resources will be deployed in the same location as the resource group.
@@ -83,27 +83,27 @@ The deployment includes Application Insights for comprehensive monitoring:
 - Live metrics stream
 - Custom alerts and notifications
 
-## 💰 Cost Optimization
+## 💰 Cost & Performance
 
-The default configuration uses a Consumption plan which offers:
+The default configuration uses a Premium V2 (P1V2) plan which offers:
 
-- **Pay-per-execution** pricing model
-- **Automatic scaling** based on demand (0-200 instances)
-- **No charges** when functions are not running
-- **1 million free executions** per month
-- **Cold start optimization** for better performance
+- **Always-on** instances for better performance
+- **No cold starts** for improved response times
+- **Enhanced compute** resources and memory
+- **VNet integration** capabilities
+- **Predictable pricing** model
 
 ### Cost Comparison
 
 | Plan Type | Best For | Pricing Model | Scaling |
 |-----------|----------|---------------|---------|
 | Consumption (Y1) | Variable workloads | Pay-per-execution | 0-200 instances |
-| Premium (P1V2) | Predictable workloads | Always-on pricing | Pre-warmed instances |
+| **Premium (P1V2)** | **Predictable workloads (Default)** | **Always-on pricing** | **Pre-warmed instances** |
 | Dedicated (B1/S1) | Existing App Service | Standard App Service | Manual/auto-scale |
 
 ## 🌐 Sample HTTP Trigger Function
 
-The template includes an optional C# HTTP trigger function that:
+The template includes an optional PowerShell HTTP trigger function that:
 
 - Accepts GET or POST requests
 - Uses anonymous authentication (no key required)
@@ -111,25 +111,32 @@ The template includes an optional C# HTTP trigger function that:
 - Demonstrates basic Azure Functions functionality
 
 ### Function Code
-```csharp
-[FunctionName("HttpTrigger")]
-public static async Task<IActionResult> Run(
-    [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req,
-    ILogger log)
-{
-    log.LogInformation("C# HTTP trigger function processed a request.");
+```powershell
+using namespace System.Net
 
-    string name = req.Query["name"];
-    string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-    dynamic data = JsonConvert.DeserializeObject(requestBody);
-    name = name ?? data?.name;
+# Input bindings are passed in via param block.
+param($Request, $TriggerMetadata)
 
-    string responseMessage = string.IsNullOrEmpty(name)
-        ? "This HTTP triggered function executed successfully. Pass a name parameter."
-        : $"Hello, {name}. This HTTP triggered function executed successfully.";
+# Write to the Azure Functions log stream.
+Write-Host "PowerShell HTTP trigger function processed a request."
 
-    return new OkObjectResult(responseMessage);
+# Interact with query parameters or the body of the request.
+$name = $Request.Query.Name
+if (-not $name) {
+    $name = $Request.Body.Name
 }
+
+$body = "This HTTP triggered function executed successfully."
+
+if ($name) {
+    $body = "Hello, $name. This HTTP triggered function executed successfully."
+}
+
+# Associate values to output bindings by calling 'Push-OutputBinding'.
+Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
+    StatusCode = [HttpStatusCode]::OK
+    Body = $body
+})
 ```
 
 ### Testing the Function

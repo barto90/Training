@@ -120,7 +120,7 @@
             </div>
             <div class="feature-item">
                 <strong>⚡ App Service Plan</strong><br>
-                Consumption plan (serverless) by default
+                Premium V2 plan with enhanced performance
             </div>
             <div class="feature-item">
                 <strong>🔧 Function App</strong><br>
@@ -132,7 +132,7 @@
             </div>
             <div class="feature-item">
                 <strong>🌐 HTTP Trigger</strong><br>
-                Sample C# function (optional)
+                Sample PowerShell function (optional)
             </div>
         </div>
 
@@ -169,17 +169,17 @@
             <tr>
                 <td>functionRuntime</td>
                 <td>Runtime stack (dotnet, node, python, java, powershell)</td>
-                <td>dotnet</td>
+                <td>powershell</td>
             </tr>
             <tr>
                 <td>functionRuntimeVersion</td>
                 <td>The version of the runtime</td>
-                <td>6</td>
+                <td>~7.2</td>
             </tr>
             <tr>
                 <td>appServicePlanSku</td>
                 <td>The App Service Plan SKU</td>
-                <td>Y1 (Consumption)</td>
+                <td>P1V2 (Premium V2)</td>
             </tr>
             <tr>
                 <td>deploySampleFunction</td>
@@ -193,7 +193,7 @@
         </div>
         
         <div class="note">
-            <strong>🔗 Sample Function:</strong> The template includes a C# HTTP trigger function that you can access at
+            <strong>🔗 Sample Function:</strong> The template includes a PowerShell HTTP trigger function that you can access at
             <code>https://&lt;functionAppName&gt;.azurewebsites.net/api/HttpTrigger</code>. It accepts a "name" parameter and returns a personalized greeting.
         </div>
 

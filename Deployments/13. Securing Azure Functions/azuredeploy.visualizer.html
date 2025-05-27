@@ -179,16 +179,16 @@
                 <!-- App Service Plan -->
                 <rect x="540" y="120" width="180" height="100" fill="#e6f2ff" stroke="#0078d4" stroke-width="2" rx="8" filter="url(#shadow)"/>
                 <text x="560" y="145" font-size="14" fill="#0078d4" font-weight="bold">⚡ Service Plan</text>
-                <text x="550" y="165" font-size="12" fill="#666">• Consumption</text>
-                <text x="550" y="180" font-size="12" fill="#666">• Serverless</text>
-                <text x="550" y="195" font-size="12" fill="#666">• Auto-scale</text>
+                <text x="550" y="165" font-size="12" fill="#666">• Premium V2</text>
+                <text x="550" y="180" font-size="12" fill="#666">• Always-on</text>
+                <text x="550" y="195" font-size="12" fill="#666">• No cold starts</text>
                 
                 <!-- Function App -->
                 <rect x="320" y="280" width="200" height="120" fill="#dff6dd" stroke="#107c10" stroke-width="3" rx="8" filter="url(#shadow)"/>
                 <text x="360" y="305" font-size="16" fill="#107c10" font-weight="bold">🔧 Function App</text>
                 <text x="330" y="325" font-size="12" fill="#666">• Managed Identity</text>
                 <text x="330" y="340" font-size="12" fill="#666">• CORS Enabled</text>
-                <text x="330" y="355" font-size="12" fill="#666">• .NET 6 Runtime</text>
+                <text x="330" y="355" font-size="12" fill="#666">• PowerShell 7.2</text>
                 <text x="330" y="370" font-size="12" fill="#666">• HTTPS Only</text>
                 
                 <!-- HTTP Trigger Function -->
@@ -196,7 +196,7 @@
                 <text x="770" y="305" font-size="14" fill="#0078d4" font-weight="bold">🌐 HTTP Trigger</text>
                 <text x="760" y="325" font-size="12" fill="#666">• Anonymous Auth</text>
                 <text x="760" y="340" font-size="12" fill="#666">• GET/POST</text>
-                <text x="760" y="355" font-size="12" fill="#666">• C# Function</text>
+                <text x="760" y="355" font-size="12" fill="#666">• PowerShell Function</text>
                 
                 <!-- Connection Lines -->
                 <line x1="190" y1="220" x2="320" y2="320" stroke="#666666" stroke-width="2" marker-end="url(#arrowhead)"/>
@@ -240,13 +240,13 @@
             
             <div class="resource">
                 <h3><span class="resource-icon">⚡</span>App Service Plan</h3>
-                <p>Serverless hosting infrastructure with automatic scaling</p>
+                <p>Premium hosting infrastructure with enhanced performance</p>
                 <div class="config">
-                    <div>• SKU: Y1 (Consumption)</div>
-                    <div>• Pay-per-execution</div>
-                    <div>• Auto-scaling: 0-200 instances</div>
-                    <div>• Cold start optimization</div>
-                    <div>• 1M free executions/month</div>
+                    <div>• SKU: P1V2 (Premium V2)</div>
+                    <div>• Always-on instances</div>
+                    <div>• No cold starts</div>
+                    <div>• Enhanced compute resources</div>
+                    <div>• VNet integration ready</div>
                 </div>
             </div>
             
@@ -254,7 +254,7 @@
                 <h3><span class="resource-icon">🔧</span>Function App</h3>
                 <p>Serverless compute platform for your code</p>
                 <div class="config">
-                    <div>• Runtime: .NET 6</div>
+                    <div>• Runtime: PowerShell 7.2</div>
                     <div>• Managed Identity: System</div>
                     <div>• CORS: Enabled (*)</div>
                     <div>• HTTPS Only: Enforced</div>
@@ -265,26 +265,33 @@
         
         <div class="function">
             <h3>🌐 Sample HTTP Trigger Function</h3>
-            <p>The deployment includes a C# HTTP trigger function that demonstrates basic functionality:</p>
+            <p>The deployment includes a PowerShell HTTP trigger function that demonstrates basic functionality:</p>
             <pre>
-[FunctionName("HttpTrigger")]
-public static async Task&lt;IActionResult&gt; Run(
-    [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req,
-    ILogger log)
-{
-    log.LogInformation("C# HTTP trigger function processed a request.");
+using namespace System.Net
 
-    string name = req.Query["name"];
-    string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-    dynamic data = JsonConvert.DeserializeObject(requestBody);
-    name = name ?? data?.name;
+# Input bindings are passed in via param block.
+param($Request, $TriggerMetadata)
 
-    string responseMessage = string.IsNullOrEmpty(name)
-        ? "This HTTP triggered function executed successfully. Pass a name parameter."
-        : $"Hello, {name}. This HTTP triggered function executed successfully.";
+# Write to the Azure Functions log stream.
+Write-Host "PowerShell HTTP trigger function processed a request."
 
-    return new OkObjectResult(responseMessage);
+# Interact with query parameters or the body of the request.
+$name = $Request.Query.Name
+if (-not $name) {
+    $name = $Request.Body.Name
 }
+
+$body = "This HTTP triggered function executed successfully."
+
+if ($name) {
+    $body = "Hello, $name. This HTTP triggered function executed successfully."
+}
+
+# Associate values to output bindings by calling 'Push-OutputBinding'.
+Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
+    StatusCode = [HttpStatusCode]::OK
+    Body = $body
+})
             </pre>
             <p><strong>Endpoint:</strong> <code>https://&lt;functionAppName&gt;.azurewebsites.net/api/HttpTrigger</code></p>
             <p><strong>Usage:</strong> <code>?name=YourName</code> or POST with JSON body <code>{"name": "YourName"}</code></p>

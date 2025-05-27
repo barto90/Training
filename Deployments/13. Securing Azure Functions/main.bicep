@@ -12,12 +12,12 @@ param storageAccountName string
   'java'
   'powershell'
 ])
-param functionRuntime string = 'dotnet'
+param functionRuntime string = 'powershell'
 
 @description('The version of the selected runtime stack')
-param functionRuntimeVersion string = '6'
+param functionRuntimeVersion string = '~7.2'
 
-@description('The SKU of the App Service Plan (Y1 = Consumption Plan)')
+@description('The SKU of the App Service Plan (P1V2 = Premium V2)')
 @allowed([
   'Y1'
   'B1'
@@ -25,7 +25,7 @@ param functionRuntimeVersion string = '6'
   'P1V2'
   'P1V3'
 ])
-param appServicePlanSku string = 'Y1'
+param appServicePlanSku string = 'P1V2'
 
 @description('Deploy a sample HTTP trigger function')
 param deploySampleFunction bool = true
@@ -35,41 +35,31 @@ var functionWorkerRuntime = functionRuntime
 var location = resourceGroup().location
 var applicationInsightsName = 'ai-${functionAppName}'
 
-var httpTriggerCSharpCode = '''using System;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+var httpTriggerPowerShellCode = '''using namespace System.Net
 
-namespace Company.Function
-{
-    public static class HttpTrigger
-    {
-        [FunctionName("HttpTrigger")]
-        public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
-            ILogger log)
-        {
-            log.LogInformation("C# HTTP trigger function processed a request.");
+# Input bindings are passed in via param block.
+param($Request, $TriggerMetadata)
 
-            string name = req.Query["name"];
+# Write to the Azure Functions log stream.
+Write-Host "PowerShell HTTP trigger function processed a request."
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-            name = name ?? data?.name;
+# Interact with query parameters or the body of the request.
+$name = $Request.Query.Name
+if (-not $name) {
+    $name = $Request.Body.Name
+}
 
-            string responseMessage = string.IsNullOrEmpty(name)
-                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
-                : $"Hello, {name}. This HTTP triggered function executed successfully.";
+$body = "This HTTP triggered function executed successfully."
 
-            return new OkObjectResult(responseMessage);
-        }
-    }
-}'''
+if ($name) {
+    $body = "Hello, $name. This HTTP triggered function executed successfully."
+}
+
+# Associate values to output bindings by calling 'Push-OutputBinding'.
+Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
+    StatusCode = [HttpStatusCode]::OK
+    Body = $body
+})'''
 
 // Storage Account
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
@@ -195,7 +185,7 @@ resource httpTriggerFunction 'Microsoft.Web/sites/functions@2022-03-01' = if (de
           authLevel: 'anonymous'
           type: 'httpTrigger'
           direction: 'in'
-          name: 'req'
+          name: 'Request'
           methods: [
             'get'
             'post'
@@ -204,12 +194,12 @@ resource httpTriggerFunction 'Microsoft.Web/sites/functions@2022-03-01' = if (de
         {
           type: 'http'
           direction: 'out'
-          name: '$return'
+          name: 'Response'
         }
       ]
     }
     files: {
-      'run.csx': httpTriggerCSharpCode
+      'run.ps1': httpTriggerPowerShellCode
     }
   }
 }
