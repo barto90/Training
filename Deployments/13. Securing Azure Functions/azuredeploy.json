@@ -44,7 +44,7 @@
     },
     "appServicePlanSku": {
       "type": "string",
-      "defaultValue": "Y1",
+      "defaultValue": "P1V2",
       "allowedValues": [
         "Y1",
         "B1",
@@ -53,7 +53,7 @@
         "P1V3"
       ],
       "metadata": {
-        "description": "The SKU of the App Service Plan (Y1 = Consumption Plan)"
+        "description": "The SKU of the App Service Plan (P1V2 = Premium V2)"
       }
     },
     "deploySampleFunction": {
