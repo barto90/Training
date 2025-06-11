@@ -42,6 +42,16 @@ The deployment creates the following Azure resources:
 | Application Insights | Monitoring and telemetry | Web application type |
 | Sample Function | Graph API demonstration | HTTP trigger with anonymous auth |
 
+### Function Structure
+
+The deployment includes a properly structured Azure Function:
+
+```
+GraphAPITrigger/
+├── function.json    # Function configuration and bindings
+└── run.ps1         # Clean PowerShell code without escape characters
+```
+
 ### Security Features
 
 - ✅ **No stored credentials** - Uses managed identity for authentication
@@ -114,6 +124,26 @@ az deployment group create \
   --template-file "main.bicep" \
   --parameters @parameters.json
 ```
+
+### PowerShell Deployment Script (Recommended)
+
+Use the included PowerShell script for the easiest deployment:
+
+```powershell
+# Run the deployment script
+.\deploy.ps1 -ResourceGroupName "rg-graph-functions" `
+             -FunctionAppName "my-graph-function" `
+             -StorageAccountName "mygraphfuncstorage" `
+             -AppServicePlanSku "P1V2"
+```
+
+This script:
+- ✅ Validates prerequisites (Azure CLI, login status)
+- ✅ Creates resource group if needed
+- ✅ Deploys using Bicep template with external PowerShell files
+- ✅ Displays deployment outputs including Principal ID
+- ✅ Provides next steps for permission setup
+- ✅ Optionally tests the deployed function
 
 ## 🔑 Post-Deployment Setup
 

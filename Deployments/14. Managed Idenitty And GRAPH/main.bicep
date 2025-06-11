@@ -21,57 +21,9 @@ var hostingPlanName = 'plan-${functionAppName}'
 var location = resourceGroup().location
 var applicationInsightsName = 'ai-${functionAppName}'
 
-// PowerShell code for the sample Graph API function
-var httpTriggerGraphCode = '''using namespace System.Net
-
-# Input bindings are passed in via param block.
-param($Request, $TriggerMetadata)
-
-# Write to the Azure Functions log stream.
-Write-Host "PowerShell HTTP trigger function with Managed Identity processed a request."
-
-# Get the managed identity token for Microsoft Graph
-try {
-    $resourceURI = "https://graph.microsoft.com/"
-    $tokenAuthURI = $env:IDENTITY_ENDPOINT + "?resource=$resourceURI&api-version=2019-08-01"
-    $tokenResponse = Invoke-RestMethod -Method Get -Headers @{"X-IDENTITY-HEADER"=$env:IDENTITY_HEADER} -Uri $tokenAuthURI
-    $accessToken = $tokenResponse.access_token
-    
-    Write-Host "Successfully obtained access token for Microsoft Graph"
-    
-    # Example: Get current user information (requires User.Read permission)
-    $headers = @{
-        'Authorization' = "Bearer $accessToken"
-        'Content-Type' = 'application/json'
-    }
-    
-    # You can uncomment this to test Graph API call
-    # $userInfo = Invoke-RestMethod -Uri "https://graph.microsoft.com/v1.0/me" -Headers $headers
-    
-    $body = @{
-        status = "success"
-        message = "Managed Identity authentication successful"
-        tokenObtained = $true
-        # userInfo = $userInfo
-    } | ConvertTo-Json
-    
-} catch {
-    Write-Host "Error obtaining token: $($_.Exception.Message)"
-    $body = @{
-        status = "error"
-        message = "Failed to obtain access token: $($_.Exception.Message)"
-        tokenObtained = $false
-    } | ConvertTo-Json
-}
-
-# Associate values to output bindings by calling 'Push-OutputBinding'.
-Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
-    StatusCode = [HttpStatusCode]::OK
-    Body = $body
-    Headers = @{
-        "Content-Type" = "application/json"
-    }
-})'''
+// Load PowerShell code from external file
+var httpTriggerGraphCode = loadTextContent('GraphAPITrigger/run.ps1')
+var functionConfig = loadTextContent('GraphAPITrigger/function.json')
 
 // Storage Account
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
@@ -190,26 +142,7 @@ resource graphAPITrigger 'Microsoft.Web/sites/functions@2022-03-01' = if (deploy
   name: 'GraphAPITrigger'
   parent: functionApp
   properties: {
-    config: {
-      disabled: false
-      bindings: [
-        {
-          authLevel: 'anonymous'
-          type: 'httpTrigger'
-          direction: 'in'
-          name: 'Request'
-          methods: [
-            'get'
-            'post'
-          ]
-        }
-        {
-          type: 'http'
-          direction: 'out'
-          name: 'Response'
-        }
-      ]
-    }
+    config: json(functionConfig)
     files: {
       'run.ps1': httpTriggerGraphCode
     }
