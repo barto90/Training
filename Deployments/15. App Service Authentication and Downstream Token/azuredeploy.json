@@ -35,13 +35,6 @@
         "description": "The SKU of the App Service Plan"
       }
     },
-    "tenantId": {
-      "type": "string",
-      "defaultValue": "[subscription().tenantId]",
-      "metadata": {
-        "description": "The Azure AD tenant ID for authentication"
-      }
-    },
     "clientId": {
       "type": "string",
       "metadata": {
@@ -181,7 +174,7 @@
           "azureActiveDirectory": {
             "enabled": true,
             "registration": {
-              "openIdIssuer": "[format('https://sts.windows.net/{0}/', parameters('tenantId'))]",
+              "openIdIssuer": "[format('https://sts.windows.net/{0}/', subscription().tenantId)]",
               "clientId": "[parameters('clientId')]",
               "clientSecretSettingName": "MICROSOFT_PROVIDER_AUTHENTICATION_SECRET"
             },
