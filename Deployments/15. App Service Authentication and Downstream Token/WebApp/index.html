@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Service Authentication Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .auth-info {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .user-claims {
+            background: #e8f5e8;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .token-info {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 App Service Authentication Demo</h1>
+        
+        <div class="auth-info">
+            <h3>Authentication Status</h3>
+            <p id="auth-status">Loading...</p>
+            <div id="auth-actions">
+                <a href="/.auth/login/aad" class="btn">Login with Azure AD</a>
+                <a href="/.auth/logout" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+
+        <div class="user-claims" id="user-info" style="display: none;">
+            <h3>User Information</h3>
+            <div id="user-details"></div>
+        </div>
+
+        <div class="token-info" id="token-info" style="display: none;">
+            <h3>Access Token Information</h3>
+            <p><strong>Note:</strong> This shows token metadata for demonstration purposes.</p>
+            <div id="token-details"></div>
+        </div>
+
+        <div class="auth-info">
+            <h3>Available Endpoints</h3>
+            <ul>
+                <li><a href="/.auth/me" target="_blank">/.auth/me</a> - User claims and token information</li>
+                <li><a href="/.auth/login/aad" target="_blank">/.auth/login/aad</a> - Azure AD login</li>
+                <li><a href="/.auth/logout" target="_blank">/.auth/logout</a> - Logout</li>
+                <li><a href="/.auth/refresh" target="_blank">/.auth/refresh</a> - Refresh token</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication status and load user information
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('/.auth/me');
+                const data = await response.json();
+                
+                if (response.ok && data && data.length > 0) {
+                    // User is authenticated
+                    document.getElementById('auth-status').innerHTML = '✅ <strong>Authenticated</strong>';
+                    displayUserInfo(data[0]);
+                    displayTokenInfo(data[0]);
+                } else {
+                    // User is not authenticated
+                    document.getElementById('auth-status').innerHTML = '❌ <strong>Not Authenticated</strong>';
+                }
+            } catch (error) {
+                console.error('Error checking auth status:', error);
+                document.getElementById('auth-status').innerHTML = '⚠️ <strong>Error checking authentication status</strong>';
+            }
+        }
+
+        function displayUserInfo(userInfo) {
+            const userDetails = document.getElementById('user-details');
+            const userInfoDiv = document.getElementById('user-info');
+            
+            let html = '<h4>Claims:</h4><pre>' + JSON.stringify(userInfo.user_claims || [], null, 2) + '</pre>';
+            
+            if (userInfo.user_id) {
+                html += '<p><strong>User ID:</strong> ' + userInfo.user_id + '</p>';
+            }
+            
+            if (userInfo.provider_name) {
+                html += '<p><strong>Provider:</strong> ' + userInfo.provider_name + '</p>';
+            }
+
+            userDetails.innerHTML = html;
+            userInfoDiv.style.display = 'block';
+        }
+
+        function displayTokenInfo(userInfo) {
+            const tokenDetails = document.getElementById('token-details');
+            const tokenInfoDiv = document.getElementById('token-info');
+            
+            let html = '';
+            
+            if (userInfo.access_token) {
+                html += '<p><strong>Access Token Available:</strong> ✅ Yes</p>';
+                html += '<p><strong>Token Type:</strong> Bearer</p>';
+            }
+            
+            if (userInfo.expires_on) {
+                const expiresOn = new Date(userInfo.expires_on * 1000);
+                html += '<p><strong>Token Expires:</strong> ' + expiresOn.toLocaleString() + '</p>';
+            }
+            
+            if (userInfo.refresh_token) {
+                html += '<p><strong>Refresh Token Available:</strong> ✅ Yes</p>';
+            }
+
+            if (html) {
+                tokenDetails.innerHTML = html;
+                tokenInfoDiv.style.display = 'block';
+            }
+        }
+
+        // Load authentication status when page loads
+        window.addEventListener('load', checkAuthStatus);
+    </script>
+</body>
+</html> 

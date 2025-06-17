@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploy Azure App Service with Authentication & Downstream Token</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+        .deploy-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .deploy-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        .deploy-button img {
+            vertical-align: middle;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            border-left: 4px solid #667eea;
+            font-size: 14px;
+        }
+        .note {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-left: 4px solid #2196f3;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .security-note {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            border-left: 4px solid #4caf50;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .auth-note {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 20%);
+            border-left: 4px solid #ff9800;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+        .feature-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.3s ease;
+        }
+        .feature-item:hover {
+            transform: translateY(-5px);
+        }
+        code {
+            background-color: #f1f3f4;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .app-registration-section {
+            background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #e91e63;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Azure App Service with Authentication & Downstream Token</h1>
+        
+        <p>This template deploys a secure Azure App Service with Azure Active Directory authentication and token management for downstream API calls:</p>
+        
+        <div class="feature-list">
+            <div class="feature-item">
+                <strong>🔐 Azure AD Authentication</strong><br>
+                Built-in App Service authentication with Azure AD
+            </div>
+            <div class="feature-item">
+                <strong>🎫 Token Management</strong><br>
+                Automatic token storage and refresh capabilities
+            </div>
+            <div class="feature-item">
+                <strong>🌐 Modern Web Interface</strong><br>
+                Clean, responsive authentication demo application
+            </div>
+            <div class="feature-item">
+                <strong>🔗 Downstream API Ready</strong><br>
+                Configured for calling downstream APIs with user tokens
+            </div>
+            <div class="feature-item">
+                <strong>📈 Application Insights</strong><br>
+                Built-in monitoring and telemetry
+            </div>
+            <div class="feature-item">
+                <strong>🔒 Security Hardened</strong><br>
+                HTTPS-only, secure headers, and token protection
+            </div>
+        </div>
+
+        <h2>🚀 Deploy to Azure</h2>
+        <p>Click the button below to deploy this App Service to your Azure subscription:</p>
+        
+        <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fbarto90%2FTraining%2Fmain%2FDeployments%2F15.%20App%20Service%20Authentication%20and%20Downstream%20Token%2Fazuredeploy.json" target="_blank" class="deploy-button">
+            <img src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure">
+        </a>
+
+        <div class="note">
+            <strong>💡 Note:</strong> The URL uses the raw GitHub content URL format (raw.githubusercontent.com) which is required for ARM template deployments.
+        </div>
+
+        <h2>⚙️ Parameters</h2>
+        <p>When deploying, you can customize the following parameters:</p>
+        
+        <table>
+            <tr>
+                <th>Parameter Name</th>
+                <th>Description</th>
+                <th>Default Value</th>
+            </tr>
+            <tr>
+                <td>appServiceName</td>
+                <td>The name of the App Service</td>
+                <td><em>Required</em></td>
+            </tr>
+            <tr>
+                <td>storageAccountName</td>
+                <td>The name of the storage account</td>
+                <td><em>Required</em></td>
+            </tr>
+            <tr>
+                <td>clientId</td>
+                <td>Azure AD App Registration Client ID</td>
+                <td><em>Required</em></td>
+            </tr>
+            <tr>
+                <td>appServicePlanSku</td>
+                <td>The App Service Plan SKU</td>
+                <td>B1 (Basic)</td>
+            </tr>
+            <tr>
+                <td>deploySampleApp</td>
+                <td>Deploy sample authentication web app</td>
+                <td>true</td>
+            </tr>
+        </table>
+        
+        <div class="note">
+            <strong>📍 Location:</strong> All resources will be deployed in the same location as the resource group.
+        </div>
+        
+        <div class="auth-note">
+            <strong>🔐 Sample Web Application:</strong> The template includes a web application that demonstrates how to:
+            <ul>
+                <li>Check user authentication status</li>
+                <li>Display user claims and profile information</li>
+                <li>Show access token metadata</li>
+                <li>Handle authentication flows and logout</li>
+                <li>Call authenticated endpoints</li>
+            </ul>
+            Access it at: <code>https://&lt;appServiceName&gt;.azurewebsites.net</code>
+        </div>
+
+        <div class="app-registration-section">
+            <h3>🔑 Required Azure AD App Registration Setup</h3>
+            <p><strong>Important:</strong> Before deployment, you need to create an Azure AD App Registration and configure it properly.</p>
+            
+            <p><strong>1. Create App Registration using Azure CLI:</strong></p>
+            <pre>
+# Create App Registration
+az ad app create --display-name "AppService-Auth-Demo" --sign-in-audience "AzureADMyOrg"
+
+# Get the Application (Client) ID
+az ad app list --display-name "AppService-Auth-Demo" --query "[0].appId" -o tsv
+            </pre>
+            
+            <p><strong>2. Configure Authentication after deployment:</strong></p>
+            <pre>
+# Add redirect URI (replace with your actual app service URL)
+az ad app update --id "your-client-id" --web-redirect-uris "https://your-app-name.azurewebsites.net/.auth/login/aad/callback"
+
+# Create client secret
+az ad app credential reset --id "your-client-id" --append
+            </pre>
+            
+            <p><strong>3. Update App Service settings with the client secret:</strong></p>
+            <pre>
+az webapp config appsettings set \
+  --resource-group "your-resource-group" \
+  --name "your-app-name" \
+  --settings MICROSOFT_PROVIDER_AUTHENTICATION_SECRET="your-client-secret"
+            </pre>
+        </div>
+
+        <h2>🛠️ Other Deployment Options</h2>
+        <p>For programmatic deployments, you can also use:</p>
+        
+        <h3>Azure CLI</h3>
+        <pre>az deployment group create \
+  --resource-group &lt;resource-group-name&gt; \
+  --template-uri "https://raw.githubusercontent.com/barto90/Training/main/Deployments/15.%20App%20Service%20Authentication%20and%20Downstream%20Token/azuredeploy.json" \
+  --parameters appServiceName=myAuthApp storageAccountName=mystorageacct clientId=your-client-id</pre>
+        
+        <h3>PowerShell</h3>
+        <pre>New-AzResourceGroupDeployment `
+  -ResourceGroupName &lt;resource-group-name&gt; `
+  -TemplateUri "https://raw.githubusercontent.com/barto90/Training/main/Deployments/15.%20App%20Service%20Authentication%20and%20Downstream%20Token/azuredeploy.json" `
+  -appServiceName "myAuthApp" `
+  -storageAccountName "mystorageacct" `
+  -clientId "your-client-id"</pre>
+
+        <div class="security-note">
+            <strong>🔒 Security Features:</strong> This deployment follows Azure security best practices:
+            <ul>
+                <li>✅ Azure AD authentication integration</li>
+                <li>✅ Automatic token management and refresh</li>
+                <li>✅ HTTPS-only communication enforced</li>
+                <li>✅ TLS 1.2 minimum version</li>
+                <li>✅ Secure HTTP headers (X-Frame-Options, X-XSS-Protection)</li>
+                <li>✅ Storage account security hardening</li>
+                <li>✅ Application Insights for monitoring</li>
+                <li>✅ System-assigned managed identity</li>
+            </ul>
+        </div>
+
+        <h2>🌐 Authentication Endpoints</h2>
+        <p>The deployed App Service provides several built-in authentication endpoints:</p>
+        <ul>
+            <li><strong>/.auth/login/aad:</strong> Azure AD login endpoint</li>
+            <li><strong>/.auth/logout:</strong> Logout endpoint (clears tokens)</li>
+            <li><strong>/.auth/me:</strong> User claims and token information</li>
+            <li><strong>/.auth/refresh:</strong> Token refresh endpoint</li>
+        </ul>
+
+        <h2>🎫 Token Management for Downstream APIs</h2>
+        <p>The authentication configuration enables:</p>
+        <ul>
+            <li><strong>Token Store:</strong> Secure storage of access and refresh tokens</li>
+            <li><strong>Automatic Refresh:</strong> Tokens are refreshed automatically before expiration</li>
+            <li><strong>API Access:</strong> Use stored tokens to call downstream APIs on behalf of users</li>
+            <li><strong>Claims Access:</strong> Rich user profile information from Azure AD</li>
+        </ul>
+
+        <h2>🎯 Use Cases</h2>
+        <p>This template is perfect for scenarios involving:</p>
+        <ul>
+            <li>🌐 Web applications requiring Azure AD authentication</li>
+            <li>🔗 Applications that call Microsoft Graph API on behalf of users</li>
+            <li>📊 Line-of-business applications with Azure AD integration</li>
+            <li>🔐 Single sign-on (SSO) enabled web applications</li>
+            <li>📈 Applications requiring user-specific data from Microsoft 365</li>
+            <li>🔄 Multi-tenant applications with Azure AD support</li>
+        </ul>
+
+        <h2>🔗 Next Steps</h2>
+        <p>After deployment:</p>
+        <ol>
+            <li>Create an <strong>Azure AD App Registration</strong> if you haven't already</li>
+            <li>Note the <strong>Client ID</strong> and add it to the deployment parameters</li>
+            <li>Configure the <strong>redirect URI</strong> in your App Registration</li>
+            <li>Set the <strong>client secret</strong> in the App Service configuration</li>
+            <li>Test the authentication flow by visiting your app</li>
+            <li>Customize the web application for your specific needs</li>
+            <li>Implement downstream API calls using the stored tokens</li>
+        </ol>
+
+        <h2>📱 Demo Application Features</h2>
+        <p>The included demo web application shows:</p>
+        <ul>
+            <li>Real-time authentication status checking</li>
+            <li>User claims and profile information display</li>
+            <li>Access token metadata and expiration times</li>
+            <li>Interactive login and logout functionality</li>
+            <li>Modern, responsive user interface</li>
+            <li>JavaScript examples for token handling</li>
+        </ul>
+    </div>
+</body>
+</html> 

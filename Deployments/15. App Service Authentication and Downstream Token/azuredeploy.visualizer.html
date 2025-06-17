@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure App Service with Authentication - Architecture</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 32px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            text-align: center;
+        }
+        .architecture {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            margin: 20px 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        .resources {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        .resource {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .resource:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        .resource h3 {
+            margin-top: 0;
+            color: #fff;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .resource-icon {
+            font-size: 28px;
+        }
+        .config {
+            background-color: rgba(255,255,255,0.15);
+            padding: 18px;
+            border-radius: 8px;
+            margin-top: 18px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+        .config div {
+            margin: 6px 0;
+        }
+        .security {
+            margin-top: 30px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+        }
+        .security h3 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .security ul {
+            columns: 2;
+            column-gap: 40px;
+        }
+        .authentication {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .authentication h3 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .auth-flow {
+            background-color: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 18px;
+            backdrop-filter: blur(10px);
+        }
+        .auth-step {
+            margin: 12px 0;
+            padding: 10px;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            border-left: 3px solid #ffd700;
+        }
+        .token-management {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+        }
+        .token-management h3 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+        .stat-item {
+            background-color: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            display: block;
+        }
+        .azure-ad {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #333;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(252, 182, 159, 0.3);
+        }
+        .azure-ad h3 {
+            margin-top: 0;
+            font-size: 24px;
+            color: #d84315;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Azure App Service with Authentication & Downstream Token</h1>
+        
+        <!-- Simple Architecture Flow -->
+        <div class="architecture">
+            <div style="padding: 40px; text-align: center;">
+                <h2>🏗️ Architecture Overview</h2>
+                <p style="font-size: 18px; color: #666;">User → Azure AD → App Service → Token Store → Downstream APIs</p>
+                <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 40px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 48px;">👤</div>
+                        <div>User</div>
+                    </div>
+                    <div style="font-size: 24px;">➡️</div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 48px;">🔑</div>
+                        <div>Azure AD</div>
+                    </div>
+                    <div style="font-size: 24px;">➡️</div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 48px;">🌐</div>
+                        <div>App Service</div>
+                    </div>
+                    <div style="font-size: 24px;">➡️</div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 48px;">🔗</div>
+                        <div>APIs</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Azure Resources Diagram -->
+        <div style="margin: 30px 0;">
+            <h2 style="text-align: center; color: #2c3e50; margin-bottom: 20px;">🏗️ Azure Resources Architecture</h2>
+            <svg viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 500px; border: 1px solid #ddd; border-radius: 12px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                <defs>
+                    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="4" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
+                    </filter>
+                    <marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">
+                        <path d="M0,0 L0,6 L9,3 z" fill="#667eea"/>
+                    </marker>
+                </defs>
+                
+                <rect x="0" y="0" width="1200" height="600" fill="#f8f9fa"/>
+                
+                <!-- Resource Group Container -->
+                <rect x="50" y="50" width="1100" height="500" fill="#ffffff" stroke="#667eea" stroke-width="3" rx="20" filter="url(#shadow)"/>
+                <text x="80" y="90" font-size="20" fill="#667eea" font-weight="bold">🏢 Azure Resource Group</text>
+                
+                <!-- Storage Account -->
+                <rect x="100" y="120" width="200" height="120" fill="#e6f2ff" stroke="#0078d4" stroke-width="2" rx="10" filter="url(#shadow)"/>
+                <text x="130" y="150" font-size="16" fill="#0078d4" font-weight="bold">📦 Storage</text>
+                <text x="110" y="175" font-size="12" fill="#666">• Standard_LRS</text>
+                <text x="110" y="195" font-size="12" fill="#666">• HTTPS Only</text>
+                <text x="110" y="215" font-size="12" fill="#666">• TLS 1.2</text>
+                
+                <!-- Application Insights -->
+                <rect x="350" y="120" width="200" height="120" fill="#fff2e6" stroke="#ff8c00" stroke-width="2" rx="10" filter="url(#shadow)"/>
+                <text x="380" y="150" font-size="16" fill="#ff8c00" font-weight="bold">📊 Insights</text>
+                <text x="360" y="175" font-size="12" fill="#666">• Telemetry</text>
+                <text x="360" y="195" font-size="12" fill="#666">• Monitoring</text>
+                <text x="360" y="215" font-size="12" fill="#666">• Performance</text>
+                
+                <!-- App Service Plan -->
+                <rect x="600" y="120" width="200" height="120" fill="#e6f2ff" stroke="#0078d4" stroke-width="2" rx="10" filter="url(#shadow)"/>
+                <text x="630" y="150" font-size="16" fill="#0078d4" font-weight="bold">⚡ Basic Plan</text>
+                <text x="610" y="175" font-size="12" fill="#666">• B1</text>
+                <text x="610" y="195" font-size="12" fill="#666">• Always-on</text>
+                <text x="610" y="215" font-size="12" fill="#666">• Scaling</text>
+                
+                <!-- App Service -->
+                <rect x="850" y="120" width="250" height="120" fill="#e6f7ff" stroke="#00b7eb" stroke-width="2" rx="10" filter="url(#shadow)"/>
+                <text x="880" y="150" font-size="16" fill="#00b7eb" font-weight="bold">🌐 App Service</text>
+                <text x="860" y="175" font-size="12" fill="#666">• Azure AD Auth</text>
+                <text x="860" y="195" font-size="12" fill="#666">• Token Store</text>
+                <text x="860" y="215" font-size="12" fill="#666">• Managed Identity</text>
+                
+                <!-- Azure AD (External) -->
+                <rect x="300" y="320" width="250" height="120" fill="#fff0e6" stroke="#ff6b35" stroke-width="2" rx="10" filter="url(#shadow)"/>
+                <text x="330" y="350" font-size="16" fill="#ff6b35" font-weight="bold">🔑 Azure AD</text>
+                <text x="310" y="375" font-size="12" fill="#666">• Authentication</text>
+                <text x="310" y="395" font-size="12" fill="#666">• Token Issuance</text>
+                <text x="310" y="415" font-size="12" fill="#666">• User Claims</text>
+                
+                <!-- Downstream APIs (External) -->
+                <rect x="700" y="320" width="250" height="120" fill="#f0fff0" stroke="#32cd32" stroke-width="2" rx="10" filter="url(#shadow)"/>
+                <text x="730" y="350" font-size="16" fill="#32cd32" font-weight="bold">🔗 Downstream APIs</text>
+                <text x="710" y="375" font-size="12" fill="#666">• Microsoft Graph</text>
+                <text x="710" y="395" font-size="12" fill="#666">• Custom APIs</text>
+                <text x="710" y="415" font-size="12" fill="#666">• On-behalf-of calls</text>
+                
+                <!-- User (External) -->
+                <rect x="100" y="320" width="150" height="120" fill="#f5f5f5" stroke="#666" stroke-width="2" rx="10" filter="url(#shadow)"/>
+                <text x="130" y="350" font-size="16" fill="#666" font-weight="bold">👤 User</text>
+                <text x="110" y="375" font-size="12" fill="#666">• Browser</text>
+                <text x="110" y="395" font-size="12" fill="#666">• Authentication</text>
+                <text x="110" y="415" font-size="12" fill="#666">• Session</text>
+                
+                <!-- Connection Lines - Streamlined routing to avoid crossing blocks -->
+                
+                <!-- Storage to App Service (routed above blocks) -->
+                <polyline points="300,180 320,180 320,100 830,100 830,180 850,180" 
+                         fill="none" stroke="#0078d4" stroke-width="2" marker-end="url(#arrow)"/>
+                <text x="575" y="90" font-size="12" fill="#666" text-anchor="middle">Storage Connection</text>
+                
+                <!-- App Insights to App Service (routed above blocks) -->
+                <polyline points="550,180 570,180 570,110 830,110 830,180 850,180" 
+                         fill="none" stroke="#ff8c00" stroke-width="2" marker-end="url(#arrow)"/>
+                <text x="700" y="100" font-size="12" fill="#666" text-anchor="middle">Telemetry</text>
+                
+                <!-- App Service Plan to App Service (direct connection) -->
+                <line x1="800" y1="180" x2="850" y2="180" stroke="#0078d4" stroke-width="2" marker-end="url(#arrow)"/>
+                <text x="825" y="170" font-size="12" fill="#666" text-anchor="middle">Hosts</text>
+                
+                <!-- User to Azure AD (direct connection) -->
+                <line x1="250" y1="380" x2="300" y2="380" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+                <text x="275" y="370" font-size="12" fill="#666" text-anchor="middle">Login</text>
+                
+                <!-- Azure AD to App Service (routed around blocks) -->
+                <polyline points="425,320 425,290 560,290 560,250 975,250 975,240" 
+                         fill="none" stroke="#ff6b35" stroke-width="2" marker-end="url(#arrow)"/>
+                <text x="700" y="280" font-size="12" fill="#666" text-anchor="middle">Authentication</text>
+                
+                <!-- App Service to Downstream APIs (routed below) -->
+                <polyline points="975,240 975,270 825,270 825,320" 
+                         fill="none" stroke="#00b7eb" stroke-width="2" marker-end="url(#arrow)"/>
+                <text x="900" y="285" font-size="12" fill="#666" text-anchor="middle">API Calls</text>
+                
+                <!-- User to App Service (routed far right to avoid all blocks) -->
+                <polyline points="175,320 175,290 1120,290 1120,70 975,70 975,120" 
+                         fill="none" stroke="#666" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrow)"/>
+                <text x="650" y="280" font-size="12" fill="#666" text-anchor="middle">Authenticated Access</text>
+                
+                <!-- External Services Label -->
+                <text x="80" y="310" font-size="14" fill="#999" font-style="italic">External Services</text>
+                <line x1="80" y1="315" x2="1120" y2="315" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+            </svg>
+        </div>
+
+        <div class="resources">
+            <div class="resource">
+                <h3>🌐 App Service</h3>
+                <div class="config">
+                    <div><strong>Name:</strong> {appServiceName}</div>
+                    <div><strong>Runtime:</strong> Any (.NET, Node.js, etc.)</div>
+                    <div><strong>Plan:</strong> B1 (Basic)</div>
+                    <div><strong>Authentication:</strong> Azure AD</div>
+                    <div><strong>HTTPS:</strong> Only</div>
+                    <div><strong>TLS:</strong> 1.2 minimum</div>
+                </div>
+            </div>
+
+            <div class="resource">
+                <h3>📦 Storage Account</h3>
+                <div class="config">
+                    <div><strong>Name:</strong> {storageAccountName}</div>
+                    <div><strong>SKU:</strong> Standard_LRS</div>
+                    <div><strong>Kind:</strong> StorageV2</div>
+                    <div><strong>HTTPS:</strong> Required</div>
+                    <div><strong>TLS:</strong> 1.2 minimum</div>
+                    <div><strong>Access:</strong> Private</div>
+                </div>
+            </div>
+
+            <div class="resource">
+                <h3>📊 Application Insights</h3>
+                <div class="config">
+                    <div><strong>Name:</strong> ai-{appServiceName}</div>
+                    <div><strong>Type:</strong> Web</div>
+                    <div><strong>Monitoring:</strong> Enabled</div>
+                    <div><strong>Telemetry:</strong> Real-time</div>
+                    <div><strong>Performance:</strong> Tracked</div>
+                    <div><strong>Errors:</strong> Logged</div>
+                </div>
+            </div>
+
+            <div class="resource">
+                <h3>⚡ App Service Plan</h3>
+                <div class="config">
+                    <div><strong>Name:</strong> plan-{appServiceName}</div>
+                    <div><strong>SKU:</strong> B1 (Basic)</div>
+                    <div><strong>Scaling:</strong> Manual</div>
+                    <div><strong>OS:</strong> Windows/Linux</div>
+                    <div><strong>Workers:</strong> 1</div>
+                    <div><strong>Always On:</strong> Available</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="authentication">
+            <h3>🔐 Azure AD Authentication Flow</h3>
+            <div class="auth-flow">
+                <div class="auth-step">1. User accesses the application</div>
+                <div class="auth-step">2. App Service redirects to Azure AD for authentication</div>
+                <div class="auth-step">3. User authenticates with Azure AD credentials</div>
+                <div class="auth-step">4. Azure AD issues access and refresh tokens</div>
+                <div class="auth-step">5. Tokens are stored securely in App Service token store</div>
+                <div class="auth-step">6. User is redirected back to the application</div>
+                <div class="auth-step">7. Application can access user claims and tokens</div>
+            </div>
+        </div>
+
+        <div class="token-management">
+            <h3>🎫 Token Management & Downstream APIs</h3>
+            <p>The App Service authentication provides robust token management capabilities:</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-number">72</span>
+                    Hours token refresh
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">8</span>
+                    Hours cookie expiration
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">/.auth</span>
+                    Built-in endpoints
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">Auto</span>
+                    Token refresh
+                </div>
+            </div>
+            <ul>
+                <li><strong>Token Store:</strong> Secure storage for access and refresh tokens</li>
+                <li><strong>Automatic Refresh:</strong> Tokens refreshed before expiration</li>
+                <li><strong>Claims Access:</strong> Rich user profile information</li>
+                <li><strong>API Integration:</strong> Ready for calling downstream APIs</li>
+                <li><strong>On-behalf-of:</strong> Call APIs using user context</li>
+            </ul>
+        </div>
+
+        <div class="azure-ad">
+            <h3>🔑 Azure AD Integration Requirements</h3>
+            <p><strong>Before deployment, ensure you have:</strong></p>
+            <ul>
+                <li>Azure AD App Registration created</li>
+                <li>Client ID from the App Registration</li>
+                <li>Client Secret configured</li>
+                <li>Redirect URI properly set</li>
+                <li>Required API permissions granted</li>
+            </ul>
+            <p><strong>Post-deployment configuration:</strong></p>
+            <ul>
+                <li>Update redirect URI: https://your-app.azurewebsites.net/.auth/login/aad/callback</li>
+                <li>Set client secret in App Service configuration</li>
+                <li>Grant additional permissions if needed for downstream APIs</li>
+                <li>Test authentication flow</li>
+            </ul>
+        </div>
+
+        <div class="security">
+            <h3>🔒 Security Features</h3>
+            <ul>
+                <li>Azure AD authentication integration</li>
+                <li>HTTPS-only communication enforced</li>
+                <li>TLS 1.2 minimum version requirement</li>
+                <li>Secure token storage and management</li>
+                <li>System-assigned managed identity</li>
+                <li>Application Insights monitoring</li>
+                <li>CORS configuration</li>
+                <li>Storage account access restrictions</li>
+                <li>X-Frame-Options security header</li>
+                <li>X-XSS-Protection enabled</li>
+                <li>Content-Type-Options: nosniff</li>
+                <li>Automatic token refresh</li>
+                <li>Session management</li>
+                <li>Secure logout functionality</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 
