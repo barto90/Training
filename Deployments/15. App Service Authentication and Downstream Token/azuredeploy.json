@@ -61,13 +61,7 @@
         "description": "Deploy the Node.js API application"
       }
     },
-    "apiServiceName": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "The name of the API app service (optional, leave empty to auto-generate from main app name)"
-      }
-    },
+
     "apiClientId": {
       "type": "string",
       "defaultValue": "",
@@ -87,7 +81,7 @@
     "hostingPlanName": "[format('plan-{0}', parameters('appServiceName'))]",
     "location": "[resourceGroup().location]",
     "applicationInsightsName": "[format('ai-{0}', parameters('appServiceName'))]",
-    "actualApiServiceName": "[if(empty(parameters('apiServiceName')), format('{0}-api', parameters('appServiceName')), parameters('apiServiceName'))]",
+    "actualApiServiceName": "[format('{0}-api', parameters('appServiceName'))]",
     "apiApplicationInsightsName": "[format('ai-{0}', variables('actualApiServiceName'))]",
     "indexHtmlContent": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>App Service Authentication Demo</title>\n    <!-- Simplified content for ARM template -->\n</head>\n<body>\n    <h1>🔐 App Service Authentication Demo</h1>\n    <p>Authentication endpoint: <a href=\"/.auth/me\">/.auth/me</a></p>\n</body>\n</html>",
     "webConfigContent": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<configuration>\n  <system.webServer>\n    <defaultDocument>\n      <files>\n        <clear />\n        <add value=\"index.html\" />\n      </files>\n    </defaultDocument>\n  </system.webServer>\n</configuration>"
