@@ -80,6 +80,7 @@ After deployment completes:
 | `ResourceGroupName` | string | Resource group name | Required |
 | `AppServiceName` | string | Web app service name | Required |
 | `APIServiceName` | string | API service name | `{AppServiceName}-api` |
+| `APIClientId` | string | API Azure AD Client ID | Uses main ClientId if not provided |
 | `StorageAccountName` | string | Storage account name (3-24 chars) | Required |
 | `ClientId` | string | Azure AD App Registration Client ID | Required |
 | `ClientSecret` | string | Azure AD Client Secret | Required for API |
@@ -101,6 +102,21 @@ After deployment completes:
 - **Token Validation**: Bearer token validation
 - **CORS**: Configured for web app communication
 - **Claims Processing**: Automatic user claims extraction
+- **Client ID**: Can use separate Azure AD app registration for enhanced security
+
+### 🔐 Client ID Configuration Options
+
+#### Option 1: Single Client ID (Default)
+- Both web app and API use the same Azure AD app registration
+- Simpler setup with one app registration to manage
+- Suitable for development and simple scenarios
+
+#### Option 2: Separate Client IDs (Recommended for Production)
+- Web app has its own Azure AD app registration
+- API has its own Azure AD app registration  
+- Enhanced security with proper separation of concerns
+- Follows enterprise security best practices
+- Use `-APIClientId` parameter to specify separate API client ID
 
 ## 🌐 Available Endpoints
 
@@ -241,6 +257,9 @@ Ready to deploy? Just run:
 
 ```powershell
 .\deploy.ps1 -ResourceGroupName "my-rg" -AppServiceName "my-app" -StorageAccountName "mystorage123" -ClientId "your-client-id" -ClientSecret "your-secret"
+
+# With separate API Client ID (recommended for production)
+.\deploy.ps1 -ResourceGroupName "my-rg" -AppServiceName "my-app" -APIClientId "your-api-client-id" -StorageAccountName "mystorage123" -ClientId "your-client-id" -ClientSecret "your-secret"
 ```
 
 That's it! Your secure, authenticated web application with API backend will be ready in minutes! 🚀 

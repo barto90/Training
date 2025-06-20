@@ -63,7 +63,7 @@
     },
     "apiServiceName": {
       "type": "string",
-      "defaultValue": "[concat(parameters('appServiceName'), '-api')]",
+      "defaultValue": "[format('{0}-api', parameters('appServiceName'))]",
       "metadata": {
         "description": "The name of the API app service (optional, will default to appServiceName-api)"
       }
@@ -73,6 +73,13 @@
       "defaultValue": "",
       "metadata": {
         "description": "The Azure AD client ID for the API service (optional, will use main clientId if not provided)"
+      }
+    },
+    "apiClientSecret": {
+      "type": "secureString",
+      "defaultValue": "",
+      "metadata": {
+        "description": "The Azure AD client secret for the API service (optional, will use main clientSecret if not provided)"
       }
     }
   },
@@ -228,7 +235,7 @@
             },
             {
               "name": "MICROSOFT_PROVIDER_AUTHENTICATION_SECRET",
-              "value": "[parameters('clientSecret')]"
+              "value": "[if(empty(parameters('apiClientSecret')), parameters('clientSecret'), parameters('apiClientSecret'))]"
             },
             {
               "name": "NODE_ENV",
