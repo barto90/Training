@@ -1,0 +1,50 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "webAppName": {
+            "type": "string",
+            "defaultValue": "bartpasmans-api"
+        },
+        "resourceGroupName": {
+            "type": "string",
+            "defaultValue": "BPAS"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2022-03-01",
+            "name": "[concat(parameters('webAppName'), '/authsettingsV2')]",
+            "properties": {
+                "platform": {
+                    "enabled": true
+                },
+                "globalValidation": {
+                    "requireAuthentication": true,
+                    "unauthenticatedClientAction": "RedirectToLoginPage"
+                },
+                "identityProviders": {
+                    "azureActiveDirectory": {
+                        "enabled": true,
+                        "registration": {
+                            "openIdIssuer": "https://sts.windows.net/d4528834-f568-4dca-92d0-bb1c60461360/v2.0",
+                            "clientId": "67173e98-0a8e-4277-a150-96fdf683c82e"
+                        },
+                        "validation": {
+                            "allowedAudiences": [
+                                "api://bartpasmans-api",
+                                "67173e98-0a8e-4277-a150-96fdf683c82e"
+                            ]
+                        }
+                    }
+                },
+                "login": {
+                    "tokenStore": {
+                        "enabled": true
+                    }
+                }
+            }
+        }
+    ]
+} 

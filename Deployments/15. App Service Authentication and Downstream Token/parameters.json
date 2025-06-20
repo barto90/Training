@@ -14,8 +14,17 @@
     "clientId": {
       "value": "your-app-registration-client-id"
     },
+    "clientSecret": {
+      "value": "your-client-secret-here"
+    },
     "deploySampleApp": {
       "value": true
+    },
+    "deployAPI": {
+      "value": true
+    },
+    "apiServiceName": {
+      "value": "auth-app-service-demo-api"
     }
   }
 } 

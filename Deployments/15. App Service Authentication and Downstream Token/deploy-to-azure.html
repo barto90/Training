@@ -154,7 +154,11 @@
                 Clean, responsive authentication demo application
             </div>
             <div class="feature-item">
-                <strong>🔗 Downstream API Ready</strong><br>
+                <strong>🔗 Node.js API Application</strong><br>
+                Complete API with Azure AD authentication and user claims
+            </div>
+            <div class="feature-item">
+                <strong>🔄 Downstream API Ready</strong><br>
                 Configured for calling downstream APIs with user tokens
             </div>
             <div class="feature-item">
@@ -203,6 +207,11 @@
                 <td><em>Required</em></td>
             </tr>
             <tr>
+                <td>clientSecret</td>
+                <td>Azure AD client secret</td>
+                <td><em>Required (secure)</em></td>
+            </tr>
+            <tr>
                 <td>appServicePlanSku</td>
                 <td>The App Service Plan SKU</td>
                 <td>B1 (Basic)</td>
@@ -211,6 +220,16 @@
                 <td>deploySampleApp</td>
                 <td>Deploy sample authentication web app</td>
                 <td>true</td>
+            </tr>
+            <tr>
+                <td>deployAPI</td>
+                <td>Deploy Node.js API application</td>
+                <td>true</td>
+            </tr>
+            <tr>
+                <td>apiServiceName</td>
+                <td>Name of the API app service</td>
+                <td>appServiceName-api</td>
             </tr>
         </table>
         
@@ -268,7 +287,7 @@ az webapp config appsettings set \
         <pre>az deployment group create \
   --resource-group &lt;resource-group-name&gt; \
   --template-uri "https://raw.githubusercontent.com/barto90/Training/main/Deployments/15.%20App%20Service%20Authentication%20and%20Downstream%20Token/azuredeploy.json" \
-  --parameters appServiceName=myAuthApp storageAccountName=mystorageacct clientId=your-client-id</pre>
+  --parameters appServiceName=myAuthApp storageAccountName=mystorageacct clientId=your-client-id clientSecret=your-client-secret deployAPI=true</pre>
         
         <h3>PowerShell</h3>
         <pre>New-AzResourceGroupDeployment `
@@ -276,7 +295,9 @@ az webapp config appsettings set \
   -TemplateUri "https://raw.githubusercontent.com/barto90/Training/main/Deployments/15.%20App%20Service%20Authentication%20and%20Downstream%20Token/azuredeploy.json" `
   -appServiceName "myAuthApp" `
   -storageAccountName "mystorageacct" `
-  -clientId "your-client-id"</pre>
+  -clientId "your-client-id" `
+  -clientSecret "your-client-secret" `
+  -deployAPI $true</pre>
 
         <div class="security-note">
             <strong>🔒 Security Features:</strong> This deployment follows Azure security best practices:

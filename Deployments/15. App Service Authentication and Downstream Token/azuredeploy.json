@@ -41,11 +41,31 @@
         "description": "The Azure AD client ID (App Registration) for authentication"
       }
     },
+    "clientSecret": {
+      "type": "secureString",
+      "metadata": {
+        "description": "The Azure AD client secret for authentication"
+      }
+    },
     "deploySampleApp": {
       "type": "bool",
       "defaultValue": true,
       "metadata": {
         "description": "Deploy a sample web application"
+      }
+    },
+    "deployAPI": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Deploy the Node.js API application"
+      }
+    },
+    "apiServiceName": {
+      "type": "string",
+      "defaultValue": "[concat(parameters('appServiceName'), '-api')]",
+      "metadata": {
+        "description": "The name of the API app service (optional, will default to appServiceName-api)"
       }
     }
   },
@@ -53,6 +73,7 @@
     "hostingPlanName": "[format('plan-{0}', parameters('appServiceName'))]",
     "location": "[resourceGroup().location]",
     "applicationInsightsName": "[format('ai-{0}', parameters('appServiceName'))]",
+    "apiApplicationInsightsName": "[format('ai-{0}', parameters('apiServiceName'))]",
     "indexHtmlContent": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>App Service Authentication Demo</title>\n    <!-- Simplified content for ARM template -->\n</head>\n<body>\n    <h1>🔐 App Service Authentication Demo</h1>\n    <p>Authentication endpoint: <a href=\"/.auth/me\">/.auth/me</a></p>\n</body>\n</html>",
     "webConfigContent": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<configuration>\n  <system.webServer>\n    <defaultDocument>\n      <files>\n        <clear />\n        <add value=\"index.html\" />\n      </files>\n    </defaultDocument>\n  </system.webServer>\n</configuration>"
   },
@@ -80,6 +101,18 @@
       "type": "Microsoft.Insights/components",
       "apiVersion": "2020-02-02",
       "name": "[variables('applicationInsightsName')]",
+      "location": "[variables('location')]",
+      "kind": "web",
+      "properties": {
+        "Application_Type": "web",
+        "Request_Source": "rest"
+      }
+    },
+    {
+      "condition": "[parameters('deployAPI')]",
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "[variables('apiApplicationInsightsName')]",
       "location": "[variables('location')]",
       "kind": "web",
       "properties": {
@@ -144,7 +177,7 @@
             },
             {
               "name": "MICROSOFT_PROVIDER_AUTHENTICATION_SECRET",
-              "value": "your-client-secret-here"
+              "value": "[parameters('clientSecret')]"
             }
           ]
         }
@@ -152,6 +185,66 @@
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
         "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]"
+      ]
+    },
+    {
+      "condition": "[parameters('deployAPI')]",
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2022-03-01",
+      "name": "[parameters('apiServiceName')]",
+      "location": "[variables('location')]",
+      "kind": "app",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "httpsOnly": true,
+        "siteConfig": {
+          "ftpsState": "Disabled",
+          "minTlsVersion": "1.2",
+          "http20Enabled": true,
+          "nodeVersion": "~18",
+          "defaultDocuments": [
+            "server.js",
+            "index.js",
+            "app.js"
+          ],
+          "appSettings": [
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[if(parameters('deployAPI'), reference(resourceId('Microsoft.Insights/components', variables('apiApplicationInsightsName'))).InstrumentationKey, '')]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[if(parameters('deployAPI'), reference(resourceId('Microsoft.Insights/components', variables('apiApplicationInsightsName'))).ConnectionString, '')]"
+            },
+            {
+              "name": "MICROSOFT_PROVIDER_AUTHENTICATION_SECRET",
+              "value": "[parameters('clientSecret')]"
+            },
+            {
+              "name": "NODE_ENV",
+              "value": "production"
+            },
+            {
+              "name": "WEBSITE_NODE_DEFAULT_VERSION",
+              "value": "~18"
+            },
+            {
+              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+              "value": "true"
+            },
+            {
+              "name": "WEBSITE_RUN_FROM_PACKAGE",
+              "value": "0"
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "[resourceId('Microsoft.Insights/components', variables('apiApplicationInsightsName'))]"
       ]
     },
     {
@@ -213,6 +306,67 @@
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]"
       ]
+    },
+    {
+      "condition": "[parameters('deployAPI')]",
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "2022-03-01",
+      "name": "[format('{0}/{1}', parameters('apiServiceName'), 'authsettingsV2')]",
+      "properties": {
+        "globalValidation": {
+          "requireAuthentication": true,
+          "unauthenticatedClientAction": "RedirectToLoginPage",
+          "redirectToProvider": "azureActiveDirectory"
+        },
+        "httpSettings": {
+          "requireHttps": true,
+          "routes": {
+            "apiPrefix": "/.auth"
+          }
+        },
+        "identityProviders": {
+          "azureActiveDirectory": {
+            "enabled": true,
+            "registration": {
+              "openIdIssuer": "[format('https://sts.windows.net/{0}/', subscription().tenantId)]",
+              "clientId": "[parameters('clientId')]",
+              "clientSecretSettingName": "MICROSOFT_PROVIDER_AUTHENTICATION_SECRET"
+            },
+            "validation": {
+              "jwtClaimChecks": {},
+              "allowedAudiences": [
+                "[format('api://{0}', parameters('clientId'))]",
+                "[parameters('clientId')]"
+              ]
+            }
+          }
+        },
+        "login": {
+          "routes": {
+            "logoutEndpoint": "/.auth/logout"
+          },
+          "tokenStore": {
+            "enabled": true,
+            "tokenRefreshExtensionHours": 72,
+            "fileSystem": {
+              "directory": "/home/data/.auth"
+            }
+          },
+          "preserveUrlFragmentsForLogins": false,
+          "allowedExternalRedirectUrls": [],
+          "cookieExpiration": {
+            "convention": "FixedTime",
+            "timeToExpiration": "08:00:00"
+          },
+          "nonce": {
+            "validateNonce": true,
+            "nonceExpirationInterval": "00:05:00"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('apiServiceName'))]"
+      ]
     }
   ],
   "outputs": {
@@ -235,6 +389,26 @@
     "authLogoutUrl": {
       "type": "string",
       "value": "[format('https://{0}.azurewebsites.net/.auth/logout', parameters('appServiceName'))]"
+    },
+    "apiServiceName": {
+      "type": "string",
+      "value": "[if(parameters('deployAPI'), parameters('apiServiceName'), '')]"
+    },
+    "apiServiceUrl": {
+      "type": "string",
+      "value": "[if(parameters('deployAPI'), format('https://{0}.azurewebsites.net', parameters('apiServiceName')), '')]"
+    },
+    "apiManagedIdentityPrincipalId": {
+      "type": "string",
+      "value": "[if(parameters('deployAPI'), reference(resourceId('Microsoft.Web/sites', parameters('apiServiceName')), '2022-03-01', 'full').identity.principalId, '')]"
+    },
+    "apiAuthLoginUrl": {
+      "type": "string",
+      "value": "[if(parameters('deployAPI'), format('https://{0}.azurewebsites.net/.auth/login/aad', parameters('apiServiceName')), '')]"
+    },
+    "apiWelcomeUrl": {
+      "type": "string",
+      "value": "[if(parameters('deployAPI'), format('https://{0}.azurewebsites.net/api/welcome', parameters('apiServiceName')), '')]"
     }
   }
 } 

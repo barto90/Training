@@ -1,34 +1,42 @@
-# 🔐 Azure App Service with Authentication & Downstream Token
+# 🔐 Azure App Service with Authentication & Downstream API
 
-This project demonstrates how to deploy an Azure App Service with Azure Active Directory authentication enabled, including token management for downstream API calls.
+This project demonstrates a complete Azure App Service solution with Azure Active Directory authentication, including a web application and a downstream API service for secure token-based communication.
 
 ## 🏗️ Architecture Overview
 
 ```mermaid
 graph TB
-    User[👤 User] --> AppService[🌐 App Service]
-    AppService --> AAD[🔑 Azure AD]
-    AppService --> Storage[💾 Storage Account]
-    AppService --> AppInsights[📊 Application Insights]
-    AAD --> TokenStore[🎫 Token Store]
-    AppService --> DownstreamAPI[🔗 Downstream APIs]
+    User[👤 User] --> WebApp[🌐 Web App]
+    WebApp --> AAD[🔑 Azure AD]
+    WebApp --> API[🔗 API Service]
+    API --> AAD
+    WebApp --> Storage[💾 Storage Account]
+    WebApp --> AppInsights[📊 Application Insights]
+    API --> AppInsights
     
     subgraph "Authentication Flow"
         AAD --> UserAuth[User Authentication]
         UserAuth --> TokenIssue[Token Issuance]
-        TokenIssue --> TokenStore
+        TokenIssue --> TokenStore[🎫 Token Store]
+    end
+    
+    subgraph "API Communication"
+        WebApp --> BearerToken[Bearer Token]
+        BearerToken --> API
+        API --> Validation[Token Validation]
     end
 ```
 
 ## ✨ Features
 
-- 🔐 **Azure AD Authentication**: Built-in App Service authentication
-- 🎫 **Token Management**: Automatic token refresh and storage
-- 🔗 **Downstream API Support**: Ready for calling downstream APIs with user tokens
-- 🌐 **Modern Web Interface**: Clean, responsive demo application
-- 📊 **Application Insights**: Built-in monitoring and telemetry
+- 🔐 **Dual App Service Authentication**: Both web app and API with Azure AD
+- 🎫 **Token Management**: Complete JWT token handling and validation
+- 🔗 **Secure API Communication**: Bearer token authentication between services
+- 🌐 **Modern Web Interface**: Clean, responsive demo application with token inspection
+- 📊 **Application Insights**: Built-in monitoring for both services
 - 🛡️ **Security Best Practices**: HTTPS only, secure headers, minimal permissions
-- 🏗️ **Infrastructure as Code**: Complete Bicep/ARM templates
+- 🏗️ **Infrastructure as Code**: Complete Bicep/ARM templates for both services
+- 🚀 **One-Click Deployment**: Automated deployment of infrastructure and code
 
 ## 🚀 Quick Start
 
@@ -36,7 +44,7 @@ graph TB
 
 - Azure CLI installed and logged in
 - Azure subscription with appropriate permissions
-- Azure AD App Registration (see setup guide below)
+- PowerShell (for deployment script)
 
 ### 1. Clone and Navigate
 
@@ -44,214 +52,195 @@ graph TB
 cd "15. App Service Authentication and Downstream Token"
 ```
 
-### 2. Set Up Azure AD App Registration
-
-First, create an App Registration in Azure AD:
-
-```bash
-# Create App Registration
-az ad app create --display-name "AppService-Auth-Demo" --sign-in-audience "AzureADMyOrg"
-
-# Get the Application (Client) ID
-az ad app list --display-name "AppService-Auth-Demo" --query "[0].appId" -o tsv
-```
-
-### 3. Deploy Using PowerShell Script
+### 2. Deploy Everything with One Command
 
 ```powershell
-.\deploy.ps1 -ResourceGroupName "rg-auth-demo" -AppServiceName "my-auth-app" -StorageAccountName "myauthstorage123" -ClientId "your-client-id-here"
+.\deploy.ps1 -ResourceGroupName "rg-auth-demo" -AppServiceName "my-auth-app" -APIServiceName "my-auth-api" -StorageAccountName "myauthstorage123" -ClientId "your-client-id-here" -ClientSecret "your-client-secret-here"
 ```
 
-### 4. Configure App Registration
+The script will:
+- ✅ Create Azure AD App Registration (if needed)
+- ✅ Deploy web app infrastructure
+- ✅ Deploy API infrastructure  
+- ✅ Configure authentication for both services
+- ✅ Deploy web app code automatically
+- ✅ Deploy API code automatically
+- ✅ Set up all required configuration
 
-After deployment, update your App Registration with the redirect URI:
-- Go to Azure Portal → Azure Active Directory → App registrations
-- Select your app → Authentication → Add platform → Web
-- Add redirect URI: `https://your-app-name.azurewebsites.net/.auth/login/aad/callback`
+### 3. Access Your Application
 
-### 5. Set Client Secret
-
-```bash
-# Create client secret
-az ad app credential reset --id "your-client-id" --append
-
-# Update App Service setting
-az webapp config appsettings set --resource-group "rg-auth-demo" --name "my-auth-app" --settings MICROSOFT_PROVIDER_AUTHENTICATION_SECRET="your-client-secret"
-```
+After deployment completes:
+- 🌐 **Web App**: `https://your-app-name.azurewebsites.net`
+- 🔗 **API**: `https://your-api-name.azurewebsites.net`
 
 ## 📋 Deployment Parameters
 
 | Parameter | Type | Description | Default |
 |-----------|------|-------------|---------|
-| `appServiceName` | string | Name of the App Service | Required |
-| `storageAccountName` | string | Storage account name (3-24 chars, lowercase) | Required |
-| `clientId` | string | Azure AD App Registration Client ID | Required |
-| `appServicePlanSku` | string | App Service Plan SKU (F1, B1, S1, P1V2, P1V3) | `B1` |
-| `deploySampleApp` | bool | Deploy the sample web application | `true` |
-| `tenantId` | string | Azure AD Tenant ID | Current subscription tenant |
+| `ResourceGroupName` | string | Resource group name | Required |
+| `AppServiceName` | string | Web app service name | Required |
+| `APIServiceName` | string | API service name | `{AppServiceName}-api` |
+| `StorageAccountName` | string | Storage account name (3-24 chars) | Required |
+| `ClientId` | string | Azure AD App Registration Client ID | Required |
+| `ClientSecret` | string | Azure AD Client Secret | Required for API |
+| `AppServicePlanSku` | string | Service plan SKU (B1, S1, P1V2, P1V3) | `B1` |
+| `DeploySampleApp` | bool | Deploy sample web application | `true` |
+| `DeployAPI` | bool | Deploy API service | `true` |
+| `Location` | string | Azure region | `East US` |
 
 ## 🔑 Authentication Configuration
 
-The deployment configures Azure AD authentication with the following settings:
+### Web App Authentication
+- **Provider**: Azure Active Directory
+- **Require Authentication**: Yes
+- **Unauthenticated Action**: Redirect to login
+- **Token Store**: Enabled with 72-hour refresh
 
-### Global Validation
-- **Require Authentication**: `true`
-- **Unauthenticated Action**: Redirect to login page
-- **Default Provider**: Azure Active Directory
-
-### Token Store
-- **Enabled**: `true`
-- **Token Refresh**: 72 hours
-- **Cookie Expiration**: 8 hours
-- **Directory**: `/home/data/.auth`
-
-### Security Headers
-- `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: DENY`
-- `X-XSS-Protection: 1; mode=block`
+### API Authentication  
+- **Provider**: Azure Active Directory
+- **Token Validation**: Bearer token validation
+- **CORS**: Configured for web app communication
+- **Claims Processing**: Automatic user claims extraction
 
 ## 🌐 Available Endpoints
 
+### Web App Endpoints
 | Endpoint | Description |
 |----------|-------------|
 | `/` | Main application (requires auth) |
 | `/.auth/login/aad` | Azure AD login |
 | `/.auth/logout` | Logout |
 | `/.auth/me` | User claims and token info |
-| `/.auth/refresh` | Refresh tokens |
 
-## 🎫 Token Management
+### API Endpoints
+| Endpoint | Description |
+|----------|-------------|
+| `/` | API health check |
+| `/health` | Detailed health status |
+| `/api/welcome` | Protected welcome endpoint |
+| `/api/auth-info` | Authentication information |
 
-The sample application demonstrates how to:
+## 🎫 Token Management & Inspection
 
-1. **Check Authentication Status**: Verify if user is logged in
-2. **Display User Claims**: Show user information from Azure AD
-3. **Access Token Metadata**: Display token expiration and refresh info
-4. **Handle Token Refresh**: Automatic token renewal
+The web application provides comprehensive token inspection:
 
-### Getting User Tokens for Downstream APIs
+### Token Display Features
+- 📋 **Full JWT Token**: Complete token with copy functionality
+- 🔍 **Claims Table**: Formatted display of all token claims
+- ✅ **Authentication Status**: Real-time auth verification
+- 🚀 **API Testing**: Live downstream API call demonstration
+
+### Token Claims Available
+- `name` - User display name
+- `preferred_username` - User email
+- `aud` - Token audience
+- `iss` - Token issuer  
+- `exp` - Expiration time
+- `iat` - Issued at time
+- `roles` - User roles (if configured)
+- And many more...
+
+## 🔗 API Communication Pattern
+
+The solution demonstrates secure service-to-service communication:
 
 ```javascript
-// Fetch user information and tokens
-fetch('/.auth/me')
-  .then(response => response.json())
-  .then(data => {
-    const accessToken = data[0].access_token;
-    const userClaims = data[0].user_claims;
-    
-    // Use access token for downstream API calls
-    fetch('https://api.example.com/data', {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
-    });
-  });
+// Web App calls API with Bearer token
+const response = await fetch('https://your-api.azurewebsites.net/api/welcome', {
+    headers: {
+        'Authorization': `Bearer ${idToken}`,
+        'Content-Type': 'application/json'
+    }
+});
+```
+
+```javascript
+// API validates token and extracts user info
+const clientPrincipal = req.headers['x-ms-client-principal'];
+const userInfo = JSON.parse(Buffer.from(clientPrincipal, 'base64').toString('utf-8'));
 ```
 
 ## 🔍 Monitoring and Troubleshooting
 
-### Application Insights
-The deployment includes Application Insights for monitoring:
-- Authentication events
-- Application performance
-- Error tracking
-- User behavior analytics
+### Application Insights Integration
+Both services include comprehensive monitoring:
+- 📊 Authentication success/failure rates
+- ⚡ API response times and errors
+- 👥 User behavior analytics
+- 🔍 Detailed error tracking
 
-### Common Issues
+### Health Checks
+- Web app: Authentication status monitoring
+- API: Service health endpoints with uptime tracking
 
-1. **Authentication Loops**: Check redirect URI configuration
-2. **Token Refresh Failures**: Verify client secret is set correctly
-3. **Permission Errors**: Ensure App Registration has required permissions
+## 🔐 Security Features
 
-### Debug Authentication
-
-```bash
-# Check authentication configuration
-az webapp auth show --resource-group "rg-auth-demo" --name "my-auth-app"
-
-# View app service logs
-az webapp log tail --resource-group "rg-auth-demo" --name "my-auth-app"
-```
-
-## 🔐 Security Considerations
-
-### Production Deployment Checklist
-
-- [ ] Use Azure Key Vault for client secrets
-- [ ] Configure custom domains with SSL certificates
-- [ ] Enable diagnostic logging
-- [ ] Set up monitoring alerts
-- [ ] Review and minimize Azure AD permissions
-- [ ] Configure network restrictions if needed
-- [ ] Enable backup and disaster recovery
+### Production Security
+- ✅ HTTPS enforced on all endpoints
+- ✅ Secure token storage with automatic refresh
+- ✅ CORS properly configured
+- ✅ Security headers implemented
+- ✅ Minimal permission principle applied
 
 ### Token Security
-
-- Tokens are stored securely in the App Service token store
-- Automatic token refresh prevents expiration issues
+- Tokens stored in secure App Service token store
+- Automatic token refresh prevents expiration
 - Logout clears all stored tokens
-- HTTPS is enforced for all authentication flows
+- Bearer token validation on API endpoints
 
 ## 📁 Project Structure
 
 ```
 15. App Service Authentication and Downstream Token/
-├── 📄 main.bicep                    # Main infrastructure template
-├── 📄 azuredeploy.json             # Generated ARM template
-├── 📄 parameters.json              # Sample deployment parameters
-├── 📄 deploy.ps1                   # PowerShell deployment script
-├── 📄 deploy-to-azure.html         # Web deployment interface
-├── 📄 azuredeploy.visualizer.html  # Architecture visualization
-├── 📄 README.md                    # This comprehensive guide
-├── 📄 STRUCTURE.md                 # Project structure documentation
-└── 📁 WebApp/                      # Sample web application
-    ├── 📄 index.html               # Authentication demo page
-    └── 📄 web.config               # IIS configuration
+├── 🌐 WebApp/
+│   ├── index.html              # Clean, production-ready web app
+│   └── web.config             # IIS configuration
+├── 🔗 API/
+│   ├── server.js              # Clean Node.js API server
+│   ├── package.json           # Dependencies
+│   └── web.config             # Node.js configuration
+├── 📄 main.bicep              # Web app infrastructure
+├── 📄 api-main.bicep          # API infrastructure  
+├── 📄 azuredeploy.json        # Generated ARM template (web app)
+├── 📄 api-deploy.json         # Generated ARM template (API)
+├── 🚀 deploy.ps1              # Complete deployment script
+├── 📄 parameters.json         # Deployment parameters
+└── 📚 README.md               # This documentation
 ```
 
-## 🚀 Advanced Scenarios
+## 🎯 Use Cases
 
-### Custom Claims and Roles
+This solution is perfect for:
+- 🏢 **Enterprise Applications**: Secure internal apps with AD integration
+- 🔗 **Microservices Architecture**: Service-to-service authentication
+- 📱 **Modern Web Apps**: SPA applications with API backends
+- 🎓 **Learning & Demos**: Understanding Azure authentication patterns
 
-Configure additional claims in your Azure AD App Registration:
-1. Go to Token configuration in your App Registration
-2. Add optional claims (groups, roles, etc.)
-3. Update application to use custom claims
+## 🆘 Support & Troubleshooting
 
-### Multi-tenant Applications
+### Common Issues
+1. **Authentication Loops**: Verify redirect URIs in Azure AD
+2. **API 401 Errors**: Check client secret configuration
+3. **Token Refresh Issues**: Verify token store settings
 
-For multi-tenant scenarios:
-1. Change `sign-in-audience` to `AzureADMultipleOrgs`
-2. Update tenant validation in the Bicep template
-3. Handle tenant-specific logic in your application
-
-### API Permissions for Downstream Calls
-
-Grant API permissions to call Microsoft Graph or other APIs:
-
+### Debug Commands
 ```bash
-# Grant Microsoft Graph permissions
-az ad app permission add --id "your-client-id" --api 00000003-0000-0000-c000-000000000000 --api-permissions e1fe6dd8-ba31-4d61-89e7-88639da4683d=Scope
+# Check web app auth config
+az webapp auth show --resource-group "rg-auth-demo" --name "my-auth-app"
 
-# Grant admin consent
-az ad app permission admin-consent --id "your-client-id"
+# Check API auth config
+az webapp auth show --resource-group "rg-auth-demo" --name "my-auth-api"
+
+# View logs
+az webapp log tail --resource-group "rg-auth-demo" --name "my-auth-app"
 ```
 
-## 📚 Additional Resources
+## 🎉 Getting Started
 
-- [Azure App Service Authentication Documentation](https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization)
-- [Azure AD OAuth 2.0 Flow](https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow)
-- [Token Store Configuration](https://docs.microsoft.com/en-us/azure/app-service/configure-authentication-provider-aad)
-- [Downstream API Patterns](https://docs.microsoft.com/en-us/azure/active-directory/develop/scenario-web-app-call-api-overview)
+Ready to deploy? Just run:
 
-## 🆘 Support
+```powershell
+.\deploy.ps1 -ResourceGroupName "my-rg" -AppServiceName "my-app" -StorageAccountName "mystorage123" -ClientId "your-client-id" -ClientSecret "your-secret"
+```
 
-For issues or questions:
-1. Check the troubleshooting section above
-2. Review Azure App Service logs
-3. Consult Azure AD sign-in logs
-4. Review Application Insights telemetry
-
----
-
-**🎯 Ready to deploy?** Run the deployment script and start building authenticated applications with downstream API access! 
+That's it! Your secure, authenticated web application with API backend will be ready in minutes! 🚀 
