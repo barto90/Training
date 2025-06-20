@@ -63,9 +63,9 @@
     },
     "apiServiceName": {
       "type": "string",
-      "defaultValue": "[format('{0}-api', parameters('appServiceName'))]",
+      "defaultValue": "",
       "metadata": {
-        "description": "The name of the API app service (optional, will default to appServiceName-api)"
+        "description": "The name of the API app service (optional, leave empty to auto-generate from main app name)"
       }
     },
     "apiClientId": {
@@ -87,7 +87,8 @@
     "hostingPlanName": "[format('plan-{0}', parameters('appServiceName'))]",
     "location": "[resourceGroup().location]",
     "applicationInsightsName": "[format('ai-{0}', parameters('appServiceName'))]",
-    "apiApplicationInsightsName": "[format('ai-{0}', parameters('apiServiceName'))]",
+    "actualApiServiceName": "[if(empty(parameters('apiServiceName')), format('{0}-api', parameters('appServiceName')), parameters('apiServiceName'))]",
+    "apiApplicationInsightsName": "[format('ai-{0}', variables('actualApiServiceName'))]",
     "indexHtmlContent": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>App Service Authentication Demo</title>\n    <!-- Simplified content for ARM template -->\n</head>\n<body>\n    <h1>🔐 App Service Authentication Demo</h1>\n    <p>Authentication endpoint: <a href=\"/.auth/me\">/.auth/me</a></p>\n</body>\n</html>",
     "webConfigContent": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<configuration>\n  <system.webServer>\n    <defaultDocument>\n      <files>\n        <clear />\n        <add value=\"index.html\" />\n      </files>\n    </defaultDocument>\n  </system.webServer>\n</configuration>"
   },
@@ -205,7 +206,7 @@
       "condition": "[parameters('deployAPI')]",
       "type": "Microsoft.Web/sites",
       "apiVersion": "2022-03-01",
-      "name": "[parameters('apiServiceName')]",
+      "name": "[variables('actualApiServiceName')]",
       "location": "[variables('location')]",
       "kind": "app",
       "identity": {
@@ -325,7 +326,7 @@
       "condition": "[parameters('deployAPI')]",
       "type": "Microsoft.Web/sites/config",
       "apiVersion": "2022-03-01",
-      "name": "[format('{0}/{1}', parameters('apiServiceName'), 'authsettingsV2')]",
+      "name": "[format('{0}/{1}', variables('actualApiServiceName'), 'authsettingsV2')]",
       "properties": {
         "globalValidation": {
           "requireAuthentication": true,
@@ -379,7 +380,7 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Web/sites', parameters('apiServiceName'))]"
+        "[resourceId('Microsoft.Web/sites', variables('actualApiServiceName'))]"
       ]
     }
   ],
@@ -406,23 +407,23 @@
     },
     "apiServiceName": {
       "type": "string",
-      "value": "[if(parameters('deployAPI'), parameters('apiServiceName'), '')]"
+      "value": "[if(parameters('deployAPI'), variables('actualApiServiceName'), '')]"
     },
     "apiServiceUrl": {
       "type": "string",
-      "value": "[if(parameters('deployAPI'), format('https://{0}.azurewebsites.net', parameters('apiServiceName')), '')]"
+      "value": "[if(parameters('deployAPI'), format('https://{0}.azurewebsites.net', variables('actualApiServiceName')), '')]"
     },
     "apiManagedIdentityPrincipalId": {
       "type": "string",
-      "value": "[if(parameters('deployAPI'), reference(resourceId('Microsoft.Web/sites', parameters('apiServiceName')), '2022-03-01', 'full').identity.principalId, '')]"
+      "value": "[if(parameters('deployAPI'), reference(resourceId('Microsoft.Web/sites', variables('actualApiServiceName')), '2022-03-01', 'full').identity.principalId, '')]"
     },
     "apiAuthLoginUrl": {
       "type": "string",
-      "value": "[if(parameters('deployAPI'), format('https://{0}.azurewebsites.net/.auth/login/aad', parameters('apiServiceName')), '')]"
+      "value": "[if(parameters('deployAPI'), format('https://{0}.azurewebsites.net/.auth/login/aad', variables('actualApiServiceName')), '')]"
     },
     "apiWelcomeUrl": {
       "type": "string",
-      "value": "[if(parameters('deployAPI'), format('https://{0}.azurewebsites.net/api/welcome', parameters('apiServiceName')), '')]"
+      "value": "[if(parameters('deployAPI'), format('https://{0}.azurewebsites.net/api/welcome', variables('actualApiServiceName')), '')]"
     }
   }
 } 

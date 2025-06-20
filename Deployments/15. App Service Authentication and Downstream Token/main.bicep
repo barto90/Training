@@ -30,8 +30,8 @@ param deploySampleApp bool = true
 @description('Deploy the Node.js API application')
 param deployAPI bool = true
 
-@description('The name of the API app service (optional, will default to appServiceName-api)')
-param apiServiceName string = '${appServiceName}-api'
+@description('The name of the API app service (optional, leave empty to auto-generate from main app name)')
+param apiServiceName string = ''
 
 @description('The Azure AD client ID for the API service (optional, will use main clientId if not provided)')
 param apiClientId string = ''
