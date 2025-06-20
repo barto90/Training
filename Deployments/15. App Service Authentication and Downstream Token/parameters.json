@@ -25,6 +25,9 @@
     },
     "apiServiceName": {
       "value": "auth-app-service-demo-api"
+    },
+    "apiClientId": {
+      "value": ""
     }
   }
 } 

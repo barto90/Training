@@ -30,6 +30,9 @@ param(
     [string]$APIServiceName,
     
     [Parameter(Mandatory = $false)]
+    [string]$APIClientId,
+    
+    [Parameter(Mandatory = $false)]
     [string]$Location = "East US"
 )
 
@@ -105,6 +108,9 @@ try {
                      appServicePlanSku=$AppServicePlanSku `
                      clientId=$ClientId `
                      deploySampleApp=$DeploySampleApp `
+                     deployAPI=$DeployAPI `
+                     apiServiceName=$APIServiceName `
+                     apiClientId=$APIClientId `
         --name $deploymentName `
         --output json | ConvertFrom-Json
 
@@ -184,6 +190,11 @@ try {
 if ($DeployAPI) {
     if ([string]::IsNullOrEmpty($APIServiceName)) {
         $APIServiceName = "$AppServiceName-api"
+    }
+    
+    if ([string]::IsNullOrEmpty($APIClientId)) {
+        $APIClientId = $ClientId
+        Write-Host "No separate API Client ID provided, using main Client ID for API authentication." -ForegroundColor Yellow
     }
     
     Write-Host "`nDeploying API App Service..." -ForegroundColor Yellow

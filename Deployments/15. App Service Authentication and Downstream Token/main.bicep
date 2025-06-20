@@ -33,6 +33,9 @@ param deployAPI bool = true
 @description('The name of the API app service (optional, will default to appServiceName-api)')
 param apiServiceName string = '${appServiceName}-api'
 
+@description('The Azure AD client ID for the API service (optional, will use main clientId if not provided)')
+param apiClientId string = ''
+
 var hostingPlanName = 'plan-${appServiceName}'
 var location = resourceGroup().location
 var applicationInsightsName = 'ai-${appServiceName}'
@@ -267,19 +270,14 @@ resource appServiceAuth 'Microsoft.Web/sites/config@2022-03-01' = {
   }
 }
 
-// Configure Azure AD Authentication for API - DISABLED for testing
-/*
+// Configure Azure AD Authentication for API
 resource apiServiceAuth 'Microsoft.Web/sites/config@2022-03-01' = if (deployAPI) {
   name: 'authsettingsV2'
   parent: apiService
   properties: {
     globalValidation: {
-      requireAuthentication: false
-      unauthenticatedClientAction: 'AllowAnonymous'
-      excludedPaths: []
-    }
-    platform: {
-      enabled: false
+      requireAuthentication: true
+      unauthenticatedClientAction: 'Return401'
     }
     httpSettings: {
       requireHttps: true
@@ -289,17 +287,17 @@ resource apiServiceAuth 'Microsoft.Web/sites/config@2022-03-01' = if (deployAPI)
     }
     identityProviders: {
       azureActiveDirectory: {
-        enabled: false
+        enabled: true
         registration: {
           openIdIssuer: 'https://sts.windows.net/${tenantId}/'
-          clientId: clientId
+          clientId: empty(apiClientId) ? clientId : apiClientId
           clientSecretSettingName: 'MICROSOFT_PROVIDER_AUTHENTICATION_SECRET'
         }
         validation: {
           jwtClaimChecks: {}
           allowedAudiences: [
-            'api://${clientId}'
-            clientId
+            'api://${empty(apiClientId) ? clientId : apiClientId}'
+            empty(apiClientId) ? clientId : apiClientId
           ]
         }
       }
@@ -328,7 +326,6 @@ resource apiServiceAuth 'Microsoft.Web/sites/config@2022-03-01' = if (deployAPI)
     }
   }
 }
-*/
 
 // Deploy sample web files (conditional)
 resource webFiles 'Microsoft.Web/sites/sourcecontrols@2022-03-01' = if (deploySampleApp) {

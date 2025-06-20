@@ -67,6 +67,13 @@
       "metadata": {
         "description": "The name of the API app service (optional, will default to appServiceName-api)"
       }
+    },
+    "apiClientId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "The Azure AD client ID for the API service (optional, will use main clientId if not provided)"
+      }
     }
   },
   "variables": {
@@ -329,14 +336,14 @@
             "enabled": true,
             "registration": {
               "openIdIssuer": "[format('https://sts.windows.net/{0}/', subscription().tenantId)]",
-              "clientId": "[parameters('clientId')]",
+              "clientId": "[if(empty(parameters('apiClientId')), parameters('clientId'), parameters('apiClientId'))]",
               "clientSecretSettingName": "MICROSOFT_PROVIDER_AUTHENTICATION_SECRET"
             },
             "validation": {
               "jwtClaimChecks": {},
               "allowedAudiences": [
-                "[format('api://{0}', parameters('clientId'))]",
-                "[parameters('clientId')]"
+                "[format('api://{0}', if(empty(parameters('apiClientId')), parameters('clientId'), parameters('apiClientId')))]",
+                "[if(empty(parameters('apiClientId')), parameters('clientId'), parameters('apiClientId'))]"
               ]
             }
           }
