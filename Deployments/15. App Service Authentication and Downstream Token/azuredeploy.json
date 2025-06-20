@@ -316,6 +316,7 @@
         "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]"
       ]
     },
+
     {
       "condition": "[parameters('deployAPI')]",
       "type": "Microsoft.Web/sites/config",

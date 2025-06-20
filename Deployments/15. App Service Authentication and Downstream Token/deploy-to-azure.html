@@ -132,6 +132,13 @@
             margin: 20px 0;
             border-left: 4px solid #e91e63;
         }
+        .zip-deployment-note {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border-left: 4px solid #9c27b0;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
     </style>
 </head>
 <body>
@@ -163,11 +170,15 @@
             </div>
             <div class="feature-item">
                 <strong>📈 Application Insights</strong><br>
-                Built-in monitoring and telemetry
+                Built-in monitoring and telemetry for both apps
             </div>
             <div class="feature-item">
                 <strong>🔒 Security Hardened</strong><br>
                 HTTPS-only, secure headers, and token protection
+            </div>
+            <div class="feature-item">
+                <strong>📦 Zip Deployment Ready</strong><br>
+                Includes production-ready code packages for instant deployment
             </div>
         </div>
 
@@ -182,6 +193,15 @@
             <strong>💡 Note:</strong> The URL uses the raw GitHub content URL format (raw.githubusercontent.com) which is required for ARM template deployments.
         </div>
 
+        <div class="zip-deployment-note">
+            <strong>📦 Zip Deployment:</strong> This template creates the infrastructure only. After deployment, use the included PowerShell script or Azure CLI commands to deploy the application code:
+            <ul>
+                <li><strong>webapp.zip</strong> - Production-ready frontend application</li>
+                <li><strong>api.zip</strong> - Node.js API with authentication</li>
+                <li><strong>deploy-with-zip.ps1</strong> - Automated deployment script</li>
+            </ul>
+        </div>
+
         <h2>⚙️ Parameters</h2>
         <p>When deploying, you can customize the following parameters:</p>
         
@@ -190,63 +210,79 @@
                 <th>Parameter Name</th>
                 <th>Description</th>
                 <th>Default Value</th>
+                <th>Required</th>
             </tr>
             <tr>
-                <td>appServiceName</td>
-                <td>The name of the App Service</td>
-                <td><em>Required</em></td>
+                <td><code>appServiceName</code></td>
+                <td>The name of the main App Service (webapp)</td>
+                <td><em>No default</em></td>
+                <td>✅ Yes</td>
             </tr>
             <tr>
-                <td>storageAccountName</td>
-                <td>The name of the storage account</td>
-                <td><em>Required</em></td>
+                <td><code>storageAccountName</code></td>
+                <td>The name of the storage account used by the App Service</td>
+                <td><em>No default</em></td>
+                <td>✅ Yes</td>
             </tr>
             <tr>
-                <td>clientId</td>
-                <td>Azure AD App Registration Client ID</td>
-                <td><em>Required</em></td>
+                <td><code>clientId</code></td>
+                <td>Azure AD App Registration Client ID for authentication</td>
+                <td><em>No default</em></td>
+                <td>✅ Yes</td>
             </tr>
             <tr>
-                <td>clientSecret</td>
-                <td>Azure AD client secret</td>
-                <td><em>Required (secure)</em></td>
+                <td><code>clientSecret</code></td>
+                <td>Azure AD client secret for authentication (secure parameter)</td>
+                <td><em>No default</em></td>
+                <td>✅ Yes</td>
             </tr>
             <tr>
-                <td>appServicePlanSku</td>
-                <td>The App Service Plan SKU</td>
-                <td>B1 (Basic)</td>
+                <td><code>appServicePlanSku</code></td>
+                <td>The App Service Plan SKU (F1, B1, S1, P1V2, P1V3)</td>
+                <td>B1</td>
+                <td>❌ No</td>
             </tr>
             <tr>
-                <td>deploySampleApp</td>
-                <td>Deploy sample authentication web app</td>
+                <td><code>deploySampleApp</code></td>
+                <td>Deploy sample authentication web application</td>
                 <td>true</td>
+                <td>❌ No</td>
             </tr>
             <tr>
-                <td>deployAPI</td>
+                <td><code>deployAPI</code></td>
                 <td>Deploy Node.js API application</td>
                 <td>true</td>
+                <td>❌ No</td>
             </tr>
             <tr>
-                <td>apiServiceName</td>
-                <td>Name of the API app service</td>
-                <td>appServiceName-api</td>
+                <td><code>apiClientId</code></td>
+                <td>Azure AD client ID for API service (optional, uses main clientId if empty)</td>
+                <td><em>Empty (uses main clientId)</em></td>
+                <td>❌ No</td>
+            </tr>
+            <tr>
+                <td><code>apiClientSecret</code></td>
+                <td>Azure AD client secret for API service (optional, uses main clientSecret if empty)</td>
+                <td><em>Empty (uses main clientSecret)</em></td>
+                <td>❌ No</td>
             </tr>
         </table>
         
         <div class="note">
             <strong>📍 Location:</strong> All resources will be deployed in the same location as the resource group.
+            <br><strong>🔧 API Service Name:</strong> The API service will automatically be named <code>{appServiceName}-api</code>
         </div>
         
         <div class="auth-note">
-            <strong>🔐 Sample Web Application:</strong> The template includes a web application that demonstrates how to:
+            <strong>🔐 What Gets Deployed:</strong>
             <ul>
-                <li>Check user authentication status</li>
-                <li>Display user claims and profile information</li>
-                <li>Show access token metadata</li>
-                <li>Handle authentication flows and logout</li>
-                <li>Call authenticated endpoints</li>
+                <li><strong>Web App Service:</strong> <code>https://{appServiceName}.azurewebsites.net</code></li>
+                <li><strong>API Service:</strong> <code>https://{appServiceName}-api.azurewebsites.net</code> (if deployAPI=true)</li>
+                <li><strong>App Service Plan:</strong> Shared hosting plan for both services</li>
+                <li><strong>Application Insights:</strong> Monitoring for both applications</li>
+                <li><strong>Storage Account:</strong> For application data and logs</li>
+                <li><strong>Authentication Configuration:</strong> Azure AD Easy Auth setup</li>
             </ul>
-            Access it at: <code>https://&lt;appServiceName&gt;.azurewebsites.net</code>
         </div>
 
         <div class="app-registration-section">
@@ -256,65 +292,94 @@
             <p><strong>1. Create App Registration using Azure CLI:</strong></p>
             <pre>
 # Create App Registration
-az ad app create --display-name "AppService-Auth-Demo" --sign-in-audience "AzureADMyOrg"
+az ad app create --display-name "MyAppService-Auth-Demo" --sign-in-audience "AzureADMyOrg"
 
 # Get the Application (Client) ID
-az ad app list --display-name "AppService-Auth-Demo" --query "[0].appId" -o tsv
+az ad app list --display-name "MyAppService-Auth-Demo" --query "[0].appId" -o tsv
             </pre>
             
             <p><strong>2. Configure Authentication after deployment:</strong></p>
             <pre>
-# Add redirect URI (replace with your actual app service URL)
-az ad app update --id "your-client-id" --web-redirect-uris "https://your-app-name.azurewebsites.net/.auth/login/aad/callback"
+# Add redirect URIs (replace with your actual app service names)
+az ad app update --id "your-client-id" --web-redirect-uris \
+  "https://your-webapp-name.azurewebsites.net/.auth/login/aad/callback" \
+  "https://your-webapp-name-api.azurewebsites.net/.auth/login/aad/callback"
 
 # Create client secret
 az ad app credential reset --id "your-client-id" --append
             </pre>
             
-            <p><strong>3. Update App Service settings with the client secret:</strong></p>
+            <p><strong>3. For separate API authentication (optional):</strong></p>
             <pre>
-az webapp config appsettings set \
-  --resource-group "your-resource-group" \
-  --name "your-app-name" \
-  --settings MICROSOFT_PROVIDER_AUTHENTICATION_SECRET="your-client-secret"
+# Create separate App Registration for API
+az ad app create --display-name "MyAppService-API-Auth" --sign-in-audience "AzureADMyOrg"
+
+# Use the separate client ID and secret in the apiClientId and apiClientSecret parameters
             </pre>
         </div>
 
-        <h2>🛠️ Other Deployment Options</h2>
-        <p>For programmatic deployments, you can also use:</p>
+        <h2>🛠️ Deployment Options</h2>
         
-        <h3>Azure CLI</h3>
-        <pre>az deployment group create \
-  --resource-group &lt;resource-group-name&gt; \
+        <h3>Option 1: PowerShell Script (Recommended)</h3>
+        <pre>
+# Deploy everything at once (infrastructure + code)
+.\deploy-with-zip.ps1 `
+    -ResourceGroupName "your-resource-group" `
+    -AppServiceName "your-webapp-name" `
+    -StorageAccountName "yourstorageaccount" `
+    -ClientId "your-client-id" `
+    -ClientSecret "your-client-secret"
+        </pre>
+        
+        <h3>Option 2: Azure CLI</h3>
+        <pre>
+# Step 1: Deploy infrastructure
+az deployment group create \
+  --resource-group your-resource-group \
   --template-uri "https://raw.githubusercontent.com/barto90/Training/main/Deployments/15.%20App%20Service%20Authentication%20and%20Downstream%20Token/azuredeploy.json" \
-  --parameters appServiceName=myAuthApp storageAccountName=mystorageacct clientId=your-client-id clientSecret=your-client-secret deployAPI=true</pre>
+  --parameters \
+    appServiceName=your-webapp-name \
+    storageAccountName=yourstorageaccount \
+    clientId=your-client-id \
+    clientSecret=your-client-secret \
+    deployAPI=true
+
+# Step 2: Deploy webapp code
+az webapp deploy --resource-group your-resource-group --name your-webapp-name --src-path webapp.zip --type zip
+
+# Step 3: Deploy API code
+az webapp deploy --resource-group your-resource-group --name your-webapp-name-api --src-path api.zip --type zip
+        </pre>
         
-        <h3>PowerShell</h3>
-        <pre>New-AzResourceGroupDeployment `
-  -ResourceGroupName &lt;resource-group-name&gt; `
+        <h3>Option 3: PowerShell</h3>
+        <pre>
+New-AzResourceGroupDeployment `
+  -ResourceGroupName "your-resource-group" `
   -TemplateUri "https://raw.githubusercontent.com/barto90/Training/main/Deployments/15.%20App%20Service%20Authentication%20and%20Downstream%20Token/azuredeploy.json" `
-  -appServiceName "myAuthApp" `
-  -storageAccountName "mystorageacct" `
+  -appServiceName "your-webapp-name" `
+  -storageAccountName "yourstorageaccount" `
   -clientId "your-client-id" `
   -clientSecret "your-client-secret" `
-  -deployAPI $true</pre>
+  -deployAPI $true
+        </pre>
 
         <div class="security-note">
             <strong>🔒 Security Features:</strong> This deployment follows Azure security best practices:
             <ul>
-                <li>✅ Azure AD authentication integration</li>
+                <li>✅ Azure AD authentication integration with Easy Auth</li>
                 <li>✅ Automatic token management and refresh</li>
                 <li>✅ HTTPS-only communication enforced</li>
                 <li>✅ TLS 1.2 minimum version</li>
                 <li>✅ Secure HTTP headers (X-Frame-Options, X-XSS-Protection)</li>
                 <li>✅ Storage account security hardening</li>
-                <li>✅ Application Insights for monitoring</li>
-                <li>✅ System-assigned managed identity</li>
+                <li>✅ Application Insights for monitoring and security telemetry</li>
+                <li>✅ System-assigned managed identity for both services</li>
+                <li>✅ Separate authentication contexts for webapp and API</li>
             </ul>
         </div>
 
         <h2>🌐 Authentication Endpoints</h2>
-        <p>The deployed App Service provides several built-in authentication endpoints:</p>
+        <p>The deployed App Services provide several built-in authentication endpoints:</p>
         <ul>
             <li><strong>/.auth/login/aad:</strong> Azure AD login endpoint</li>
             <li><strong>/.auth/logout:</strong> Logout endpoint (clears tokens)</li>
@@ -329,6 +394,7 @@ az webapp config appsettings set \
             <li><strong>Automatic Refresh:</strong> Tokens are refreshed automatically before expiration</li>
             <li><strong>API Access:</strong> Use stored tokens to call downstream APIs on behalf of users</li>
             <li><strong>Claims Access:</strong> Rich user profile information from Azure AD</li>
+            <li><strong>Cross-Service Authentication:</strong> Webapp can authenticate to API using user tokens</li>
         </ul>
 
         <h2>🎯 Use Cases</h2>
@@ -340,6 +406,7 @@ az webapp config appsettings set \
             <li>🔐 Single sign-on (SSO) enabled web applications</li>
             <li>📈 Applications requiring user-specific data from Microsoft 365</li>
             <li>🔄 Multi-tenant applications with Azure AD support</li>
+            <li>🏗️ Microservices architecture with shared authentication</li>
         </ul>
 
         <h2>🔗 Next Steps</h2>
@@ -347,15 +414,19 @@ az webapp config appsettings set \
         <ol>
             <li>Create an <strong>Azure AD App Registration</strong> if you haven't already</li>
             <li>Note the <strong>Client ID</strong> and add it to the deployment parameters</li>
-            <li>Configure the <strong>redirect URI</strong> in your App Registration</li>
-            <li>Set the <strong>client secret</strong> in the App Service configuration</li>
-            <li>Test the authentication flow by visiting your app</li>
-            <li>Customize the web application for your specific needs</li>
+            <li>Configure the <strong>redirect URIs</strong> in your App Registration</li>
+            <li>Set the <strong>client secret</strong> in the deployment parameters</li>
+            <li><strong>Deploy the code</strong> using the zip packages or PowerShell script</li>
+            <li>Test the authentication flow by visiting your webapp</li>
+            <li>Test the API endpoints and cross-service communication</li>
+            <li>Customize the applications for your specific needs</li>
             <li>Implement downstream API calls using the stored tokens</li>
         </ol>
 
         <h2>📱 Demo Application Features</h2>
-        <p>The included demo web application shows:</p>
+        <p>The included demo applications show:</p>
+        
+        <h3>Frontend (WebApp):</h3>
         <ul>
             <li>Real-time authentication status checking</li>
             <li>User claims and profile information display</li>
@@ -363,6 +434,28 @@ az webapp config appsettings set \
             <li>Interactive login and logout functionality</li>
             <li>Modern, responsive user interface</li>
             <li>JavaScript examples for token handling</li>
+            <li>API communication examples</li>
+        </ul>
+        
+        <h3>Backend (API):</h3>
+        <ul>
+            <li>Azure AD token validation</li>
+            <li>User claims extraction and processing</li>
+            <li>Protected API endpoints</li>
+            <li>RESTful API design</li>
+            <li>CORS configuration for frontend access</li>
+            <li>Production-ready error handling</li>
+        </ul>
+
+        <h2>📋 Files Included</h2>
+        <ul>
+            <li><strong>azuredeploy.json</strong> - ARM template for infrastructure deployment</li>
+            <li><strong>webapp.zip</strong> - Production-ready frontend application package</li>
+            <li><strong>api.zip</strong> - Node.js API application package</li>
+            <li><strong>deploy-with-zip.ps1</strong> - Automated deployment script</li>
+            <li><strong>parameters.json</strong> - Sample parameters file</li>
+            <li><strong>README.md</strong> - Comprehensive documentation</li>
+            <li><strong>STRUCTURE.md</strong> - Architecture and technical details</li>
         </ul>
     </div>
 </body>
