@@ -54,8 +54,7 @@
     "applicationInsightsName": "[format('ai-{0}', parameters('functionAppName'))]",
     "serviceBusConnectionStringName": "ServiceBusConnection",
     "defaultSASKeyName": "RootManageSharedAccessKey",
-    "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('serviceBusNamespaceName'), variables('defaultSASKeyName'))]",
-    "serviceBusConnectionString": "[listkeys(variables('authRuleResourceId'), '2021-06-01-preview').primaryConnectionString]"
+    "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('serviceBusNamespaceName'), variables('defaultSASKeyName'))]"
   },
   "resources": [
     {
@@ -184,7 +183,7 @@
             },
             {
               "name": "[variables('serviceBusConnectionStringName')]",
-              "value": "[variables('serviceBusConnectionString')]"
+              "value": "[listkeys(variables('authRuleResourceId'), '2021-06-01-preview').primaryConnectionString]"
             },
             {
               "name": "ServiceBusQueueName",
@@ -216,7 +215,7 @@
     },
     "serviceBusConnectionString": {
       "type": "string",
-      "value": "[variables('serviceBusConnectionString')]"
+      "value": "[listkeys(variables('authRuleResourceId'), '2021-06-01-preview').primaryConnectionString]"
     },
     "functionAppUrl": {
       "type": "string",
