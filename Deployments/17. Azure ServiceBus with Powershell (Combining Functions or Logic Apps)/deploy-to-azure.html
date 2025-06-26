@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploy Azure ServiceBus with PowerShell Functions</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        h1 {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            border-bottom: 3px solid #0078d4;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+        .deploy-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 120, 212, 0.4);
+        }
+        .deploy-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 120, 212, 0.6);
+        }
+        .deploy-button img {
+            vertical-align: middle;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            border-left: 4px solid #0078d4;
+            font-size: 14px;
+        }
+        .note {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-left: 4px solid #2196f3;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .warning {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 20%);
+            border-left: 4px solid #ff9800;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .success {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            border-left: 4px solid #4caf50;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+        .feature-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #0078d4;
+            transition: transform 0.3s ease;
+        }
+        .feature-item:hover {
+            transform: translateY(-5px);
+        }
+        code {
+            background-color: #f1f3f4;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .step {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border-left: 4px solid #9c27b0;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚌 Azure ServiceBus with PowerShell Functions</h1>
+        
+        <p>This template deploys a complete Azure ServiceBus messaging solution with PowerShell Azure Functions for automatic message processing:</p>
+        
+        <div class="feature-list">
+            <div class="feature-item">
+                <strong>🚌 Azure ServiceBus</strong><br>
+                Enterprise-grade messaging with guaranteed delivery
+            </div>
+            <div class="feature-item">
+                <strong>⚡ PowerShell Functions</strong><br>
+                Serverless compute with PowerShell 7.2 runtime
+            </div>
+            <div class="feature-item">
+                <strong>🎯 Queue Trigger</strong><br>
+                Automatic function execution on message arrival
+            </div>
+            <div class="feature-item">
+                <strong>📋 Console Logging</strong><br>
+                Real-time message processing logs
+            </div>
+            <div class="feature-item">
+                <strong>📤 Message Publisher</strong><br>
+                PowerShell script for sending test messages
+            </div>
+            <div class="feature-item">
+                <strong>📊 Monitoring</strong><br>
+                Application Insights for comprehensive telemetry
+            </div>
+            <div class="feature-item">
+                <strong>🔒 Security</strong><br>
+                SAS authentication and HTTPS-only communication
+            </div>
+            <div class="feature-item">
+                <strong>💰 Cost Effective</strong><br>
+                Pay-per-execution consumption plan
+            </div>
+        </div>
+
+        <h2>🚀 Deploy to Azure</h2>
+        <p>Click the button below to deploy this ServiceBus solution to your Azure subscription:</p>
+        
+        <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fbarto90%2FTraining%2Fmain%2FDeployments%2F17.%20Azure%20ServiceBus%20with%20Powershell%20(Combining%20Functions%20or%20Logic%20Apps)%2Fazuredeploy.json" target="_blank" class="deploy-button">
+            <img src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure">
+        </a>
+
+        <div class="note">
+            <strong>💡 Note:</strong> The deployment creates all infrastructure components. After deployment, you'll need to add the PowerShell function code.
+        </div>
+
+        <h2>📋 Required Parameters</h2>
+        <table>
+            <tr>
+                <th>Parameter</th>
+                <th>Description</th>
+                <th>Example</th>
+            </tr>
+            <tr>
+                <td><code>serviceBusNamespaceName</code></td>
+                <td>Name for the ServiceBus namespace</td>
+                <td>myservicebus-ns</td>
+            </tr>
+            <tr>
+                <td><code>functionAppName</code></td>
+                <td>Name for the Azure Function App</td>
+                <td>myfunction-app</td>
+            </tr>
+            <tr>
+                <td><code>storageAccountName</code></td>
+                <td>Name for the storage account</td>
+                <td>mystorageaccount123</td>
+            </tr>
+            <tr>
+                <td><code>queueName</code></td>
+                <td>ServiceBus queue name (optional)</td>
+                <td>messagequeue</td>
+            </tr>
+            <tr>
+                <td><code>appServicePlanSku</code></td>
+                <td>Function App plan tier (optional)</td>
+                <td>Y1 (Consumption)</td>
+            </tr>
+        </table>
+
+        <h2>🛠️ Post-Deployment Setup</h2>
+        
+        <div class="step">
+            <h3>Step 1: Create the PowerShell Function</h3>
+            <p>After deployment, create a new function in your Function App:</p>
+            <pre><code>1. Go to Azure Portal → Function Apps → [Your Function App]
+2. Click "Functions" → "Create"
+3. Choose "ServiceBus Queue trigger"
+4. Set the function name: "ServiceBusQueueProcessor"
+5. Configure connection: "ServiceBusConnection"
+6. Set queue name: "messagequeue"</code></pre>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Add PowerShell Function Code</h3>
+            <p>Replace the default function code with this PowerShell script:</p>
+            <pre><code># PowerShell script for processing ServiceBus messages
+using namespace System.Net
+
+param($QueueItem, $TriggerMetadata)
+
+# Log the incoming message
+Write-Host "🚌 ServiceBus Message Received!"
+Write-Host "📅 Timestamp: $(Get-Date)"
+Write-Host "🆔 Message ID: $($TriggerMetadata.MessageId)"
+Write-Host "📋 Message Content: $QueueItem"
+Write-Host "📊 Delivery Count: $($TriggerMetadata.DeliveryCount)"
+Write-Host "⏰ Enqueued Time: $($TriggerMetadata.EnqueuedTimeUtc)"
+
+# Process the message content
+try {
+    # Convert message if it's JSON
+    if ($QueueItem -match '^[\{\[].*[\}\]]$') {
+        $messageObject = $QueueItem | ConvertFrom-Json
+        Write-Host "✅ Successfully parsed JSON message:"
+        $messageObject | ConvertTo-Json -Depth 3 | Write-Host
+    } else {
+        Write-Host "📝 Plain text message: $QueueItem"
+    }
+    
+    # Simulate message processing
+    Write-Host "⚙️ Processing message..."
+    Start-Sleep -Seconds 2
+    Write-Host "✅ Message processed successfully!"
+    
+} catch {
+    Write-Error "❌ Error processing message: $($_.Exception.Message)"
+    throw
+}
+
+Write-Host "🏁 Message processing completed."</code></pre>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Create Message Publisher Script</h3>
+            <p>Save this PowerShell script to send test messages:</p>
+            <pre><code># Send-ServiceBusMessage.ps1
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$ConnectionString,
+    
+    [Parameter(Mandatory=$true)]
+    [string]$QueueName,
+    
+    [Parameter(Mandatory=$false)]
+    [string]$MessageContent = "Hello from PowerShell!"
+)
+
+# Install required module if not present
+if (!(Get-Module -ListAvailable -Name Azure.ServiceBus.Core)) {
+    Install-Module -Name Azure.ServiceBus.Core -Force -AllowClobber
+}
+
+Import-Module Azure.ServiceBus.Core
+
+try {
+    # Create ServiceBus client
+    $serviceBusClient = [Azure.Messaging.ServiceBus.ServiceBusClient]::new($ConnectionString)
+    $sender = $serviceBusClient.CreateSender($QueueName)
+    
+    # Create message
+    $message = [Azure.Messaging.ServiceBus.ServiceBusMessage]::new($MessageContent)
+    $message.MessageId = [Guid]::NewGuid().ToString()
+    
+    # Send message
+    Write-Host "📤 Sending message to queue: $QueueName"
+    Write-Host "📋 Message content: $MessageContent"
+    
+    $sender.SendMessageAsync($message).GetAwaiter().GetResult()
+    
+    Write-Host "✅ Message sent successfully!"
+    Write-Host "🆔 Message ID: $($message.MessageId)"
+    
+} catch {
+    Write-Error "❌ Failed to send message: $($_.Exception.Message)"
+} finally {
+    if ($sender) { $sender.DisposeAsync().GetAwaiter().GetResult() }
+    if ($serviceBusClient) { $serviceBusClient.DisposeAsync().GetAwaiter().GetResult() }
+}
+
+# Usage example:
+# .\Send-ServiceBusMessage.ps1 -ConnectionString "your-connection-string" -QueueName "messagequeue" -MessageContent "Test message"</code></pre>
+        </div>
+
+        <div class="success">
+            <h3>🎯 Testing Your Solution</h3>
+            <p>To test your ServiceBus solution:</p>
+            <ol>
+                <li>Get the ServiceBus connection string from the Azure Portal</li>
+                <li>Run the publisher script to send a test message</li>
+                <li>Check the Function App logs in Application Insights</li>
+                <li>Verify the message was processed and logged correctly</li>
+            </ol>
+        </div>
+
+        <div class="warning">
+            <h3>⚠️ Important Notes</h3>
+            <ul>
+                <li>Resource names must be globally unique (especially storage account)</li>
+                <li>The Function App uses consumption plan for cost efficiency</li>
+                <li>ServiceBus namespace uses Standard tier for advanced features</li>
+                <li>Application Insights provides 90 days of log retention</li>
+                <li>Consider using managed identity in production for enhanced security</li>
+            </ul>
+        </div>
+
+        <h2>📊 Monitoring and Troubleshooting</h2>
+        <div class="note">
+            <p><strong>Function Logs:</strong> Monitor function execution in Azure Portal → Function App → Functions → [Function Name] → Monitor</p>
+            <p><strong>ServiceBus Metrics:</strong> Check queue depth and message throughput in Azure Portal → ServiceBus Namespace → Queues → [Queue Name] → Metrics</p>
+            <p><strong>Application Insights:</strong> Detailed telemetry and performance monitoring for comprehensive observability</p>
+        </div>
+
+        <h2>💰 Cost Optimization</h2>
+        <div class="success">
+            <p>This solution is designed for cost efficiency:</p>
+            <ul>
+                <li><strong>Consumption Plan:</strong> Pay only for function executions</li>
+                <li><strong>Standard ServiceBus:</strong> Balanced features and cost</li>
+                <li><strong>Standard_LRS Storage:</strong> Locally redundant storage for cost savings</li>
+                <li><strong>Application Insights:</strong> Free tier with 1GB monthly data</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 

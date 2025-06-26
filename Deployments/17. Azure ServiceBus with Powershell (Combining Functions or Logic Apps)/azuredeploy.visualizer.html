@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure ServiceBus with PowerShell Functions - Architecture</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 32px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #0078d4;
+            text-align: center;
+        }
+        .architecture {
+            width: 100%;
+            height: 450px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            margin: 20px 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .flow-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            padding: 40px;
+        }
+        .flow-item {
+            text-align: center;
+            flex: 1;
+            margin: 0 10px;
+        }
+        .flow-icon {
+            font-size: 60px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .flow-arrow {
+            font-size: 30px;
+            color: #0078d4;
+            margin: 0 20px;
+        }
+        .resources {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        .resource {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 25px;
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 120, 212, 0.3);
+        }
+        .resource:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(0, 120, 212, 0.4);
+        }
+        .resource h3 {
+            margin-top: 0;
+            color: #fff;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .resource-icon {
+            font-size: 28px;
+        }
+        .config {
+            background-color: rgba(255,255,255,0.15);
+            padding: 18px;
+            border-radius: 8px;
+            margin-top: 18px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+        .config div {
+            margin: 6px 0;
+        }
+        .messaging {
+            margin-top: 30px;
+            background: linear-gradient(135deg, #6f42c1 0%, #563d7c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+        }
+        .messaging h3 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .messaging ul {
+            columns: 2;
+            column-gap: 40px;
+        }
+        .function-features {
+            background: linear-gradient(135deg, #20c997 0%, #198754 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);
+        }
+        .function-features h3 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .function-flow {
+            background-color: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 18px;
+            backdrop-filter: blur(10px);
+        }
+        .function-step {
+            margin: 12px 0;
+            padding: 10px;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            border-left: 3px solid #ffd700;
+        }
+        .servicebus-features {
+            background: linear-gradient(135deg, #fd7e14 0%, #dc6507 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(253, 126, 20, 0.3);
+        }
+        .servicebus-features h3 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+        .stat-item {
+            background-color: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            display: block;
+        }
+        .powershell-info {
+            background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
+        }
+        .powershell-info h3 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚌 Azure ServiceBus with PowerShell Functions</h1>
+        
+        <!-- Architecture Flow -->
+        <div class="architecture">
+            <h2>🏗️ Architecture Overview</h2>
+            <p style="font-size: 18px; color: #666; margin-bottom: 30px;">Message Publisher → ServiceBus Queue → PowerShell Function → Console Output</p>
+            <div class="flow-container">
+                <div class="flow-item">
+                    <span class="flow-icon">📤</span>
+                    <div><strong>Message Publisher</strong></div>
+                    <div style="font-size: 14px; color: #666;">PowerShell Script</div>
+                </div>
+                <div class="flow-arrow">➡️</div>
+                <div class="flow-item">
+                    <span class="flow-icon">🚌</span>
+                    <div><strong>ServiceBus Queue</strong></div>
+                    <div style="font-size: 14px; color: #666;">Message Storage</div>
+                </div>
+                <div class="flow-arrow">➡️</div>
+                <div class="flow-item">
+                    <span class="flow-icon">⚡</span>
+                    <div><strong>Azure Function</strong></div>
+                    <div style="font-size: 14px; color: #666;">PowerShell Runtime</div>
+                </div>
+                <div class="flow-arrow">➡️</div>
+                <div class="flow-item">
+                    <span class="flow-icon">📋</span>
+                    <div><strong>Console Output</strong></div>
+                    <div style="font-size: 14px; color: #666;">Message Processing</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="resources">
+            <div class="resource">
+                <h3><span class="resource-icon">🚌</span>Azure ServiceBus</h3>
+                <p>Enterprise messaging service for reliable message delivery between applications and services.</p>
+                <div class="config">
+                    <div><strong>Namespace:</strong> Standard Tier</div>
+                    <div><strong>Queue:</strong> messagequeue</div>
+                    <div><strong>Features:</strong> FIFO, Deduplication</div>
+                    <div><strong>Max Size:</strong> 1 GB</div>
+                </div>
+            </div>
+
+            <div class="resource">
+                <h3><span class="resource-icon">⚡</span>Azure Functions</h3>
+                <p>Serverless compute service running PowerShell runtime for processing ServiceBus messages.</p>
+                <div class="config">
+                    <div><strong>Runtime:</strong> PowerShell 7.2</div>
+                    <div><strong>Trigger:</strong> ServiceBus Queue</div>
+                    <div><strong>Plan:</strong> Consumption (Y1)</div>
+                    <div><strong>Architecture:</strong> 64-bit</div>
+                </div>
+            </div>
+
+            <div class="resource">
+                <h3><span class="resource-icon">💾</span>Storage Account</h3>
+                <p>Backend storage for Azure Functions runtime and content management.</p>
+                <div class="config">
+                    <div><strong>Type:</strong> Standard_LRS</div>
+                    <div><strong>Security:</strong> HTTPS Only</div>
+                    <div><strong>Features:</strong> Secure Storage</div>
+                    <div><strong>Access:</strong> Function Runtime</div>
+                </div>
+            </div>
+
+            <div class="resource">
+                <h3><span class="resource-icon">📊</span>Application Insights</h3>
+                <p>Monitoring and telemetry for function execution and performance metrics.</p>
+                <div class="config">
+                    <div><strong>Type:</strong> Web Application</div>
+                    <div><strong>Features:</strong> Logs, Metrics</div>
+                    <div><strong>Tracing:</strong> Enabled</div>
+                    <div><strong>Retention:</strong> 90 days</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="messaging">
+            <h3>🚌 ServiceBus Messaging Features</h3>
+            <ul>
+                <li><strong>Guaranteed Delivery:</strong> At-least-once message delivery</li>
+                <li><strong>FIFO Ordering:</strong> First-in-first-out message processing</li>
+                <li><strong>Duplicate Detection:</strong> Automatic message deduplication</li>
+                <li><strong>Dead Lettering:</strong> Failed message handling</li>
+                <li><strong>Session Support:</strong> Message grouping capabilities</li>
+                <li><strong>Batched Operations:</strong> High throughput processing</li>
+                <li><strong>Auto-scaling:</strong> Dynamic scaling based on queue depth</li>
+                <li><strong>Security:</strong> SAS keys and Azure AD integration</li>
+            </ul>
+        </div>
+
+        <div class="function-features">
+            <h3>⚡ PowerShell Function Capabilities</h3>
+            <div class="function-flow">
+                <div class="function-step">
+                    <strong>1. Message Trigger:</strong> Function automatically triggered when message arrives in queue
+                </div>
+                <div class="function-step">
+                    <strong>2. Message Processing:</strong> PowerShell script processes the message content
+                </div>
+                <div class="function-step">
+                    <strong>3. Console Output:</strong> Message details written to Application Insights logs
+                </div>
+                <div class="function-step">
+                    <strong>4. Error Handling:</strong> Built-in retry logic and dead letter queue support
+                </div>
+            </div>
+        </div>
+
+        <div class="servicebus-features">
+            <h3>📤 Message Publishing Script</h3>
+            <p>Included PowerShell script for sending test messages to the ServiceBus queue:</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-number">✉️</span>
+                    <div>Send Messages</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">🔑</span>
+                    <div>SAS Authentication</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">📊</span>
+                    <div>Queue Monitoring</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">⚡</span>
+                    <div>Instant Triggering</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="powershell-info">
+            <h3>💻 PowerShell Integration Benefits</h3>
+            <ul>
+                <li><strong>Native Azure Integration:</strong> Built-in cmdlets for Azure services</li>
+                <li><strong>Rich Object Model:</strong> Complex data processing capabilities</li>
+                <li><strong>Error Handling:</strong> Comprehensive try-catch-finally support</li>
+                <li><strong>Logging:</strong> Detailed execution logging to Application Insights</li>
+                <li><strong>Scalability:</strong> Automatic scaling based on queue load</li>
+                <li><strong>Cost Effective:</strong> Pay-per-execution consumption model</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 
