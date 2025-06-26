@@ -18,7 +18,7 @@ This solution deploys a complete Azure ServiceBus messaging system with PowerShe
 
 - **Azure ServiceBus Namespace** - Standard tier messaging service
 - **ServiceBus Queue** - Message storage with configurable properties
-- **Azure Function App** - PowerShell 7.2 runtime on consumption plan
+- **Azure Function App** - PowerShell 7.4 runtime on consumption plan
 - **Storage Account** - Backend storage for Functions runtime
 - **Application Insights** - Monitoring and logging for function execution
 

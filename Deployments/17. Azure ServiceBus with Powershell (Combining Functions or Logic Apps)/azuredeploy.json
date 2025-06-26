@@ -156,7 +156,7 @@
         "siteConfig": {
           "ftpsState": "Disabled",
           "minTlsVersion": "1.2",
-          "powerShellVersion": "7.2",
+          "powerShellVersion": "7.4",
           "use32BitWorkerProcess": false,
           "appSettings": [
             {
