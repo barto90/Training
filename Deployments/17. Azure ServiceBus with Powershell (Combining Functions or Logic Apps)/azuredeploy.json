@@ -11,8 +11,10 @@
   "parameters": {
     "serviceBusNamespaceName": {
       "type": "string",
+      "minLength": 6,
+      "maxLength": 50,
       "metadata": {
-        "description": "The name of the Service Bus namespace that you wish to create."
+        "description": "The name of the Service Bus namespace that you wish to create. Must be between 6-50 characters, globally unique, and contain only lowercase letters, numbers, and hyphens (cannot start or end with hyphen)."
       }
     },
     "queueName": {
@@ -24,14 +26,18 @@
     },
     "functionAppName": {
       "type": "string",
+      "minLength": 2,
+      "maxLength": 60,
       "metadata": {
-        "description": "The name of the Azure Function App that you wish to create."
+        "description": "The name of the Azure Function App that you wish to create. Must be globally unique and contain only lowercase letters, numbers, and hyphens."
       }
     },
     "storageAccountName": {
       "type": "string",
+      "minLength": 3,
+      "maxLength": 24,
       "metadata": {
-        "description": "The name of the storage account that will be used by the Function App."
+        "description": "The name of the storage account that will be used by the Function App. Must be globally unique, 3-24 characters, and contain only lowercase letters and numbers."
       }
     },
     "appServicePlanSku": {
