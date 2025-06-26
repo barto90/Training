@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Function with Managed Identity & Graph - Architecture</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 32px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            text-align: center;
+        }
+        .architecture {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            margin: 20px 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        .resources {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        .resource {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .resource:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        .resource h3 {
+            margin-top: 0;
+            color: #fff;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .resource-icon {
+            font-size: 28px;
+        }
+        .config {
+            background-color: rgba(255,255,255,0.15);
+            padding: 18px;
+            border-radius: 8px;
+            margin-top: 18px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+        .config div {
+            margin: 6px 0;
+        }
+        .security {
+            margin-top: 30px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+        }
+        .security h3 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .security ul {
+            columns: 2;
+            column-gap: 40px;
+        }
+        .function {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .function h3 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .function pre {
+            background-color: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .graph-integration {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+        }
+        .graph-integration h3 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+        .stat-item {
+            background-color: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            display: block;
+        }
+        .permissions {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #333;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(252, 182, 159, 0.3);
+        }
+        .permissions h3 {
+            margin-top: 0;
+            font-size: 24px;
+            color: #d84315;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Azure Function with Managed Identity & Microsoft Graph</h1>
+        
+        <div class="architecture-diagram">
+            <svg viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg" class="architecture">
+                <defs>
+                    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="4" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
+                    </filter>
+                </defs>
+                
+                <rect x="0" y="0" width="1200" height="600" fill="#f8f9fa"/>
+                
+                <!-- Resource Group -->
+                <rect x="50" y="50" width="1100" height="500" fill="#ffffff" stroke="#667eea" stroke-width="3" rx="20" filter="url(#shadow)"/>
+                <text x="80" y="90" font-size="20" fill="#667eea" font-weight="bold">🏢 Azure Resource Group</text>
+                
+                <!-- Storage Account -->
+                <rect x="100" y="120" width="200" height="120" fill="#e6f2ff" stroke="#0078d4" stroke-width="2" rx="10" filter="url(#shadow)"/>
+                <text x="130" y="150" font-size="16" fill="#0078d4" font-weight="bold">📦 Storage</text>
+                <text x="110" y="175" font-size="12" fill="#666">• Standard_LRS</text>
+                <text x="110" y="195" font-size="12" fill="#666">• HTTPS Only</text>
+                <text x="110" y="215" font-size="12" fill="#666">• TLS 1.2</text>
+                
+                <!-- Application Insights -->
+                <rect x="350" y="120" width="200" height="120" fill="#fff2e6" stroke="#ff8c00" stroke-width="2" rx="10" filter="url(#shadow)"/>
+                <text x="380" y="150" font-size="16" fill="#ff8c00" font-weight="bold">📊 Insights</text>
+                <text x="360" y="175" font-size="12" fill="#666">• Telemetry</text>
+                <text x="360" y="195" font-size="12" fill="#666">• Monitoring</text>
+                <text x="360" y="215" font-size="12" fill="#666">• Performance</text>
+                
+                <!-- App Service Plan -->
+                <rect x="600" y="120" width="200" height="120" fill="#e6f2ff" stroke="#0078d4" stroke-width="2" rx="10" filter="url(#shadow)"/>
+                <text x="630" y="150" font-size="16" fill="#0078d4" font-weight="bold">⚡ Premium</text>
+                <text x="610" y="175" font-size="12" fill="#666">• P1V2</text>
+                <text x="610" y="195" font-size="12" fill="#666">• Always-on</text>
+                <text x="610" y="215" font-size="12" fill="#666">• No cold starts</text>
+                
+                <!-- Function App with Managed Identity -->
+                <rect x="350" y="300" width="250" height="140" fill="#667eea" stroke="#667eea" stroke-width="3" rx="10" filter="url(#shadow)"/>
+                <text x="420" y="330" font-size="18" fill="#fff" font-weight="bold">🔧 Function App</text>
+                <text x="360" y="355" font-size="13" fill="#fff">• PowerShell 7.2</text>
+                <text x="360" y="375" font-size="13" fill="#fff">• Managed Identity</text>
+                <text x="360" y="395" font-size="13" fill="#fff">• HTTPS Only</text>
+                <text x="360" y="415" font-size="13" fill="#fff">• Graph Ready</text>
+                
+                <!-- Microsoft Graph API -->
+                <rect x="850" y="300" width="200" height="140" fill="#ee5a24" stroke="#ee5a24" stroke-width="3" rx="10" filter="url(#shadow)"/>
+                <text x="880" y="330" font-size="16" fill="#fff" font-weight="bold">📊 Graph API</text>
+                <text x="860" y="355" font-size="12" fill="#fff">• Microsoft 365</text>
+                <text x="860" y="375" font-size="12" fill="#fff">• Azure AD</text>
+                <text x="860" y="395" font-size="12" fill="#fff">• Teams</text>
+                <text x="860" y="415" font-size="12" fill="#fff">• Mail & Calendar</text>
+                
+                <!-- Azure AD -->
+                <rect x="100" y="300" width="200" height="140" fill="#f0f8ff" stroke="#4169e1" stroke-width="2" rx="10" filter="url(#shadow)"/>
+                <text x="130" y="330" font-size="16" fill="#4169e1" font-weight="bold">🔐 Azure AD</text>
+                <text x="110" y="355" font-size="12" fill="#666">• Identity Provider</text>
+                <text x="110" y="375" font-size="12" fill="#666">• Token Issuer</text>
+                <text x="110" y="395" font-size="12" fill="#666">• Permissions</text>
+                <text x="110" y="415" font-size="12" fill="#666">• Managed Identity</text>
+                
+                <!-- Connection Lines -->
+                <line x1="200" y1="240" x2="350" y2="320" stroke="#666" stroke-width="2"/>
+                <line x1="450" y1="240" x2="475" y2="300" stroke="#ff8c00" stroke-width="2"/>
+                <line x1="600" y1="240" x2="525" y2="300" stroke="#666" stroke-width="2"/>
+                <line x1="300" y1="370" x2="350" y2="370" stroke="#4169e1" stroke-width="3"/>
+                <line x1="600" y1="370" x2="850" y2="370" stroke="#ee5a24" stroke-width="3"/>
+            </svg>
+        </div>
+        
+        <div class="resources">
+            <div class="resource">
+                <h3><span class="resource-icon">🔐</span>Managed Identity</h3>
+                <p>System-assigned identity eliminates credential storage</p>
+                <div class="config">
+                    <div>• Type: SystemAssigned</div>
+                    <div>• No stored secrets</div>
+                    <div>• Azure AD integration</div>
+                    <div>• Principal ID provided</div>
+                    <div>• Token-based auth</div>
+                </div>
+            </div>
+            
+            <div class="resource">
+                <h3><span class="resource-icon">📊</span>Microsoft Graph</h3>
+                <p>Unified API for Microsoft 365 and Azure AD</p>
+                <div class="config">
+                    <div>• User management</div>
+                    <div>• Microsoft 365 data</div>
+                    <div>• Teams integration</div>
+                    <div>• Calendar & mail</div>
+                    <div>• Files & SharePoint</div>
+                </div>
+            </div>
+            
+            <div class="resource">
+                <h3><span class="resource-icon">⚡</span>PowerShell Runtime</h3>
+                <p>PowerShell 7.2 with Graph capabilities</p>
+                <div class="config">
+                    <div>• PowerShell 7.2</div>
+                    <div>• Graph modules ready</div>
+                    <div>• Azure cmdlets</div>
+                    <div>• REST API support</div>
+                    <div>• JSON processing</div>
+                </div>
+            </div>
+            
+            <div class="resource">
+                <h3><span class="resource-icon">🏆</span>Premium Hosting</h3>
+                <p>Premium V2 for consistent performance</p>
+                <div class="config">
+                    <div>• SKU: P1V2</div>
+                    <div>• Always-on instances</div>
+                    <div>• No cold starts</div>
+                    <div>• VNet ready</div>
+                    <div>• Enhanced security</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="function">
+            <h3>🌐 Sample Microsoft Graph Function</h3>
+            <p>PowerShell function demonstrating managed identity authentication with Microsoft Graph:</p>
+            <pre>
+# Get managed identity token for Microsoft Graph
+$resourceURI = "https://graph.microsoft.com/"
+$tokenAuthURI = $env:IDENTITY_ENDPOINT + "?resource=$resourceURI&api-version=2019-08-01"
+$tokenResponse = Invoke-RestMethod -Method Get -Headers @{"X-IDENTITY-HEADER"=$env:IDENTITY_HEADER} -Uri $tokenAuthURI
+$accessToken = $tokenResponse.access_token
+
+# Make Graph API call
+$headers = @{
+    'Authorization' = "Bearer $accessToken"
+    'Content-Type' = 'application/json'
+}
+
+# Example: Get user information
+$userInfo = Invoke-RestMethod -Uri "https://graph.microsoft.com/v1.0/me" -Headers $headers
+            </pre>
+            <p><strong>Endpoint:</strong> <code>/api/GraphAPITrigger</code></p>
+        </div>
+        
+        <div class="graph-integration">
+            <h3>📈 Microsoft Graph Integration</h3>
+            <p>Comprehensive Microsoft 365 and Azure AD integration capabilities:</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-number">100+</span>
+                    <span>Graph Endpoints</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">Zero</span>
+                    <span>Stored Credentials</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">24/7</span>
+                    <span>Always Available</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">Enterprise</span>
+                    <span>Security Grade</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="permissions">
+            <h3>🔑 Required Graph API Permissions</h3>
+            <p>Grant these permissions to the managed identity based on your needs:</p>
+            <ul>
+                <li><strong>User.Read:</strong> Read user profile information</li>
+                <li><strong>User.ReadWrite.All:</strong> Read and write user profiles</li>
+                <li><strong>Group.Read.All:</strong> Read all groups</li>
+                <li><strong>Mail.Read:</strong> Read user mail</li>
+                <li><strong>Calendars.Read:</strong> Read user calendars</li>
+                <li><strong>Files.Read.All:</strong> Read all files</li>
+                <li><strong>Directory.Read.All:</strong> Read directory data</li>
+                <li><strong>Team.ReadBasic.All:</strong> Read Teams information</li>
+            </ul>
+        </div>
+        
+        <div class="security">
+            <h3>🔒 Security Features</h3>
+            <ul>
+                <li>✅ System-assigned managed identity</li>
+                <li>✅ HTTPS-only communication</li>
+                <li>✅ TLS 1.2 minimum version</li>
+                <li>✅ FTPS disabled</li>
+                <li>✅ Secure storage account</li>
+                <li>✅ Application Insights monitoring</li>
+                <li>✅ Premium plan performance</li>
+                <li>✅ Azure AD integration</li>
+                <li>✅ No stored credentials</li>
+                <li>✅ Token-based authentication</li>
+                <li>✅ Audit logging enabled</li>
+                <li>✅ Resource isolation</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 
