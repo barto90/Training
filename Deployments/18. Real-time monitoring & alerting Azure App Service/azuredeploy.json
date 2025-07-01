@@ -41,14 +41,6 @@
         "description": "The name of the storage account. Must be globally unique, lowercase letters and numbers only."
       }
     },
-    "logicAppName": {
-      "type": "string",
-      "minLength": 2,
-      "maxLength": 80,
-      "metadata": {
-        "description": "The name of the Logic App for alert processing."
-      }
-    },
     "alertEmail": {
       "type": "string",
       "metadata": {
@@ -331,138 +323,6 @@
         "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]",
         "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]"
       ]
-    },
-    {
-      "type": "Microsoft.Web/connections",
-      "apiVersion": "2016-06-01",
-      "name": "servicebus-connection",
-      "location": "[variables('location')]",
-      "properties": {
-        "displayName": "Service Bus Connection",
-        "api": {
-          "id": "[format('/subscriptions/{0}/providers/Microsoft.Web/locations/{1}/managedApis/servicebus', subscription().subscriptionId, variables('location'))]"
-        },
-        "parameterValues": {
-          "connectionString": "[listkeys(variables('authRuleResourceId'), '2021-06-01-preview').primaryConnectionString]"
-        }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Web/connections",
-      "apiVersion": "2016-06-01",
-      "name": "office365-connection",
-      "location": "[variables('location')]",
-      "properties": {
-        "displayName": "Office 365 Outlook Connection",
-        "api": {
-          "id": "[format('/subscriptions/{0}/providers/Microsoft.Web/locations/{1}/managedApis/office365', subscription().subscriptionId, variables('location'))]"
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Logic/workflows",
-      "apiVersion": "2019-05-01",
-      "name": "[parameters('logicAppName')]",
-      "location": "[variables('location')]",
-      "identity": {
-        "type": "SystemAssigned"
-      },
-      "properties": {
-        "state": "Enabled",
-        "definition": {
-          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-          "contentVersion": "1.0.0.0",
-          "parameters": {},
-          "triggers": {
-            "When_a_message_is_received_in_a_queue": {
-              "recurrence": {
-                "frequency": "Minute",
-                "interval": 1
-              },
-              "type": "ApiConnection",
-              "inputs": {
-                "host": {
-                  "connection": {
-                    "name": "@parameters('$connections')['servicebus']['connectionId']"
-                  }
-                },
-                "method": "get",
-                "path": "[format('/{0}/messages/head', variables('notificationQueueName'))]",
-                "queries": {
-                  "queueType": "Main"
-                }
-              }
-            }
-          },
-          "actions": {
-            "Parse_Alert_Message": {
-              "runAfter": {},
-              "type": "ParseJson",
-              "inputs": {
-                "content": "@triggerBody()?['ContentData']",
-                "schema": {
-                  "properties": {
-                    "alertLevel": { "type": "string" },
-                    "appServiceName": { "type": "string" },
-                    "message": { "type": "string" },
-                    "timestamp": { "type": "string" },
-                    "url": { "type": "string" },
-                    "responseTime": { "type": "integer" },
-                    "statusCode": { "type": "integer" }
-                  },
-                  "type": "object"
-                }
-              }
-            },
-            "Send_Email_Alert": {
-              "runAfter": {
-                "Parse_Alert_Message": [
-                  "Succeeded"
-                ]
-              },
-              "type": "ApiConnection",
-              "inputs": {
-                "body": {
-                  "Body": "<p><strong>Azure App Service Alert</strong><br><br><strong>App Service:</strong> @{body('Parse_Alert_Message')?['appServiceName']}<br><strong>Alert Level:</strong> @{body('Parse_Alert_Message')?['alertLevel']}<br><strong>Message:</strong> @{body('Parse_Alert_Message')?['message']}<br><strong>URL:</strong> @{body('Parse_Alert_Message')?['url']}<br><strong>Status Code:</strong> @{body('Parse_Alert_Message')?['statusCode']}<br><strong>Response Time:</strong> @{body('Parse_Alert_Message')?['responseTime']}ms<br><strong>Timestamp:</strong> @{body('Parse_Alert_Message')?['timestamp']}</p>",
-                  "Subject": "Azure App Service Alert - @{body('Parse_Alert_Message')?['alertLevel']}",
-                  "To": "[parameters('alertEmail')]"
-                },
-                "host": {
-                  "connection": {
-                    "name": "@parameters('$connections')['office365']['connectionId']"
-                  }
-                },
-                "method": "post",
-                "path": "/v2/Mail"
-              }
-            }
-          }
-        },
-        "parameters": {
-          "$connections": {
-            "value": {
-              "servicebus": {
-                "connectionId": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Web/connections/servicebus-connection', subscription().subscriptionId, resourceGroup().name)]",
-                "connectionName": "servicebus-connection",
-                "id": "[format('/subscriptions/{0}/providers/Microsoft.Web/locations/{1}/managedApis/servicebus', subscription().subscriptionId, variables('location'))]"
-              },
-              "office365": {
-                "connectionId": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Web/connections/office365-connection', subscription().subscriptionId, resourceGroup().name)]",
-                "connectionName": "office365-connection",
-                "id": "[format('/subscriptions/{0}/providers/Microsoft.Web/locations/{1}/managedApis/office365', subscription().subscriptionId, variables('location'))]"
-              }
-            }
-          }
-        }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]",
-        "[resourceId('Microsoft.Web/connections', 'servicebus-connection')]",
-        "[resourceId('Microsoft.Web/connections', 'office365-connection')]"
-      ]
     }
   ],
   "outputs": {
@@ -481,10 +341,6 @@
     "serviceBusConnectionString": {
       "type": "string",
       "value": "[listkeys(variables('authRuleResourceId'), '2021-06-01-preview').primaryConnectionString]"
-    },
-    "logicAppName": {
-      "type": "string",
-      "value": "[parameters('logicAppName')]"
     },
     "applicationInsightsInstrumentationKey": {
       "type": "string",

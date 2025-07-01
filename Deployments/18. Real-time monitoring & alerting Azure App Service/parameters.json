@@ -14,9 +14,6 @@
     "storageAccountName": {
       "value": "monitoringstorage123"
     },
-    "logicAppName": {
-      "value": "alert-processor-logic"
-    },
     "alertEmail": {
       "value": "admin@example.com"
     },
