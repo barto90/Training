@@ -69,8 +69,7 @@
     "location": "[resourceGroup().location]",
     "appServicePlanName": "[format('plan-{0}', parameters('appServiceName'))]",
     "functionHostingPlanName": "[format('plan-{0}', parameters('functionAppName'))]",
-    "applicationInsightsName": "[format('ai-{0}', parameters('appServiceName'))]",
-    "functionAppInsightsName": "[format('ai-{0}', parameters('functionAppName'))]",
+    "applicationInsightsName": "[format('ai-monitoring-{0}', parameters('appServiceName'))]",
     "logAnalyticsWorkspaceName": "[format('law-{0}', parameters('appServiceName'))]",
     "alertQueueName": "monitoring-alerts",
     "notificationQueueName": "alert-notifications",
@@ -107,22 +106,7 @@
         "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Insights/components",
-      "apiVersion": "2020-02-02",
-      "name": "[variables('functionAppInsightsName')]",
-      "location": "[variables('location')]",
-      "kind": "web",
-      "properties": {
-        "Application_Type": "web",
-        "Request_Source": "rest",
-        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
+                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
       ]
     },
     {
@@ -303,11 +287,11 @@
             },
             {
               "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-              "value": "[reference(resourceId('Microsoft.Insights/components', variables('functionAppInsightsName'))).InstrumentationKey]"
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))).InstrumentationKey]"
             },
             {
               "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-              "value": "[reference(resourceId('Microsoft.Insights/components', variables('functionAppInsightsName'))).ConnectionString]"
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))).ConnectionString]"
             },
             {
               "name": "[variables('serviceBusConnectionStringName')]",
@@ -343,7 +327,7 @@
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', variables('functionHostingPlanName'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
-        "[resourceId('Microsoft.Insights/components', variables('functionAppInsightsName'))]",
+        "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]",
         "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]"
       ]
     },
