@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appServiceName": {
+      "value": "monitored-webapp-demo"
+    },
+    "functionAppName": {
+      "value": "monitoring-functions-demo"
+    },
+    "serviceBusNamespaceName": {
+      "value": "monitoring-alerts-sb"
+    },
+    "storageAccountName": {
+      "value": "monitoringstorage123"
+    },
+    "logicAppName": {
+      "value": "alert-processor-logic"
+    },
+    "alertEmail": {
+      "value": "admin@example.com"
+    },
+    "monitoringIntervalMinutes": {
+      "value": 5
+    }
+  }
+} 

@@ -1,5 +1,5 @@
 # Send-ServiceBusMessage.ps1
-# PowerShell script to send messages to Azure ServiceBus Queue
+# PowerShell script to send messages to Azure ServiceBus Queue (for training purposes)
 param(
     [Parameter(Mandatory=$true)]
     [string]$ConnectionString,
@@ -20,12 +20,8 @@ param(
 Write-Host "🚌 Azure ServiceBus Message Publisher" -ForegroundColor Cyan
 Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
 
-# Check if Azure.Messaging.ServiceBus module is available
-try {
-    # For PowerShell 5.1 and later, use REST API approach
+try {   
     Write-Host "📦 Using REST API approach for ServiceBus messaging..." -ForegroundColor Yellow
-    
-    # Parse connection string
     $connectionParams = @{}
     $ConnectionString -split ';' | ForEach-Object {
         if ($_ -match '(.+)=(.+)') {
@@ -39,12 +35,16 @@ try {
     
     if (-not $endpoint -or -not $sharedAccessKeyName -or -not $sharedAccessKey) {
         throw "Invalid connection string format"
-    }
+    }    
     
-    # Remove https:// and trailing /
-    $namespace = $endpoint -replace 'https://', '' -replace '/$', ''
+    # Remove sb:// or https:// and trailing /
+    $namespace = $endpoint -replace '^sb://', '' -replace '^https://', '' -replace '/$', ''
     
-    # Generate SAS token
+    Write-Host "🔍 Debug Info:" -ForegroundColor Magenta
+    Write-Host "   Endpoint: $endpoint" -ForegroundColor Gray
+    Write-Host "   Namespace: $namespace" -ForegroundColor Gray
+    Write-Host "   Key Name: $sharedAccessKeyName" -ForegroundColor Gray
+    
     function New-SASToken {
         param($uri, $keyName, $key)
         
@@ -59,11 +59,9 @@ try {
     }
     
     for ($i = 1; $i -le $MessageCount; $i++) {
-        try {
-            # Create message content
+        try {            
             $currentMessage = if ($MessageCount -gt 1) { "$MessageContent (Message $i of $MessageCount)" } else { $MessageContent }
             
-            # Create message body
             $messageBody = @{
                 message = $currentMessage
                 timestamp = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssZ")
@@ -76,8 +74,6 @@ try {
             }
             
             $jsonBody = $messageBody | ConvertTo-Json -Depth 3
-            
-            # Create REST API request
             $uri = "https://$namespace/$QueueName/messages"
             $sasToken = New-SASToken -uri "https://$namespace/$QueueName" -keyName $sharedAccessKeyName -key $sharedAccessKey
             
@@ -88,9 +84,8 @@ try {
                     MessageId = [Guid]::NewGuid().ToString()
                     TimeToLive = 3600
                 } | ConvertTo-Json -Compress)
-            }
-            
-            # Add user properties to headers if provided
+            }            
+         
             if ($UserProperties.Count -gt 0) {
                 foreach ($prop in $UserProperties.GetEnumerator()) {
                     $headers["UserProperty.$($prop.Key)"] = $prop.Value
@@ -100,14 +95,13 @@ try {
             Write-Host "📤 Sending message $i to queue: $QueueName" -ForegroundColor Green
             Write-Host "📋 Message content: $currentMessage" -ForegroundColor White
             
-            # Send message via REST API
             $response = Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $jsonBody
             
             Write-Host "✅ Message $i sent successfully!" -ForegroundColor Green
             Write-Host "🆔 Message ID: $($headers.BrokerProperties | ConvertFrom-Json | Select-Object -ExpandProperty MessageId)" -ForegroundColor Cyan
             
             if ($MessageCount -gt 1 -and $i -lt $MessageCount) {
-                Start-Sleep -Milliseconds 500  # Small delay between messages
+                Start-Sleep -Milliseconds 500 
             }
             
         } catch {

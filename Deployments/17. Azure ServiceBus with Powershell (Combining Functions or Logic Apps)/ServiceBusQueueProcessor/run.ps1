@@ -1,34 +1,28 @@
-# PowerShell script for processing ServiceBus messages
 using namespace System.Net
 
-param($QueueItem, $TriggerMetadata)
+param([string] $mySbMsg, $TriggerMetadata)
 
-# Log the incoming message
 Write-Host "🚌 ServiceBus Message Received!"
 Write-Host "📅 Timestamp: $(Get-Date)"
 Write-Host "🆔 Message ID: $($TriggerMetadata.MessageId)"
-Write-Host "📋 Message Content: $QueueItem"
+Write-Host "📋 Message Content: $mySbMsg"
 Write-Host "📊 Delivery Count: $($TriggerMetadata.DeliveryCount)"
 Write-Host "⏰ Enqueued Time: $($TriggerMetadata.EnqueuedTimeUtc)"
 
-# Process the message content
 try {
-    # Convert message if it's JSON
-    if ($QueueItem -match '^[\{\[].*[\}\]]$') {
-        $messageObject = $QueueItem | ConvertFrom-Json
+
+    if ($mySbMsg -match '^[\{\[].*[\}\]]$') {
+        $messageObject = $mySbMsg | ConvertFrom-Json
         Write-Host "✅ Successfully parsed JSON message:"
         $messageObject | ConvertTo-Json -Depth 3 | Write-Host
     } else {
-        Write-Host "📝 Plain text message: $QueueItem"
+        Write-Host "📝 Plain text message: $mySbMsg"
     }
-    
-    # Log additional metadata
     Write-Host "📄 Message Properties:"
     if ($TriggerMetadata.UserProperties) {
         $TriggerMetadata.UserProperties | ConvertTo-Json -Depth 2 | Write-Host
     }
-    
-    # Simulate message processing
+  
     Write-Host "⚙️ Processing message..."
     Start-Sleep -Seconds 2
     Write-Host "✅ Message processed successfully!"

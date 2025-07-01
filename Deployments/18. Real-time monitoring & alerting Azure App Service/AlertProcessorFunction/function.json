@@ -1,0 +1,18 @@
+{
+  "bindings": [
+    {
+      "name": "AlertMessage",
+      "type": "serviceBusTrigger",
+      "direction": "in",
+      "connection": "ServiceBusConnection",
+      "queueName": "%AlertQueueName%"
+    },
+    {
+      "name": "NotificationMessage",
+      "type": "serviceBus",
+      "direction": "out",
+      "connection": "ServiceBusConnection",
+      "queueName": "%NotificationQueueName%"
+    }
+  ]
+} 

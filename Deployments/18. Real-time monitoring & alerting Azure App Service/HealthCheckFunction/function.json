@@ -1,0 +1,17 @@
+{
+  "bindings": [
+    {
+      "name": "Timer",
+      "type": "timerTrigger",
+      "direction": "in",
+      "schedule": "0 */%MonitoringIntervalMinutes% * * * *"
+    },
+    {
+      "name": "AlertMessage",
+      "type": "serviceBus",
+      "direction": "out",
+      "connection": "ServiceBusConnection",
+      "queueName": "%AlertQueueName%"
+    }
+  ]
+} 
