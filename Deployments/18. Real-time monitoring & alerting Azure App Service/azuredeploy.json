@@ -17,30 +17,6 @@
         "description": "The name of the Azure App Service to monitor. Must be globally unique."
       }
     },
-    "functionAppName": {
-      "type": "string",
-      "minLength": 2,
-      "maxLength": 60,
-      "metadata": {
-        "description": "The name of the Azure Function App for monitoring. Must be globally unique."
-      }
-    },
-    "serviceBusNamespaceName": {
-      "type": "string",
-      "minLength": 6,
-      "maxLength": 50,
-      "metadata": {
-        "description": "The name of the Service Bus namespace for alerts. Must be globally unique."
-      }
-    },
-    "storageAccountName": {
-      "type": "string",
-      "minLength": 3,
-      "maxLength": 24,
-      "metadata": {
-        "description": "The name of the storage account. Must be globally unique, lowercase letters and numbers only."
-      }
-    },
     "logicAppName": {
       "type": "string",
       "minLength": 2,
@@ -55,29 +31,35 @@
         "description": "Email address to receive monitoring alerts."
       }
     },
-    "monitoringIntervalMinutes": {
+    "responseTimeThresholdSeconds": {
       "type": "int",
       "defaultValue": 5,
       "minValue": 1,
-      "maxValue": 60,
+      "maxValue": 30,
       "metadata": {
-        "description": "Monitoring interval in minutes (1-60)."
+        "description": "Alert when response time exceeds this many seconds."
+      }
+    },
+    "errorRateThresholdPercent": {
+      "type": "int",
+      "defaultValue": 5,
+      "minValue": 1,
+      "maxValue": 50,
+      "metadata": {
+        "description": "Alert when error rate exceeds this percentage."
       }
     }
   },
   "variables": {
     "location": "[resourceGroup().location]",
-    "appServicePlanName": "[format('plan-webapp-{0}', parameters('appServiceName'))]",
-    "functionHostingPlanName": "[format('plan-functions-{0}', parameters('appServiceName'))]",
-    "actualFunctionAppName": "[format('{0}-monitoring', parameters('appServiceName'))]",
-    "applicationInsightsName": "[format('ai-monitoring-{0}', parameters('appServiceName'))]",
+    "appServicePlanName": "[format('plan-{0}', parameters('appServiceName'))]",
+    "applicationInsightsName": "[format('ai-{0}', parameters('appServiceName'))]",
     "logAnalyticsWorkspaceName": "[format('law-{0}', parameters('appServiceName'))]",
-    "alertQueueName": "monitoring-alerts",
-    "notificationQueueName": "alert-notifications",
-    "deadLetterQueueName": "alert-deadletter",
-    "serviceBusConnectionStringName": "ServiceBusConnection",
-    "defaultSASKeyName": "RootManageSharedAccessKey",
-    "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('serviceBusNamespaceName'), variables('defaultSASKeyName'))]"
+    "actionGroupName": "[format('ag-{0}', parameters('appServiceName'))]",
+    "availabilityAlertName": "[format('alert-availability-{0}', parameters('appServiceName'))]",
+    "responseTimeAlertName": "[format('alert-responsetime-{0}', parameters('appServiceName'))]",
+    "errorRateAlertName": "[format('alert-errorrate-{0}', parameters('appServiceName'))]",
+    "cpuAlertName": "[format('alert-cpu-{0}', parameters('appServiceName'))]"
   },
   "resources": [
     {
@@ -107,81 +89,7 @@
         "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
       },
       "dependsOn": [
-                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "2022-09-01",
-      "name": "[parameters('storageAccountName')]",
-      "location": "[variables('location')]",
-      "sku": {
-        "name": "Standard_LRS"
-      },
-      "kind": "StorageV2",
-      "properties": {
-        "supportsHttpsTrafficOnly": true,
-        "defaultToOAuthAuthentication": true,
-        "minimumTlsVersion": "TLS1_2",
-        "allowBlobPublicAccess": false,
-        "networkAcls": {
-          "defaultAction": "Allow"
-        }
-      }
-    },
-    {
-      "type": "Microsoft.ServiceBus/namespaces",
-      "apiVersion": "2021-06-01-preview",
-      "name": "[parameters('serviceBusNamespaceName')]",
-      "location": "[variables('location')]",
-      "sku": {
-        "name": "Standard",
-        "tier": "Standard"
-      },
-      "properties": {
-        "serviceBusEndpoint": "[format('https://{0}.servicebus.windows.net:443/', parameters('serviceBusNamespaceName'))]"
-      }
-    },
-    {
-      "type": "Microsoft.ServiceBus/namespaces/queues",
-      "apiVersion": "2021-06-01-preview",
-      "name": "[format('{0}/{1}', parameters('serviceBusNamespaceName'), variables('alertQueueName'))]",
-      "properties": {
-        "lockDuration": "PT5M",
-        "maxSizeInMegabytes": 1024,
-        "requiresDuplicateDetection": true,
-        "requiresSession": false,
-        "defaultMessageTimeToLive": "P1D",
-        "deadLetteringOnMessageExpiration": true,
-        "enableBatchedOperations": true,
-        "duplicateDetectionHistoryTimeWindow": "PT1H",
-        "maxDeliveryCount": 5,
-        "enablePartitioning": false,
-        "enableExpress": false
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.ServiceBus/namespaces/queues",
-      "apiVersion": "2021-06-01-preview",
-      "name": "[format('{0}/{1}', parameters('serviceBusNamespaceName'), variables('notificationQueueName'))]",
-      "properties": {
-        "lockDuration": "PT5M",
-        "maxSizeInMegabytes": 1024,
-        "requiresDuplicateDetection": false,
-        "requiresSession": false,
-        "defaultMessageTimeToLive": "P7D",
-        "deadLetteringOnMessageExpiration": true,
-        "enableBatchedOperations": true,
-        "duplicateDetectionHistoryTimeWindow": "PT10M",
-        "maxDeliveryCount": 3,
-        "enablePartitioning": false,
-        "enableExpress": false
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]"
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
       ]
     },
     {
@@ -190,25 +98,11 @@
       "name": "[variables('appServicePlanName')]",
       "location": "[variables('location')]",
       "sku": {
-        "name": "F1",
-        "tier": "Free"
+        "name": "S1",
+        "tier": "Standard"
       },
       "properties": {
         "name": "[variables('appServicePlanName')]",
-        "reserved": false
-      }
-    },
-    {
-      "type": "Microsoft.Web/serverfarms",
-      "apiVersion": "2022-03-01",
-      "name": "[variables('functionHostingPlanName')]",
-      "location": "[variables('location')]",
-      "sku": {
-        "name": "Y1",
-        "tier": "Dynamic"
-      },
-      "properties": {
-        "name": "[variables('functionHostingPlanName')]",
         "reserved": false
       }
     },
@@ -249,90 +143,6 @@
       ]
     },
     {
-      "type": "Microsoft.Web/sites",
-      "apiVersion": "2022-03-01",
-      "name": "[variables('actualFunctionAppName')]",
-      "location": "[variables('location')]",
-      "kind": "functionapp",
-      "identity": {
-        "type": "SystemAssigned"
-      },
-      "properties": {
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('functionHostingPlanName'))]",
-        "httpsOnly": true,
-        "siteConfig": {
-          "ftpsState": "Disabled",
-          "minTlsVersion": "1.2",
-          "powerShellVersion": "7.4",
-          "use32BitWorkerProcess": false,
-          "appSettings": [
-            {
-              "name": "AzureWebJobsStorage",
-              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('storageAccountName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2022-09-01').keys[0].value)]"
-            },
-            {
-              "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('storageAccountName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2022-09-01').keys[0].value)]"
-            },
-            {
-              "name": "WEBSITE_CONTENTSHARE",
-              "value": "[toLower(variables('actualFunctionAppName'))]"
-            },
-            {
-              "name": "FUNCTIONS_EXTENSION_VERSION",
-              "value": "~4"
-            },
-            {
-              "name": "FUNCTIONS_WORKER_RUNTIME",
-              "value": "powershell"
-            },
-            {
-              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-              "value": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))).InstrumentationKey]"
-            },
-            {
-              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-              "value": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))).ConnectionString]"
-            },
-            {
-              "name": "[variables('serviceBusConnectionStringName')]",
-              "value": "[listkeys(variables('authRuleResourceId'), '2021-06-01-preview').primaryConnectionString]"
-            },
-            {
-              "name": "MonitoredAppServiceName",
-              "value": "[parameters('appServiceName')]"
-            },
-            {
-              "name": "MonitoredAppServiceUrl",
-              "value": "[format('https://{0}.azurewebsites.net', parameters('appServiceName'))]"
-            },
-            {
-              "name": "AlertQueueName",
-              "value": "[variables('alertQueueName')]"
-            },
-            {
-              "name": "NotificationQueueName",
-              "value": "[variables('notificationQueueName')]"
-            },
-            {
-              "name": "MonitoringIntervalMinutes",
-              "value": "[string(parameters('monitoringIntervalMinutes'))]"
-            },
-            {
-              "name": "AlertEmail",
-              "value": "[parameters('alertEmail')]"
-            }
-          ]
-        }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', variables('functionHostingPlanName'))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
-        "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]",
-        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]"
-      ]
-    },
-    {
       "type": "Microsoft.Logic/workflows",
       "apiVersion": "2019-05-01",
       "name": "[parameters('logicAppName')]",
@@ -345,53 +155,262 @@
         "definition": {
           "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
           "contentVersion": "1.0.0.0",
-          "parameters": {},
+          "parameters": {
+            "alertEmail": {
+              "type": "String"
+            }
+          },
           "triggers": {
-            "Recurrence": {
-              "recurrence": {
-                "frequency": "Minute",
-                "interval": 2
-              },
-              "type": "Recurrence"
+            "manual": {
+              "type": "Request",
+              "kind": "Http",
+              "inputs": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "schemaId": { "type": "string" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "context": {
+                          "type": "object",
+                          "properties": {
+                            "timestamp": { "type": "string" },
+                            "name": { "type": "string" },
+                            "description": { "type": "string" }
+                          }
+                        },
+                        "status": { "type": "string" },
+                        "alertRule": {
+                          "type": "object",
+                          "properties": {
+                            "name": { "type": "string" },
+                            "description": { "type": "string" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
           },
           "actions": {
-            "Log_Alert_Check": {
+            "Parse_Alert_Data": {
               "runAfter": {},
               "type": "Compose",
               "inputs": {
-                "message": "Checking for monitoring alerts",
-                "timestamp": "@utcnow()",
-                "alertEmail": "[parameters('alertEmail')]"
+                "alertName": "@triggerBody()?['data']?['context']?['name']",
+                "alertDescription": "@triggerBody()?['data']?['context']?['description']",
+                "status": "@triggerBody()?['data']?['status']",
+                "timestamp": "@triggerBody()?['data']?['context']?['timestamp']",
+                "ruleName": "@triggerBody()?['data']?['alertRule']?['name']"
               }
             },
-            "Send_Webhook_Notification": {
+            "Send_Email_Alert": {
               "runAfter": {
-                "Log_Alert_Check": [
+                "Parse_Alert_Data": [
                   "Succeeded"
                 ]
               },
               "type": "Http",
               "inputs": {
                 "method": "POST",
-                "uri": "https://httpbin.org/post",
+                "uri": "https://prod-00.westus.logic.azure.com/workflows/12345678-1234-1234-1234-123456789012/triggers/manual/paths/invoke?api-version=2016-06-01",
                 "headers": {
                   "Content-Type": "application/json"
                 },
                 "body": {
-                  "alertType": "Azure App Service Monitoring",
-                  "email": "[parameters('alertEmail')]",
-                  "message": "Logic App is processing monitoring alerts",
-                  "timestamp": "@utcnow()"
+                  "to": "@parameters('alertEmail')",
+                  "subject": "🚨 Azure Monitor Alert: @{outputs('Parse_Alert_Data')?['alertName']}",
+                  "htmlBody": "<h2>🚨 Azure Monitor Alert</h2><table border='1' style='border-collapse:collapse;'><tr><th style='padding:8px;background:#f0f0f0;'>Alert</th><td style='padding:8px;'>@{outputs('Parse_Alert_Data')?['alertName']}</td></tr><tr><th style='padding:8px;background:#f0f0f0;'>Status</th><td style='padding:8px;'>@{outputs('Parse_Alert_Data')?['status']}</td></tr><tr><th style='padding:8px;background:#f0f0f0;'>Description</th><td style='padding:8px;'>@{outputs('Parse_Alert_Data')?['alertDescription']}</td></tr><tr><th style='padding:8px;background:#f0f0f0;'>Rule</th><td style='padding:8px;'>@{outputs('Parse_Alert_Data')?['ruleName']}</td></tr><tr><th style='padding:8px;background:#f0f0f0;'>Time</th><td style='padding:8px;'>@{outputs('Parse_Alert_Data')?['timestamp']}</td></tr></table>",
+                  "textBody": "Azure Monitor Alert: @{outputs('Parse_Alert_Data')?['alertName']} - Status: @{outputs('Parse_Alert_Data')?['status']} - @{outputs('Parse_Alert_Data')?['timestamp']}"
                 }
               }
             }
           },
           "outputs": {}
+        },
+        "parameters": {
+          "alertEmail": {
+            "value": "[parameters('alertEmail')]"
+          }
         }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/actionGroups",
+      "apiVersion": "2023-01-01",
+      "name": "[variables('actionGroupName')]",
+      "location": "Global",
+      "properties": {
+        "groupShortName": "AppAlerts",
+        "enabled": true,
+        "emailReceivers": [
+          {
+            "name": "EmailAlert",
+            "emailAddress": "[parameters('alertEmail')]",
+            "useCommonAlertSchema": true
+          }
+        ],
+        "webhookReceivers": [
+          {
+            "name": "LogicAppWebhook",
+            "serviceUri": "[listCallbackURL(concat(resourceId('Microsoft.Logic/workflows', parameters('logicAppName')), '/triggers/manual'), '2019-05-01').value]",
+            "useCommonAlertSchema": true
+          }
+        ]
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]"
+        "[resourceId('Microsoft.Logic/workflows', parameters('logicAppName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/metricAlerts",
+      "apiVersion": "2018-03-01",
+      "name": "[variables('availabilityAlertName')]",
+      "location": "Global",
+      "properties": {
+        "description": "Alert when the app service is not available",
+        "severity": 1,
+        "enabled": true,
+        "scopes": [
+          "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]"
+        ],
+        "evaluationFrequency": "PT1M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+          "allOf": [
+            {
+              "name": "AvailabilityCheck",
+              "metricName": "HealthCheckStatus",
+              "operator": "LessThan",
+              "threshold": 1,
+              "timeAggregation": "Average"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]",
+        "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/metricAlerts",
+      "apiVersion": "2018-03-01",
+      "name": "[variables('responseTimeAlertName')]",
+      "location": "Global",
+      "properties": {
+        "description": "Alert when response time is too high",
+        "severity": 2,
+        "enabled": true,
+        "scopes": [
+          "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]"
+        ],
+        "evaluationFrequency": "PT1M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+          "allOf": [
+            {
+              "name": "ResponseTimeCheck",
+              "metricName": "HttpResponseTime",
+              "operator": "GreaterThan",
+              "threshold": "[parameters('responseTimeThresholdSeconds')]",
+              "timeAggregation": "Average"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]",
+        "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/metricAlerts",
+      "apiVersion": "2018-03-01",
+      "name": "[variables('errorRateAlertName')]",
+      "location": "Global",
+      "properties": {
+        "description": "Alert when HTTP error rate is too high",
+        "severity": 2,
+        "enabled": true,
+        "scopes": [
+          "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]"
+        ],
+        "evaluationFrequency": "PT1M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+          "allOf": [
+            {
+              "name": "ErrorRateCheck",
+              "metricName": "Http5xx",
+              "operator": "GreaterThan",
+              "threshold": "[parameters('errorRateThresholdPercent')]",
+              "timeAggregation": "Total"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]",
+        "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/metricAlerts",
+      "apiVersion": "2018-03-01",
+      "name": "[variables('cpuAlertName')]",
+      "location": "Global",
+      "properties": {
+        "description": "Alert when CPU usage is too high",
+        "severity": 3,
+        "enabled": true,
+        "scopes": [
+          "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]"
+        ],
+        "evaluationFrequency": "PT1M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+          "allOf": [
+            {
+              "name": "CpuUsageCheck",
+              "metricName": "CpuPercentage",
+              "operator": "GreaterThan",
+              "threshold": 80,
+              "timeAggregation": "Average"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]",
+        "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
       ]
     }
   ],
@@ -400,25 +419,21 @@
       "type": "string",
       "value": "[format('https://{0}.azurewebsites.net', parameters('appServiceName'))]"
     },
-    "functionAppName": {
-      "type": "string",
-      "value": "[variables('actualFunctionAppName')]"
-    },
-    "serviceBusNamespace": {
-      "type": "string",
-      "value": "[parameters('serviceBusNamespaceName')]"
-    },
-    "serviceBusConnectionString": {
-      "type": "string",
-      "value": "[listkeys(variables('authRuleResourceId'), '2021-06-01-preview').primaryConnectionString]"
-    },
     "logicAppName": {
       "type": "string",
       "value": "[parameters('logicAppName')]"
     },
+    "logicAppTriggerUrl": {
+      "type": "string",
+      "value": "[listCallbackURL(concat(resourceId('Microsoft.Logic/workflows', parameters('logicAppName')), '/triggers/manual'), '2019-05-01').value]"
+    },
     "applicationInsightsInstrumentationKey": {
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))).InstrumentationKey]"
+    },
+    "monitoringDashboardUrl": {
+      "type": "string",
+      "value": "[format('https://portal.azure.com/#@/resource{0}/overview', resourceId('Microsoft.Web/sites', parameters('appServiceName')))]"
     }
   }
 } 

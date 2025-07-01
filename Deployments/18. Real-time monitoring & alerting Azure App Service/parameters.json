@@ -5,23 +5,17 @@
     "appServiceName": {
       "value": "monitored-webapp-demo"
     },
-    "functionAppName": {
-      "value": "monitoring-functions-demo"
-    },
-    "serviceBusNamespaceName": {
-      "value": "monitoring-alerts-sb"
-    },
-    "storageAccountName": {
-      "value": "monitoringstorage123"
-    },
     "logicAppName": {
       "value": "alert-processor-logic"
     },
     "alertEmail": {
       "value": "admin@example.com"
     },
-    "monitoringIntervalMinutes": {
+    "responseTimeThresholdSeconds": {
       "value": 5
+    },
+    "errorRateThresholdPercent": {
+      "value": 10
     }
   }
 } 
