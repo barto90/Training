@@ -1,165 +1,195 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Azure Resource Manager Template Visualizer - Real-time Monitoring & Alerting</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Monitoring & Alerting Azure App Service - Architecture</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: white;
+            color: #333;
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
         }
-
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
+            background-color: white;
             padding: 30px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-
         h1 {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 32px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #0078d4;
             text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.5rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
-
-        .architecture-diagram {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 30px;
-            margin: 30px 0;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .resource-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .resource-card {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 15px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .resource-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .resource-icon {
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-
-        .resource-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #4fc3f7;
-        }
-
-        .resource-description {
-            opacity: 0.9;
-            line-height: 1.5;
-        }
-
-        .flow-diagram {
-            text-align: center;
-            font-family: 'Courier New', monospace;
-            font-size: 1.1rem;
-            line-height: 2;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 20px;
-            border-radius: 10px;
+        .architecture {
+            width: 100%;
+            height: 450px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
             margin: 20px 0;
-        }
-
-        .arrow {
-            color: #4fc3f7;
-            font-weight: bold;
-        }
-
-        .parameters-section {
-            background: rgba(255, 193, 7, 0.1);
-            border-radius: 15px;
-            padding: 20px;
-            margin: 30px 0;
-            border: 1px solid rgba(255, 193, 7, 0.3);
-        }
-
-        .parameter-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-
-        .parameter-name {
-            font-weight: bold;
-            color: #81d4fa;
+        .flow-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            padding: 40px;
         }
-
-        .parameter-type {
-            background: rgba(76, 175, 80, 0.3);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-        }
-
-        .outputs-section {
-            background: rgba(76, 175, 80, 0.1);
-            border-radius: 15px;
-            padding: 20px;
-            margin: 30px 0;
-            border: 1px solid rgba(76, 175, 80, 0.3);
-        }
-
-        .deploy-button {
-            display: inline-block;
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: white;
-            padding: 15px 30px;
-            text-decoration: none;
-            border-radius: 25px;
-            font-weight: bold;
+        .flow-item {
             text-align: center;
-            margin: 20px auto;
-            transition: transform 0.3s;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            flex: 1;
+            margin: 0 10px;
         }
-
-        .deploy-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        .flow-icon {
+            font-size: 60px;
+            margin-bottom: 10px;
+            display: block;
         }
-
-        .info-box {
-            background: rgba(33, 150, 243, 0.1);
-            border-left: 4px solid #2196F3;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
+        .flow-arrow {
+            font-size: 30px;
+            color: #0078d4;
+            margin: 0 20px;
         }
-
-        .warning-box {
-            background: rgba(255, 152, 0, 0.1);
-            border-left: 4px solid #FF9800;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
+        .resources {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        .resource {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 25px;
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 120, 212, 0.3);
+        }
+        .resource:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(0, 120, 212, 0.4);
+        }
+        .resource h3 {
+            margin-top: 0;
+            color: #fff;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .resource-icon {
+            font-size: 28px;
+        }
+        .config {
+            background-color: rgba(255,255,255,0.15);
+            padding: 18px;
+            border-radius: 8px;
+            margin-top: 18px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+        .config div {
+            margin: 6px 0;
+        }
+        .monitoring-features {
+            margin-top: 30px;
+            background: linear-gradient(135deg, #20c997 0%, #198754 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);
+        }
+        .monitoring-features h3 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .monitoring-features ul {
+            columns: 2;
+            column-gap: 40px;
+        }
+        .alerting-system {
+            background: linear-gradient(135deg, #fd7e14 0%, #dc6507 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(253, 126, 20, 0.3);
+        }
+        .alerting-system h3 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .alert-flow {
+            background-color: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 18px;
+            backdrop-filter: blur(10px);
+        }
+        .alert-step {
+            margin: 12px 0;
+            padding: 10px;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            border-left: 3px solid #ffd700;
+        }
+        .logic-app-features {
+            background: linear-gradient(135deg, #6f42c1 0%, #563d7c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+        }
+        .logic-app-features h3 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+        .stat-item {
+            background-color: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            display: block;
+        }
+        .function-info {
+            background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
+        }
+        .function-info h3 {
+            margin-top: 0;
+            font-size: 24px;
         }
     </style>
 </head>
@@ -167,242 +197,209 @@
     <div class="container">
         <h1>🔍 Real-time Monitoring & Alerting Azure App Service</h1>
         
-        <div class="info-box">
-            <strong>📋 Template Overview:</strong> This ARM template deploys a comprehensive real-time monitoring and alerting solution for Azure App Services using ServiceBus queues, Logic Apps, and PowerShell Azure Functions.
-        </div>
-
-        <div class="architecture-diagram">
-            <h2>🏗️ Architecture Flow</h2>
-            <div class="flow-diagram">
-                🏠 Azure App Service (Monitored)<br>
-                <span class="arrow">↓ (Health Checks Every 5 Min)</span><br>
-                ⏱️ HealthCheckFunction (Timer Trigger)<br>
-                <span class="arrow">↓ (Alert Messages)</span><br>
-                🚌 ServiceBus Queue (monitoring-alerts)<br>
-                <span class="arrow">↓ (Message Processing)</span><br>
-                🚨 AlertProcessorFunction (ServiceBus Trigger)<br>
-                <span class="arrow">↓ (Enhanced Notifications)</span><br>
-                🚌 ServiceBus Queue (alert-notifications)<br>
-                <span class="arrow">↓ (Email Processing)</span><br>
-                🔄 Logic App (Notification Orchestration)<br>
-                <span class="arrow">↓</span><br>
-                📧 Email/Teams Alerts<br>
-                <span class="arrow">↙ ↘</span><br>
-                📊 Application Insights & 📈 Log Analytics
+        <!-- Architecture Flow -->
+        <div class="architecture">
+            <h2>🏗️ Monitoring Architecture Flow</h2>
+            <div class="flow-container">
+                <div class="flow-item">
+                    <div class="flow-icon">🏠</div>
+                    <div>App Service<br>(Monitored)</div>
+                </div>
+                <div class="flow-arrow">➡️</div>
+                <div class="flow-item">
+                    <div class="flow-icon">⏱️</div>
+                    <div>Health Check<br>Function</div>
+                </div>
+                <div class="flow-arrow">➡️</div>
+                <div class="flow-item">
+                    <div class="flow-icon">🚌</div>
+                    <div>ServiceBus<br>Queue</div>
+                </div>
+                <div class="flow-arrow">➡️</div>
+                <div class="flow-item">
+                    <div class="flow-icon">🚨</div>
+                    <div>Alert Processor<br>Function</div>
+                </div>
+                <div class="flow-arrow">➡️</div>
+                <div class="flow-item">
+                    <div class="flow-icon">🔄</div>
+                    <div>Logic App<br>Notifications</div>
+                </div>
+                <div class="flow-arrow">➡️</div>
+                <div class="flow-item">
+                    <div class="flow-icon">📧</div>
+                    <div>Email/Teams<br>Alerts</div>
+                </div>
             </div>
         </div>
 
+        <!-- Azure Resources -->
         <h2>🚀 Azure Resources</h2>
-        <div class="resource-grid">
-            <div class="resource-card">
-                <div class="resource-icon">🏠</div>
-                <div class="resource-title">Azure App Service</div>
-                <div class="resource-description">
-                    The monitored web application with health check endpoints. Includes sample HTML pages demonstrating monitoring capabilities.
+        <div class="resources">
+            <div class="resource">
+                <h3><span class="resource-icon">🏠</span>Azure App Service</h3>
+                <p>The monitored web application with health endpoints and Application Insights integration.</p>
+                <div class="config">
+                    <div>• HTTPS Only: Enabled</div>
+                    <div>• Health Endpoint: /health.html</div>
+                    <div>• Application Insights: Integrated</div>
+                    <div>• System Assigned Identity: Enabled</div>
                 </div>
             </div>
 
-            <div class="resource-card">
-                <div class="resource-icon">⚡</div>
-                <div class="resource-title">Function App (PowerShell)</div>
-                <div class="resource-description">
-                    PowerShell 7.4 runtime hosting two monitoring functions:
-                    <ul>
-                        <li>HealthCheckFunction (Timer trigger)</li>
-                        <li>AlertProcessorFunction (ServiceBus trigger)</li>
-                    </ul>
+            <div class="resource">
+                <h3><span class="resource-icon">⚡</span>Azure Function App</h3>
+                <p>PowerShell-based serverless functions for monitoring and alert processing.</p>
+                <div class="config">
+                    <div>• Runtime: PowerShell 7.4</div>
+                    <div>• Plan: Consumption (Y1)</div>
+                    <div>• Functions: HealthCheck, AlertProcessor</div>
+                    <div>• Triggers: Timer, ServiceBus</div>
                 </div>
             </div>
 
-            <div class="resource-card">
-                <div class="resource-icon">🚌</div>
-                <div class="resource-title">ServiceBus Namespace</div>
-                <div class="resource-description">
-                    Standard tier messaging service with two queues:
-                    <ul>
-                        <li>monitoring-alerts (Raw alerts)</li>
-                        <li>alert-notifications (Processed notifications)</li>
-                    </ul>
+            <div class="resource">
+                <h3><span class="resource-icon">🚌</span>Service Bus Namespace</h3>
+                <p>Enterprise messaging service for reliable alert queue management.</p>
+                <div class="config">
+                    <div>• Tier: Standard</div>
+                    <div>• Queues: monitoring-alerts, alert-notifications</div>
+                    <div>• Message TTL: 1-7 days</div>
+                    <div>• Dead Letter: Enabled</div>
                 </div>
             </div>
 
-            <div class="resource-card">
-                <div class="resource-icon">🔄</div>
-                <div class="resource-title">Logic App</div>
-                <div class="resource-description">
-                    Automated workflow for processing alert notifications and sending emails with formatted content and recommended actions.
+            <div class="resource">
+                <h3><span class="resource-icon">🔄</span>Logic App</h3>
+                <p>Workflow orchestration for email notifications and external integrations.</p>
+                <div class="config">
+                    <div>• Trigger: ServiceBus Queue</div>
+                    <div>• Actions: Email, Teams, Webhook</div>
+                    <div>• Identity: System Assigned</div>
+                    <div>• Connectors: Office365, ServiceBus</div>
                 </div>
             </div>
 
-            <div class="resource-card">
-                <div class="resource-icon">📊</div>
-                <div class="resource-title">Application Insights</div>
-                <div class="resource-description">
-                    Two instances for monitoring:
-                    <ul>
-                        <li>App Service telemetry and performance</li>
-                        <li>Function App execution and custom metrics</li>
-                    </ul>
+            <div class="resource">
+                <h3><span class="resource-icon">📊</span>Application Insights</h3>
+                <p>Advanced monitoring and analytics for both App Service and Function App.</p>
+                <div class="config">
+                    <div>• Type: Web Application</div>
+                    <div>• Workspace: Log Analytics</div>
+                    <div>• Retention: 30 days</div>
+                    <div>• Telemetry: Full stack monitoring</div>
                 </div>
             </div>
 
-            <div class="resource-card">
-                <div class="resource-icon">📈</div>
-                <div class="resource-title">Log Analytics Workspace</div>
-                <div class="resource-description">
-                    Centralized logging and analytics platform for all monitoring data with 30-day retention and KQL query capabilities.
-                </div>
-            </div>
-
-            <div class="resource-card">
-                <div class="resource-icon">💾</div>
-                <div class="resource-title">Storage Account</div>
-                <div class="resource-description">
-                    Standard LRS storage for Function App runtime, with HTTPS-only and minimal TLS 1.2 security configuration.
-                </div>
-            </div>
-
-            <div class="resource-card">
-                <div class="resource-icon">📋</div>
-                <div class="resource-title">App Service Plans</div>
-                <div class="resource-description">
-                    <ul>
-                        <li>Free tier for demo App Service</li>
-                        <li>Consumption plan for Functions (auto-scaling)</li>
-                    </ul>
+            <div class="resource">
+                <h3><span class="resource-icon">💾</span>Storage Account</h3>
+                <p>Secure storage for Function App runtime and configuration data.</p>
+                <div class="config">
+                    <div>• Type: StorageV2 (General Purpose v2)</div>
+                    <div>• Replication: Locally Redundant (LRS)</div>
+                    <div>• TLS: Minimum 1.2</div>
+                    <div>• HTTPS: Required</div>
                 </div>
             </div>
         </div>
 
-        <div class="parameters-section">
-            <h2>⚙️ Template Parameters</h2>
-            
-            <div class="parameter-item">
-                <span class="parameter-name">appServiceName</span>
-                <span class="parameter-type">string (required)</span>
-            </div>
-            <div style="margin-left: 20px; opacity: 0.8;">Name of the Azure App Service to monitor (2-60 chars, globally unique)</div>
-
-            <div class="parameter-item">
-                <span class="parameter-name">functionAppName</span>
-                <span class="parameter-type">string (required)</span>
-            </div>
-            <div style="margin-left: 20px; opacity: 0.8;">Name of the Azure Function App for monitoring (2-60 chars, globally unique)</div>
-
-            <div class="parameter-item">
-                <span class="parameter-name">serviceBusNamespaceName</span>
-                <span class="parameter-type">string (required)</span>
-            </div>
-            <div style="margin-left: 20px; opacity: 0.8;">ServiceBus namespace for alerts (6-50 chars, globally unique)</div>
-
-            <div class="parameter-item">
-                <span class="parameter-name">storageAccountName</span>
-                <span class="parameter-type">string (required)</span>
-            </div>
-            <div style="margin-left: 20px; opacity: 0.8;">Storage account name (3-24 chars, lowercase, globally unique)</div>
-
-            <div class="parameter-item">
-                <span class="parameter-name">logicAppName</span>
-                <span class="parameter-type">string (required)</span>
-            </div>
-            <div style="margin-left: 20px; opacity: 0.8;">Logic App name for alert processing (2-80 chars)</div>
-
-            <div class="parameter-item">
-                <span class="parameter-name">alertEmail</span>
-                <span class="parameter-type">string (required)</span>
-            </div>
-            <div style="margin-left: 20px; opacity: 0.8;">Email address to receive monitoring alerts</div>
-
-            <div class="parameter-item">
-                <span class="parameter-name">monitoringIntervalMinutes</span>
-                <span class="parameter-type">int (optional)</span>
-            </div>
-            <div style="margin-left: 20px; opacity: 0.8;">Health check interval in minutes (1-60, default: 5)</div>
-        </div>
-
-        <div class="outputs-section">
-            <h2>📤 Template Outputs</h2>
-            
-            <div class="parameter-item">
-                <span class="parameter-name">appServiceUrl</span>
-                <span class="parameter-type">string</span>
-            </div>
-            <div style="margin-left: 20px; opacity: 0.8;">URL of the deployed App Service</div>
-
-            <div class="parameter-item">
-                <span class="parameter-name">functionAppName</span>
-                <span class="parameter-type">string</span>
-            </div>
-            <div style="margin-left: 20px; opacity: 0.8;">Name of the deployed Function App</div>
-
-            <div class="parameter-item">
-                <span class="parameter-name">serviceBusConnectionString</span>
-                <span class="parameter-type">string</span>
-            </div>
-            <div style="margin-left: 20px; opacity: 0.8;">ServiceBus connection string for testing</div>
-
-            <div class="parameter-item">
-                <span class="parameter-name">applicationInsightsInstrumentationKey</span>
-                <span class="parameter-type">string</span>
-            </div>
-            <div style="margin-left: 20px; opacity: 0.8;">Application Insights instrumentation key</div>
-        </div>
-
-        <div class="warning-box">
-            <strong>⚠️ Post-Deployment Required:</strong>
+        <!-- Monitoring Features -->
+        <div class="monitoring-features">
+            <h3>🔍 Real-time Monitoring Features</h3>
             <ul>
-                <li>Deploy function code using Deploy-MonitoringFunctions.ps1</li>
-                <li>Configure Logic App API connections (ServiceBus & Office365)</li>
-                <li>Deploy sample web app content to the App Service</li>
-                <li>Test the monitoring system with Test-MonitoringAlerts.ps1</li>
+                <li>Automated health checks every 5 minutes</li>
+                <li>HTTP response time monitoring</li>
+                <li>Status code validation</li>
+                <li>Application availability tracking</li>
+                <li>Custom health endpoint validation</li>
+                <li>Performance threshold monitoring</li>
+                <li>Dependency health checking</li>
+                <li>Multi-region monitoring support</li>
+            </ul>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-number">5min</span>
+                    Health Check Interval
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">99.9%</span>
+                    Target Uptime SLA
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">< 2s</span>
+                    Alert Response Time
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">24/7</span>
+                    Continuous Monitoring
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerting System -->
+        <div class="alerting-system">
+            <h3>🚨 Multi-Channel Alerting System</h3>
+            <div class="alert-flow">
+                <div class="alert-step">
+                    <strong>1. Health Detection:</strong> Timer-triggered function checks app health every 5 minutes
+                </div>
+                <div class="alert-step">
+                    <strong>2. Alert Generation:</strong> Failed checks create structured alert messages
+                </div>
+                <div class="alert-step">
+                    <strong>3. Queue Processing:</strong> ServiceBus ensures reliable alert delivery
+                </div>
+                <div class="alert-step">
+                    <strong>4. Alert Enhancement:</strong> Processor function enriches alerts with context
+                </div>
+                <div class="alert-step">
+                    <strong>5. Notification Routing:</strong> Logic App routes to appropriate channels
+                </div>
+                <div class="alert-step">
+                    <strong>6. Multi-Channel Delivery:</strong> Email, Teams, SMS, and webhook notifications
+                </div>
+            </div>
+        </div>
+
+        <!-- Logic App Features -->
+        <div class="logic-app-features">
+            <h3>🔄 Logic App Orchestration</h3>
+            <ul>
+                <li>Email notifications with detailed formatting</li>
+                <li>Microsoft Teams channel alerts</li>
+                <li>SMS notifications for critical alerts</li>
+                <li>Webhook integrations for external systems</li>
+                <li>Alert escalation workflows</li>
+                <li>Business hours filtering</li>
+                <li>Alert deduplication and throttling</li>
+                <li>Rich HTML email templates</li>
             </ul>
         </div>
 
-        <div style="text-align: center; margin: 40px 0;">
-            <a href="#" class="deploy-button" onclick="deployTemplate()">
-                🚀 Deploy to Azure
-            </a>
-        </div>
-
-        <div class="info-box">
-            <strong>💡 Monitoring Features:</strong>
+        <!-- Function Details -->
+        <div class="function-info">
+            <h3>⚡ PowerShell Function Details</h3>
+            <p><strong>HealthCheckFunction (Timer Trigger):</strong></p>
             <ul>
-                <li>🔍 Health checks every 5 minutes (configurable)</li>
-                <li>🚨 Real-time alerting with ServiceBus messaging</li>
-                <li>📧 Email notifications with recommended actions</li>
-                <li>📊 Application Insights telemetry and custom metrics</li>
-                <li>🔄 Logic Apps for flexible notification workflows</li>
-                <li>⚡ PowerShell Functions for monitoring logic</li>
-                <li>🎯 Multiple alert levels (INFO, WARNING, CRITICAL)</li>
-                <li>💓 Heartbeat monitoring and system health validation</li>
+                <li>Configurable monitoring intervals (1-60 minutes)</li>
+                <li>HTTP health endpoint validation</li>
+                <li>Response time measurement</li>
+                <li>Status code verification</li>
+                <li>Custom health check logic</li>
+                <li>Alert level determination (Info, Warning, Critical)</li>
             </ul>
-        </div>
-
-        <div style="text-align: center; opacity: 0.7; margin-top: 40px;">
-            <p>Template Version: 1.0 | Real-time Monitoring & Alerting Solution</p>
-            <p>Compatible with Azure Resource Manager API Version: 2019-04-01</p>
+            
+            <p><strong>AlertProcessorFunction (ServiceBus Trigger):</strong></p>
+            <ul>
+                <li>Alert message processing and enrichment</li>
+                <li>Context addition (timestamps, metadata)</li>
+                <li>Notification routing logic</li>
+                <li>Integration with external monitoring systems</li>
+                <li>Alert history tracking</li>
+                <li>Performance metrics collection</li>
+            </ul>
         </div>
     </div>
-
-    <script>
-        function deployTemplate() {
-            const templateUri = encodeURIComponent(window.location.href.replace('azuredeploy.visualizer.html', 'azuredeploy.json'));
-            const deployUrl = `https://portal.azure.com/#create/Microsoft.Template/uri/${templateUri}`;
-            window.open(deployUrl, '_blank');
-        }
-
-        // Add some interactive effects
-        document.addEventListener('DOMContentLoaded', function() {
-            const cards = document.querySelectorAll('.resource-card');
-            cards.forEach(card => {
-                card.addEventListener('click', function() {
-                    this.style.transform = 'scale(1.02)';
-                    setTimeout(() => {
-                        this.style.transform = '';
-                    }, 200);
-                });
-            });
-        });
-    </script>
 </body>
 </html> 
