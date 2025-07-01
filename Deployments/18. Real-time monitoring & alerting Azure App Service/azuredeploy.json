@@ -67,8 +67,8 @@
   },
   "variables": {
     "location": "[resourceGroup().location]",
-    "appServicePlanName": "[format('plan-{0}', parameters('appServiceName'))]",
-    "functionHostingPlanName": "[format('plan-{0}', parameters('functionAppName'))]",
+    "appServicePlanName": "[format('plan-webapp-{0}', parameters('appServiceName'))]",
+    "functionHostingPlanName": "[format('plan-functions-{0}', parameters('functionAppName'))]",
     "applicationInsightsName": "[format('ai-monitoring-{0}', parameters('appServiceName'))]",
     "logAnalyticsWorkspaceName": "[format('law-{0}', parameters('appServiceName'))]",
     "alertQueueName": "monitoring-alerts",
