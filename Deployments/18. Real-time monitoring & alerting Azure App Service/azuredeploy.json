@@ -68,7 +68,8 @@
   "variables": {
     "location": "[resourceGroup().location]",
     "appServicePlanName": "[format('plan-webapp-{0}', parameters('appServiceName'))]",
-    "functionHostingPlanName": "[format('plan-functions-{0}', parameters('functionAppName'))]",
+    "functionHostingPlanName": "[format('plan-functions-{0}', parameters('appServiceName'))]",
+    "actualFunctionAppName": "[format('{0}-monitoring', parameters('appServiceName'))]",
     "applicationInsightsName": "[format('ai-monitoring-{0}', parameters('appServiceName'))]",
     "logAnalyticsWorkspaceName": "[format('law-{0}', parameters('appServiceName'))]",
     "alertQueueName": "monitoring-alerts",
@@ -250,7 +251,7 @@
     {
       "type": "Microsoft.Web/sites",
       "apiVersion": "2022-03-01",
-      "name": "[parameters('functionAppName')]",
+      "name": "[variables('actualFunctionAppName')]",
       "location": "[variables('location')]",
       "kind": "functionapp",
       "identity": {
@@ -275,7 +276,7 @@
             },
             {
               "name": "WEBSITE_CONTENTSHARE",
-              "value": "[toLower(parameters('functionAppName'))]"
+              "value": "[toLower(variables('actualFunctionAppName'))]"
             },
             {
               "name": "FUNCTIONS_EXTENSION_VERSION",
@@ -439,7 +440,7 @@
     },
     "functionAppName": {
       "type": "string",
-      "value": "[parameters('functionAppName')]"
+      "value": "[variables('actualFunctionAppName')]"
     },
     "serviceBusNamespace": {
       "type": "string",
