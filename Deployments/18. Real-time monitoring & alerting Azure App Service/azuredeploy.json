@@ -41,6 +41,14 @@
         "description": "The name of the storage account. Must be globally unique, lowercase letters and numbers only."
       }
     },
+    "logicAppName": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 80,
+      "metadata": {
+        "description": "The name of the Logic App for alert processing."
+      }
+    },
     "alertEmail": {
       "type": "string",
       "metadata": {
@@ -323,6 +331,68 @@
         "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]",
         "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]"
       ]
+    },
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "[parameters('logicAppName')]",
+      "location": "[variables('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "state": "Enabled",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "triggers": {
+            "Recurrence": {
+              "recurrence": {
+                "frequency": "Minute",
+                "interval": 2
+              },
+              "type": "Recurrence"
+            }
+          },
+          "actions": {
+            "Log_Alert_Check": {
+              "runAfter": {},
+              "type": "Compose",
+              "inputs": {
+                "message": "Checking for monitoring alerts",
+                "timestamp": "@utcnow()",
+                "alertEmail": "[parameters('alertEmail')]"
+              }
+            },
+            "Send_Webhook_Notification": {
+              "runAfter": {
+                "Log_Alert_Check": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Http",
+              "inputs": {
+                "method": "POST",
+                "uri": "https://httpbin.org/post",
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": {
+                  "alertType": "Azure App Service Monitoring",
+                  "email": "[parameters('alertEmail')]",
+                  "message": "Logic App is processing monitoring alerts",
+                  "timestamp": "@utcnow()"
+                }
+              }
+            }
+          },
+          "outputs": {}
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]"
+      ]
     }
   ],
   "outputs": {
@@ -341,6 +411,10 @@
     "serviceBusConnectionString": {
       "type": "string",
       "value": "[listkeys(variables('authRuleResourceId'), '2021-06-01-preview').primaryConnectionString]"
+    },
+    "logicAppName": {
+      "type": "string",
+      "value": "[parameters('logicAppName')]"
     },
     "applicationInsightsInstrumentationKey": {
       "type": "string",
