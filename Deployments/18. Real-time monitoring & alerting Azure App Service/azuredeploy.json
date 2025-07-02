@@ -161,7 +161,7 @@
             }
           },
           "triggers": {
-            "manual": {
+            "When_Azure_Monitor_Alert_Received": {
               "type": "Request",
               "kind": "Http",
               "inputs": {
@@ -177,7 +177,10 @@
                           "properties": {
                             "timestamp": { "type": "string" },
                             "name": { "type": "string" },
-                            "description": { "type": "string" }
+                            "description": { "type": "string" },
+                            "resourceName": { "type": "string" },
+                            "resourceGroupName": { "type": "string" },
+                            "subscriptionId": { "type": "string" }
                           }
                         },
                         "status": { "type": "string" },
@@ -196,40 +199,507 @@
             }
           },
           "actions": {
-            "Parse_Alert_Data": {
+            "Initialize_Alert_Variables": {
               "runAfter": {},
+              "type": "InitializeVariable",
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "alertSeverity",
+                    "type": "string",
+                    "value": "Medium"
+                  },
+                  {
+                    "name": "isBusinessHours",
+                    "type": "boolean",
+                    "value": false
+                  },
+                  {
+                    "name": "escalationRequired",
+                    "type": "boolean",
+                    "value": false
+                  },
+                  {
+                    "name": "alertId",
+                    "type": "string",
+                    "value": "@{guid()}"
+                  }
+                ]
+              }
+            },
+            "Parse_Alert_Data": {
+              "runAfter": {
+                "Initialize_Alert_Variables": ["Succeeded"]
+              },
               "type": "Compose",
               "inputs": {
                 "alertName": "@triggerBody()?['data']?['context']?['name']",
                 "alertDescription": "@triggerBody()?['data']?['context']?['description']",
                 "status": "@triggerBody()?['data']?['status']",
                 "timestamp": "@triggerBody()?['data']?['context']?['timestamp']",
-                "ruleName": "@triggerBody()?['data']?['alertRule']?['name']"
+                "ruleName": "@triggerBody()?['data']?['alertRule']?['name']",
+                "resourceName": "@triggerBody()?['data']?['context']?['resourceName']",
+                "resourceGroup": "@triggerBody()?['data']?['context']?['resourceGroupName']",
+                "subscriptionId": "@triggerBody()?['data']?['context']?['subscriptionId']"
               }
             },
-            "Send_Email_Alert": {
+            "Determine_Alert_Severity": {
               "runAfter": {
-                "Parse_Alert_Data": [
-                  "Succeeded"
+                "Parse_Alert_Data": ["Succeeded"]
+              },
+              "type": "Switch",
+              "expression": "@outputs('Parse_Alert_Data')?['status']",
+              "cases": {
+                "Critical": {
+                  "case": "Fired",
+                  "actions": {
+                    "Set_Critical_Severity": {
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "alertSeverity",
+                        "value": "Critical"
+                      }
+                    },
+                    "Set_Escalation_Required": {
+                      "runAfter": {
+                        "Set_Critical_Severity": ["Succeeded"]
+                      },
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "escalationRequired",
+                        "value": true
+                      }
+                    }
+                  }
+                },
+                "Warning": {
+                  "case": "Resolved",
+                  "actions": {
+                    "Set_Low_Severity": {
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "alertSeverity",
+                        "value": "Low"
+                      }
+                    }
+                  }
+                }
+              },
+              "default": {
+                "actions": {
+                  "Set_Medium_Severity": {
+                    "type": "SetVariable",
+                    "inputs": {
+                      "name": "alertSeverity",
+                      "value": "Medium"
+                    }
+                  }
+                }
+              }
+            },
+            "Check_Business_Hours": {
+              "runAfter": {
+                "Determine_Alert_Severity": ["Succeeded"]
+              },
+              "type": "Compose",
+              "inputs": {
+                "currentHour": "@int(formatDateTime(utcNow(), 'HH'))",
+                "currentDay": "@int(formatDateTime(utcNow(), 'dd'))"
+              }
+            },
+            "Set_Business_Hours_Flag": {
+              "runAfter": {
+                "Check_Business_Hours": ["Succeeded"]
+              },
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "greaterOrEquals": [
+                      "@outputs('Check_Business_Hours')?['currentHour']",
+                      9
+                    ]
+                  },
+                  {
+                    "lessOrEquals": [
+                      "@outputs('Check_Business_Hours')?['currentHour']",
+                      17
+                    ]
+                  }
                 ]
+              },
+              "actions": {
+                "Set_Business_Hours_True": {
+                  "type": "SetVariable",
+                  "inputs": {
+                    "name": "isBusinessHours",
+                    "value": true
+                  }
+                }
+              }
+            },
+            "Multi_Channel_Notification_Switch": {
+              "runAfter": {
+                "Set_Business_Hours_Flag": ["Succeeded"]
+              },
+              "type": "Switch",
+              "expression": "@variables('alertSeverity')",
+              "cases": {
+                "Critical": {
+                  "case": "Critical",
+                  "actions": {
+                    "Send_Immediate_Email": {
+                      "type": "Http",
+                      "inputs": {
+                        "method": "POST",
+                        "uri": "https://outlook.office365.com/webhook/api",
+                        "headers": {
+                          "Content-Type": "application/json"
+                        },
+                        "body": {
+                          "to": "@parameters('alertEmail')",
+                          "subject": "🚨 CRITICAL ALERT: @{outputs('Parse_Alert_Data')?['alertName']}",
+                          "htmlBody": "<div style='background:#dc3545;color:white;padding:20px;border-radius:8px;'><h2>🚨 CRITICAL ALERT</h2><table style='color:white;'><tr><td><strong>Alert:</strong></td><td>@{outputs('Parse_Alert_Data')?['alertName']}</td></tr><tr><td><strong>Resource:</strong></td><td>@{outputs('Parse_Alert_Data')?['resourceName']}</td></tr><tr><td><strong>Status:</strong></td><td>@{outputs('Parse_Alert_Data')?['status']}</td></tr><tr><td><strong>Time:</strong></td><td>@{outputs('Parse_Alert_Data')?['timestamp']}</td></tr><tr><td><strong>Alert ID:</strong></td><td>@{variables('alertId')}</td></tr></table><p><strong>Immediate Action Required!</strong></p><p>🔗 <a href='https://portal.azure.com' style='color:#fff;'>View in Azure Portal</a></p></div>"
+                        }
+                      }
+                    },
+                    "Send_Teams_Critical_Alert": {
+                      "runAfter": {
+                        "Send_Immediate_Email": ["Succeeded"]
+                      },
+                      "type": "Http",
+                      "inputs": {
+                        "method": "POST",
+                        "uri": "https://yourteam.webhook.office.com/webhookb2/critical-alerts",
+                        "headers": {
+                          "Content-Type": "application/json"
+                        },
+                        "body": {
+                          "@type": "MessageCard",
+                          "@context": "https://schema.org/extensions",
+                          "summary": "Critical Alert: @{outputs('Parse_Alert_Data')?['alertName']}",
+                          "themeColor": "dc3545",
+                          "sections": [
+                            {
+                              "activityTitle": "🚨 CRITICAL ALERT",
+                              "activitySubtitle": "@{outputs('Parse_Alert_Data')?['alertName']}",
+                              "facts": [
+                                { "name": "Resource", "value": "@{outputs('Parse_Alert_Data')?['resourceName']}" },
+                                { "name": "Status", "value": "@{outputs('Parse_Alert_Data')?['status']}" },
+                                { "name": "Alert ID", "value": "@{variables('alertId')}" },
+                                { "name": "Time", "value": "@{outputs('Parse_Alert_Data')?['timestamp']}" }
+                              ]
+                            }
+                          ],
+                          "potentialAction": [
+                            {
+                              "@type": "OpenUri",
+                              "name": "View in Azure Portal",
+                              "targets": [
+                                { "os": "default", "uri": "https://portal.azure.com" }
+                              ]
+                            },
+                            {
+                              "@type": "HttpPOST",
+                              "name": "Acknowledge Alert",
+                              "target": "https://your-logic-app-url/acknowledge"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "Trigger_SMS_Alert": {
+                      "runAfter": {
+                        "Send_Teams_Critical_Alert": ["Succeeded"]
+                      },
+                      "type": "Http",
+                      "inputs": {
+                        "method": "POST",
+                        "uri": "https://api.twilio.com/2010-04-01/Accounts/YOUR_ACCOUNT_SID/Messages.json",
+                        "headers": {
+                          "Authorization": "Basic YOUR_AUTH_TOKEN",
+                          "Content-Type": "application/x-www-form-urlencoded"
+                        },
+                        "body": "To=+1234567890&From=+1987654321&Body=CRITICAL ALERT: @{outputs('Parse_Alert_Data')?['alertName']} on @{outputs('Parse_Alert_Data')?['resourceName']}. Alert ID: @{variables('alertId')}"
+                      }
+                    },
+                    "Create_Incident_Ticket": {
+                      "runAfter": {
+                        "Trigger_SMS_Alert": ["Succeeded"]
+                      },
+                      "type": "Http",
+                      "inputs": {
+                        "method": "POST",
+                        "uri": "https://your-servicenow-instance.service-now.com/api/now/table/incident",
+                        "headers": {
+                          "Authorization": "Basic YOUR_SERVICENOW_TOKEN",
+                          "Content-Type": "application/json"
+                        },
+                        "body": {
+                          "short_description": "CRITICAL: @{outputs('Parse_Alert_Data')?['alertName']}",
+                          "description": "Azure Monitor Critical Alert\nResource: @{outputs('Parse_Alert_Data')?['resourceName']}\nStatus: @{outputs('Parse_Alert_Data')?['status']}\nTime: @{outputs('Parse_Alert_Data')?['timestamp']}\nAlert ID: @{variables('alertId')}",
+                          "urgency": "1",
+                          "priority": "1",
+                          "category": "Azure Monitoring",
+                          "subcategory": "App Service Alert"
+                        }
+                      }
+                    }
+                  }
+                },
+                "Medium": {
+                  "case": "Medium",
+                  "actions": {
+                    "Send_Standard_Email": {
+                      "type": "Http",
+                      "inputs": {
+                        "method": "POST",
+                        "uri": "https://outlook.office365.com/webhook/api",
+                        "headers": {
+                          "Content-Type": "application/json"
+                        },
+                        "body": {
+                          "to": "@parameters('alertEmail')",
+                          "subject": "⚠️ Alert: @{outputs('Parse_Alert_Data')?['alertName']}",
+                          "htmlBody": "<div style='background:#ffc107;color:black;padding:20px;border-radius:8px;'><h2>⚠️ MONITORING ALERT</h2><table><tr><td><strong>Alert:</strong></td><td>@{outputs('Parse_Alert_Data')?['alertName']}</td></tr><tr><td><strong>Resource:</strong></td><td>@{outputs('Parse_Alert_Data')?['resourceName']}</td></tr><tr><td><strong>Status:</strong></td><td>@{outputs('Parse_Alert_Data')?['status']}</td></tr><tr><td><strong>Time:</strong></td><td>@{outputs('Parse_Alert_Data')?['timestamp']}</td></tr></table></div>"
+                        }
+                      }
+                    },
+                    "Send_Teams_Warning": {
+                      "runAfter": {
+                        "Send_Standard_Email": ["Succeeded"]
+                      },
+                      "type": "Http",
+                      "inputs": {
+                        "method": "POST",
+                        "uri": "https://yourteam.webhook.office.com/webhookb2/monitoring-alerts",
+                        "body": {
+                          "@type": "MessageCard",
+                          "summary": "Warning Alert: @{outputs('Parse_Alert_Data')?['alertName']}",
+                          "themeColor": "ffc107",
+                          "sections": [
+                            {
+                              "activityTitle": "⚠️ MONITORING ALERT",
+                              "activitySubtitle": "@{outputs('Parse_Alert_Data')?['alertName']}",
+                              "facts": [
+                                { "name": "Resource", "value": "@{outputs('Parse_Alert_Data')?['resourceName']}" },
+                                { "name": "Status", "value": "@{outputs('Parse_Alert_Data')?['status']}" }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "default": {
+                "actions": {
+                  "Send_Info_Email_Business_Hours_Only": {
+                    "type": "If",
+                    "expression": {
+                      "equals": [
+                        "@variables('isBusinessHours')",
+                        true
+                      ]
+                    },
+                    "actions": {
+                      "Send_Info_Email": {
+                        "type": "Http",
+                        "inputs": {
+                          "method": "POST",
+                          "uri": "https://outlook.office365.com/webhook/api",
+                          "body": {
+                            "to": "@parameters('alertEmail')",
+                            "subject": "ℹ️ Info: @{outputs('Parse_Alert_Data')?['alertName']}",
+                            "htmlBody": "<div style='background:#17a2b8;color:white;padding:15px;'><h3>ℹ️ INFORMATION</h3><p>@{outputs('Parse_Alert_Data')?['alertName']}</p></div>"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "Auto_Remediation_Check": {
+              "runAfter": {
+                "Multi_Channel_Notification_Switch": ["Succeeded"]
+              },
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@variables('alertSeverity')",
+                      "Critical"
+                    ]
+                  },
+                  {
+                    "contains": [
+                      "@outputs('Parse_Alert_Data')?['alertName']",
+                      "ResponseTime"
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Attempt_App_Service_Restart": {
+                  "type": "Http",
+                  "inputs": {
+                    "method": "POST",
+                    "uri": "https://management.azure.com/subscriptions/@{outputs('Parse_Alert_Data')?['subscriptionId']}/resourceGroups/@{outputs('Parse_Alert_Data')?['resourceGroup']}/providers/Microsoft.Web/sites/@{outputs('Parse_Alert_Data')?['resourceName']}/restart?api-version=2022-03-01",
+                    "headers": {
+                      "Authorization": "Bearer @{workflow().environment.token}",
+                      "Content-Type": "application/json"
+                    }
+                  }
+                },
+                "Log_Remediation_Action": {
+                  "runAfter": {
+                    "Attempt_App_Service_Restart": ["Succeeded"]
+                  },
+                  "type": "Http",
+                  "inputs": {
+                    "method": "POST",
+                    "uri": "https://your-logging-endpoint.com/api/logs",
+                    "body": {
+                      "alertId": "@{variables('alertId')}",
+                      "action": "auto_restart",
+                      "resource": "@{outputs('Parse_Alert_Data')?['resourceName']}",
+                      "timestamp": "@{utcNow()}"
+                    }
+                  }
+                },
+                "Send_Remediation_Notification": {
+                  "runAfter": {
+                    "Log_Remediation_Action": ["Succeeded"]
+                  },
+                  "type": "Http",
+                  "inputs": {
+                    "method": "POST",
+                    "uri": "https://outlook.office365.com/webhook/api",
+                    "body": {
+                      "to": "@parameters('alertEmail')",
+                      "subject": "🔧 Auto-Remediation: @{outputs('Parse_Alert_Data')?['resourceName']} Restarted",
+                      "htmlBody": "<div style='background:#28a745;color:white;padding:15px;'><h3>🔧 AUTO-REMEDIATION PERFORMED</h3><p>App Service '@{outputs('Parse_Alert_Data')?['resourceName']}' has been automatically restarted due to critical response time alert.</p><p>Alert ID: @{variables('alertId')}</p><p>Time: @{utcNow()}</p></div>"
+                    }
+                  }
+                }
+              }
+            },
+            "Schedule_Follow_Up_Check": {
+              "runAfter": {
+                "Auto_Remediation_Check": ["Succeeded"]
+              },
+              "type": "If",
+              "expression": {
+                "equals": [
+                  "@variables('escalationRequired')",
+                  true
+                ]
+              },
+              "actions": {
+                "Wait_15_Minutes": {
+                  "type": "Wait",
+                  "inputs": {
+                    "interval": {
+                      "count": 15,
+                      "unit": "Minute"
+                    }
+                  }
+                },
+                "Check_If_Alert_Still_Active": {
+                  "runAfter": {
+                    "Wait_15_Minutes": ["Succeeded"]
+                  },
+                  "type": "Http",
+                  "inputs": {
+                    "method": "GET",
+                    "uri": "https://management.azure.com/subscriptions/@{outputs('Parse_Alert_Data')?['subscriptionId']}/providers/Microsoft.AlertsManagement/alerts?api-version=2019-05-05-preview&targetResource=@{outputs('Parse_Alert_Data')?['resourceName']}"
+                  }
+                },
+                "Escalate_If_Still_Active": {
+                  "runAfter": {
+                    "Check_If_Alert_Still_Active": ["Succeeded"]
+                  },
+                  "type": "If",
+                  "expression": {
+                    "greater": [
+                      "@length(body('Check_If_Alert_Still_Active')?['value'])",
+                      0
+                    ]
+                  },
+                  "actions": {
+                    "Call_On_Call_Engineer": {
+                      "type": "Http",
+                      "inputs": {
+                        "method": "POST",
+                        "uri": "https://api.pagerduty.com/incidents",
+                        "headers": {
+                          "Authorization": "Token token=YOUR_PAGERDUTY_TOKEN",
+                          "Content-Type": "application/json"
+                        },
+                        "body": {
+                          "incident": {
+                            "type": "incident",
+                            "title": "ESCALATED: @{outputs('Parse_Alert_Data')?['alertName']}",
+                            "service": {
+                              "id": "YOUR_SERVICE_ID",
+                              "type": "service_reference"
+                            },
+                            "urgency": "high",
+                            "body": {
+                              "type": "incident_body",
+                              "details": "Alert has not been resolved after 15 minutes and auto-remediation. Manual intervention required.\nAlert ID: @{variables('alertId')}\nResource: @{outputs('Parse_Alert_Data')?['resourceName']}"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "Store_Alert_History": {
+              "runAfter": {
+                "Schedule_Follow_Up_Check": ["Succeeded"]
               },
               "type": "Http",
               "inputs": {
                 "method": "POST",
-                "uri": "https://prod-00.westus.logic.azure.com/workflows/12345678-1234-1234-1234-123456789012/triggers/manual/paths/invoke?api-version=2016-06-01",
+                "uri": "https://your-cosmos-db-endpoint.documents.azure.com:443/dbs/monitoring/colls/alerts/docs",
                 "headers": {
+                  "Authorization": "YOUR_COSMOS_AUTH_HEADER",
                   "Content-Type": "application/json"
                 },
                 "body": {
-                  "to": "@parameters('alertEmail')",
-                  "subject": "🚨 Azure Monitor Alert: @{outputs('Parse_Alert_Data')?['alertName']}",
-                  "htmlBody": "<h2>🚨 Azure Monitor Alert</h2><table border='1' style='border-collapse:collapse;'><tr><th style='padding:8px;background:#f0f0f0;'>Alert</th><td style='padding:8px;'>@{outputs('Parse_Alert_Data')?['alertName']}</td></tr><tr><th style='padding:8px;background:#f0f0f0;'>Status</th><td style='padding:8px;'>@{outputs('Parse_Alert_Data')?['status']}</td></tr><tr><th style='padding:8px;background:#f0f0f0;'>Description</th><td style='padding:8px;'>@{outputs('Parse_Alert_Data')?['alertDescription']}</td></tr><tr><th style='padding:8px;background:#f0f0f0;'>Rule</th><td style='padding:8px;'>@{outputs('Parse_Alert_Data')?['ruleName']}</td></tr><tr><th style='padding:8px;background:#f0f0f0;'>Time</th><td style='padding:8px;'>@{outputs('Parse_Alert_Data')?['timestamp']}</td></tr></table>",
-                  "textBody": "Azure Monitor Alert: @{outputs('Parse_Alert_Data')?['alertName']} - Status: @{outputs('Parse_Alert_Data')?['status']} - @{outputs('Parse_Alert_Data')?['timestamp']}"
+                  "id": "@{variables('alertId')}",
+                  "alertName": "@{outputs('Parse_Alert_Data')?['alertName']}",
+                  "severity": "@{variables('alertSeverity')}",
+                  "resourceName": "@{outputs('Parse_Alert_Data')?['resourceName']}",
+                  "timestamp": "@{outputs('Parse_Alert_Data')?['timestamp']}",
+                  "status": "@{outputs('Parse_Alert_Data')?['status']}",
+                  "notificationsSent": {
+                    "email": true,
+                    "teams": "@{if(equals(variables('alertSeverity'), 'Critical'), 'true', 'false')}",
+                    "sms": "@{if(equals(variables('alertSeverity'), 'Critical'), 'true', 'false')}"
+                  },
+                  "autoRemediationAttempted": "@{if(contains(outputs('Parse_Alert_Data')?['alertName'], 'ResponseTime'), 'true', 'false')}",
+                  "escalated": "@{variables('escalationRequired')}"
                 }
               }
             }
           },
-          "outputs": {}
+          "outputs": {
+            "alertId": {
+              "type": "string",
+              "value": "@{variables('alertId')}"
+            },
+            "severity": {
+              "type": "string", 
+              "value": "@{variables('alertSeverity')}"
+            }
+          }
         },
         "parameters": {
           "alertEmail": {
