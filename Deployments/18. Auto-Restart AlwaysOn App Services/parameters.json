@@ -3,19 +3,13 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "appServiceName": {
-      "value": "monitored-webapp-demo"
+      "value": "myapp-alwayson-001"
     },
     "logicAppName": {
-      "value": "alert-processor-logic"
+      "value": "logic-auto-restart-001"
     },
     "alertEmail": {
-      "value": "admin@example.com"
-    },
-    "responseTimeThresholdSeconds": {
-      "value": 5
-    },
-    "errorRateThresholdPercent": {
-      "value": 10
+      "value": "admin@yourcompany.com"
     }
   }
 } 

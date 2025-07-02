@@ -1,0 +1,369 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "ARM Template",
+      "version": "1.0.0.0",
+      "templateHash": "19AutoRestartAlwaysOnApps"
+    }
+  },
+  "parameters": {
+    "appServiceName": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 60,
+      "metadata": {
+        "description": "The name of the Azure App Service with AlwaysOn capability. Must be globally unique."
+      }
+    },
+    "logicAppName": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 80,
+      "metadata": {
+        "description": "The name of the Logic App for auto-restart functionality."
+      }
+    },
+    "alertEmail": {
+      "type": "string",
+      "metadata": {
+        "description": "Email address to receive restart notifications."
+      }
+    }
+  },
+  "variables": {
+    "location": "[resourceGroup().location]",
+    "appServicePlanName": "[format('plan-{0}', parameters('appServiceName'))]",
+    "applicationInsightsName": "[format('ai-{0}', parameters('appServiceName'))]",
+    "logAnalyticsWorkspaceName": "[format('law-{0}', parameters('appServiceName'))]",
+    "actionGroupName": "[format('ag-restart-{0}', parameters('appServiceName'))]",
+    "activityLogAlertName": "[format('alert-appstopped-{0}', parameters('appServiceName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2022-10-01",
+      "name": "[variables('logAnalyticsWorkspaceName')]",
+      "location": "[variables('location')]",
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        },
+        "retentionInDays": 30,
+        "features": {
+          "enableLogAccessUsingOnlyResourcePermissions": true
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "[variables('applicationInsightsName')]",
+      "location": "[variables('location')]",
+      "kind": "web",
+      "properties": {
+        "Application_Type": "web",
+        "Request_Source": "rest",
+        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2022-03-01",
+      "name": "[variables('appServicePlanName')]",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "S1",
+        "tier": "Standard"
+      },
+      "properties": {
+        "name": "[variables('appServicePlanName')]",
+        "reserved": false
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2022-03-01",
+      "name": "[parameters('appServiceName')]",
+      "location": "[variables('location')]",
+      "kind": "app",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "tags": {
+        "AlwaysOn": "true"
+      },
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+        "httpsOnly": true,
+        "siteConfig": {
+          "ftpsState": "Disabled",
+          "minTlsVersion": "1.2",
+          "alwaysOn": true,
+          "appSettings": [
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))).InstrumentationKey]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))).ConnectionString]"
+            },
+            {
+              "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
+              "value": "~3"
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+        "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "[parameters('logicAppName')]",
+      "location": "[variables('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "state": "Enabled",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "alertEmail": {
+              "type": "String"
+            }
+          },
+          "triggers": {
+            "manual": {
+              "type": "Request",
+              "kind": "Http",
+              "inputs": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "schemaId": { "type": "string" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "context": {
+                          "type": "object",
+                          "properties": {
+                            "activityLog": {
+                              "type": "object",
+                              "properties": {
+                                "resourceId": { "type": "string" },
+                                "operationName": { "type": "string" },
+                                "eventTimestamp": { "type": "string" },
+                                "caller": { "type": "string" }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "actions": {
+            "Parse_Activity_Log_Data": {
+              "runAfter": {},
+              "type": "Compose",
+              "inputs": {
+                "resourceId": "@triggerBody()?['data']?['context']?['activityLog']?['resourceId']",
+                "operationName": "@triggerBody()?['data']?['context']?['activityLog']?['operationName']",
+                "eventTime": "@triggerBody()?['data']?['context']?['activityLog']?['eventTimestamp']",
+                "caller": "@triggerBody()?['data']?['context']?['activityLog']?['caller']",
+                "appName": "@last(split(triggerBody()?['data']?['context']?['activityLog']?['resourceId'], '/'))"
+              }
+            },
+            "Get_App_Service_Tags": {
+              "runAfter": {
+                "Parse_Activity_Log_Data": ["Succeeded"]
+              },
+              "type": "Http",
+              "inputs": {
+                "method": "GET",
+                "uri": "https://management.azure.com@{outputs('Parse_Activity_Log_Data')?['resourceId']}?api-version=2022-03-01",
+                "authentication": {
+                  "type": "ManagedServiceIdentity"
+                }
+              }
+            },
+            "Check_AlwaysOn_Tag": {
+              "runAfter": {
+                "Get_App_Service_Tags": ["Succeeded"]
+              },
+              "type": "Condition",
+              "expression": {
+                "equals": [
+                  "@body('Get_App_Service_Tags')?['tags']?['AlwaysOn']",
+                  "true"
+                ]
+              },
+              "actions": {
+                "Restart_App_Service": {
+                  "type": "Http",
+                  "inputs": {
+                    "method": "POST",
+                    "uri": "https://management.azure.com@{outputs('Parse_Activity_Log_Data')?['resourceId']}/start?api-version=2022-03-01",
+                    "authentication": {
+                      "type": "ManagedServiceIdentity"
+                    }
+                  }
+                },
+                "Log_Restart_Success": {
+                  "runAfter": {
+                    "Restart_App_Service": ["Succeeded"]
+                  },
+                  "type": "Compose",
+                  "inputs": {
+                    "message": "✅ Successfully restarted App Service: @{outputs('Parse_Activity_Log_Data')?['appName']}",
+                    "timestamp": "@{utcNow()}",
+                    "appName": "@{outputs('Parse_Activity_Log_Data')?['appName']}",
+                    "originalStopTime": "@{outputs('Parse_Activity_Log_Data')?['eventTime']}",
+                    "restartedBy": "Auto-Restart Logic App"
+                  }
+                }
+              },
+              "else": {
+                "actions": {
+                  "Log_No_Action_Needed": {
+                    "type": "Compose",
+                    "inputs": {
+                      "message": "App Service @{outputs('Parse_Activity_Log_Data')?['appName']} was stopped but does not have AlwaysOn tag set to 'true'. No action taken."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "outputs": {
+            "appName": {
+              "type": "string",
+              "value": "@{outputs('Parse_Activity_Log_Data')?['appName']}"
+            },
+            "actionTaken": {
+              "type": "string",
+              "value": "@{if(equals(body('Get_App_Service_Tags')?['tags']?['AlwaysOn'], 'true'), 'Restarted', 'No action - AlwaysOn tag not set')}"
+            }
+          }
+        },
+        "parameters": {
+          "alertEmail": {
+            "value": "[parameters('alertEmail')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/actionGroups",
+      "apiVersion": "2023-01-01",
+      "name": "[variables('actionGroupName')]",
+      "location": "Global",
+      "properties": {
+        "groupShortName": "AutoRestart",
+        "enabled": true,
+        "emailReceivers": [
+          {
+            "name": "AdminEmail",
+            "emailAddress": "[parameters('alertEmail')]",
+            "useCommonAlertSchema": true
+          }
+        ],
+        "webhookReceivers": [
+          {
+            "name": "LogicAppRestart",
+            "serviceUri": "[listCallbackURL(concat(resourceId('Microsoft.Logic/workflows', parameters('logicAppName')), '/triggers/manual'), '2019-05-01').value]",
+            "useCommonAlertSchema": true
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Logic/workflows', parameters('logicAppName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/activityLogAlerts",
+      "apiVersion": "2020-10-01",
+      "name": "[variables('activityLogAlertName')]",
+      "location": "Global",
+      "properties": {
+        "description": "Alert when any App Service with AlwaysOn tag is stopped",
+        "enabled": true,
+        "scopes": [
+          "[resourceGroup().id]"
+        ],
+        "condition": {
+          "allOf": [
+            {
+              "field": "category",
+              "equals": "Administrative"
+            },
+            {
+              "field": "operationName",
+              "equals": "Microsoft.Web/sites/stop/action"
+            },
+            {
+              "field": "status",
+              "equals": "Succeeded"
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            {
+              "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(resourceGroup().id, parameters('logicAppName'), 'Website Contributor')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'de139f84-1756-47ae-9be6-808fbbe84772')]",
+        "principalId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('logicAppName')), '2019-05-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal",
+        "description": "Allows Logic App to start/stop App Services for auto-restart functionality"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Logic/workflows', parameters('logicAppName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "appServiceUrl": {
+      "type": "string",
+      "value": "[format('https://{0}.azurewebsites.net', parameters('appServiceName'))]"
+    },
+    "logicAppName": {
+      "type": "string",
+      "value": "[parameters('logicAppName')]"
+    },
+    "appServiceResourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]"
+    },
+    "monitoringStatus": {
+      "type": "string",
+      "value": "Auto-restart monitoring is active for apps with AlwaysOn tag"
+    }
+  }
+} 
