@@ -375,36 +375,7 @@
                           "Content-Type": "application/json"
                         },
                         "body": {
-                          "@type": "MessageCard",
-                          "@context": "https://schema.org/extensions",
-                          "summary": "Critical Alert: @{outputs('Parse_Alert_Data')?['alertName']}",
-                          "themeColor": "dc3545",
-                          "sections": [
-                            {
-                              "activityTitle": "🚨 CRITICAL ALERT",
-                              "activitySubtitle": "@{outputs('Parse_Alert_Data')?['alertName']}",
-                              "facts": [
-                                { "name": "Resource", "value": "@{outputs('Parse_Alert_Data')?['resourceName']}" },
-                                { "name": "Status", "value": "@{outputs('Parse_Alert_Data')?['status']}" },
-                                { "name": "Alert ID", "value": "@{variables('alertId')}" },
-                                { "name": "Time", "value": "@{outputs('Parse_Alert_Data')?['timestamp']}" }
-                              ]
-                            }
-                          ],
-                          "potentialAction": [
-                            {
-                              "@type": "OpenUri",
-                              "name": "View in Azure Portal",
-                              "targets": [
-                                { "os": "default", "uri": "https://portal.azure.com" }
-                              ]
-                            },
-                            {
-                              "@type": "HttpPOST",
-                              "name": "Acknowledge Alert",
-                              "target": "https://your-logic-app-url/acknowledge"
-                            }
-                          ]
+                          "text": "🚨 CRITICAL ALERT: @{outputs('Parse_Alert_Data')?['alertName']} on @{outputs('Parse_Alert_Data')?['resourceName']} - Alert ID: @{variables('alertId')}"
                         }
                       }
                     },
@@ -477,19 +448,7 @@
                           "Content-Type": "application/json"
                         },
                         "body": {
-                          "@type": "MessageCard",
-                          "summary": "Warning Alert: @{outputs('Parse_Alert_Data')?['alertName']}",
-                          "themeColor": "ffc107",
-                          "sections": [
-                            {
-                              "activityTitle": "⚠️ MONITORING ALERT",
-                              "activitySubtitle": "@{outputs('Parse_Alert_Data')?['alertName']}",
-                              "facts": [
-                                { "name": "Resource", "value": "@{outputs('Parse_Alert_Data')?['resourceName']}" },
-                                { "name": "Status", "value": "@{outputs('Parse_Alert_Data')?['status']}" }
-                              ]
-                            }
-                          ]
+                          "text": "⚠️ MONITORING ALERT: @{outputs('Parse_Alert_Data')?['alertName']} on @{outputs('Parse_Alert_Data')?['resourceName']} - Status: @{outputs('Parse_Alert_Data')?['status']}"
                         }
                       }
                     }
