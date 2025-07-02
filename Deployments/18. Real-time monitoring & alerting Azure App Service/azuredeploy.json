@@ -739,10 +739,10 @@
           "allOf": [
             {
               "name": "AvailabilityCheck",
-              "metricName": "HealthCheckStatus",
+              "metricName": "Http2xx",
               "operator": "LessThan",
               "threshold": 1,
-              "timeAggregation": "Average"
+              "timeAggregation": "Total"
             }
           ]
         },
