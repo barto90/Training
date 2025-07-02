@@ -171,24 +171,20 @@
                     "data": {
                       "type": "object",
                       "properties": {
-                        "context": {
+                        "essentials": {
                           "type": "object",
                           "properties": {
-                            "timestamp": { "type": "string" },
-                            "name": { "type": "string" },
+                            "alertId": { "type": "string" },
+                            "alertRule": { "type": "string" },
+                            "severity": { "type": "string" },
+                            "monitorCondition": { "type": "string" },
+                            "firedDateTime": { "type": "string" },
                             "description": { "type": "string" },
-                            "resourceName": { "type": "string" },
-                            "resourceGroupName": { "type": "string" },
-                            "subscriptionId": { "type": "string" }
+                            "alertTargetIDs": { "type": "array" }
                           }
                         },
-                        "status": { "type": "string" },
-                        "alertRule": {
-                          "type": "object",
-                          "properties": {
-                            "name": { "type": "string" },
-                            "description": { "type": "string" }
-                          }
+                        "alertContext": {
+                          "type": "object"
                         }
                       }
                     }
@@ -232,14 +228,15 @@
               },
               "type": "Compose",
               "inputs": {
-                "alertName": "@triggerBody()?['data']?['context']?['name']",
-                "alertDescription": "@triggerBody()?['data']?['context']?['description']",
-                "status": "@triggerBody()?['data']?['status']",
-                "timestamp": "@triggerBody()?['data']?['context']?['timestamp']",
-                "ruleName": "@triggerBody()?['data']?['alertRule']?['name']",
-                "resourceName": "@triggerBody()?['data']?['context']?['resourceName']",
-                "resourceGroup": "@triggerBody()?['data']?['context']?['resourceGroupName']",
-                "subscriptionId": "@triggerBody()?['data']?['context']?['subscriptionId']"
+                "alertName": "@triggerBody()?['data']?['essentials']?['alertRule']",
+                "alertDescription": "@triggerBody()?['data']?['essentials']?['description']",
+                "status": "@triggerBody()?['data']?['essentials']?['monitorCondition']",
+                "timestamp": "@triggerBody()?['data']?['essentials']?['firedDateTime']",
+                "ruleName": "@triggerBody()?['data']?['essentials']?['alertRule']",
+                "resourceName": "@if(greater(length(triggerBody()?['data']?['essentials']?['alertTargetIDs']), 0), split(triggerBody()?['data']?['essentials']?['alertTargetIDs'][0], '/')[8], 'Unknown')",
+                "resourceGroup": "@if(greater(length(triggerBody()?['data']?['essentials']?['alertTargetIDs']), 0), split(triggerBody()?['data']?['essentials']?['alertTargetIDs'][0], '/')[4], 'Unknown')",
+                "subscriptionId": "@if(greater(length(triggerBody()?['data']?['essentials']?['alertTargetIDs']), 0), split(triggerBody()?['data']?['essentials']?['alertTargetIDs'][0], '/')[2], 'Unknown')",
+                "severity": "@triggerBody()?['data']?['essentials']?['severity']"
               }
             },
             "Determine_Alert_Severity": {
@@ -247,10 +244,10 @@
                 "Parse_Alert_Data": ["Succeeded"]
               },
               "type": "Switch",
-              "expression": "@outputs('Parse_Alert_Data')?['status']",
+              "expression": "@outputs('Parse_Alert_Data')?['severity']",
               "cases": {
                 "Critical": {
-                  "case": "Fired",
+                  "case": "Sev0",
                   "actions": {
                     "Set_Critical_Severity": {
                       "type": "SetVariable",
@@ -271,14 +268,36 @@
                     }
                   }
                 },
-                "Warning": {
-                  "case": "Resolved",
+                "High": {
+                  "case": "Sev1",
                   "actions": {
-                    "Set_Low_Severity": {
+                    "Set_High_Severity": {
                       "type": "SetVariable",
                       "inputs": {
                         "name": "alertSeverity",
-                        "value": "Low"
+                        "value": "Critical"
+                      }
+                    },
+                    "Set_High_Escalation": {
+                      "runAfter": {
+                        "Set_High_Severity": ["Succeeded"]
+                      },
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "escalationRequired",
+                        "value": true
+                      }
+                    }
+                  }
+                },
+                "Medium": {
+                  "case": "Sev2",
+                  "actions": {
+                    "Set_Medium_Severity": {
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "alertSeverity",
+                        "value": "Medium"
                       }
                     }
                   }
@@ -286,11 +305,11 @@
               },
               "default": {
                 "actions": {
-                  "Set_Medium_Severity": {
+                  "Set_Default_Severity": {
                     "type": "SetVariable",
                     "inputs": {
                       "name": "alertSeverity",
-                      "value": "Medium"
+                      "value": "Low"
                     }
                   }
                 }
