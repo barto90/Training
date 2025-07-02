@@ -161,7 +161,7 @@
             }
           },
           "triggers": {
-            "When_Azure_Monitor_Alert_Received": {
+            "manual": {
               "type": "Request",
               "kind": "Http",
               "inputs": {
@@ -697,6 +697,18 @@
             "useCommonAlertSchema": true
           }
         ],
+        "webhookReceivers": []
+      },
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Insights/actionGroups",
+      "apiVersion": "2023-01-01",
+      "name": "[concat(variables('actionGroupName'), '-logicapp')]",
+      "location": "Global",
+      "properties": {
+        "groupShortName": "AppLogic",
+        "enabled": true,
         "webhookReceivers": [
           {
             "name": "LogicAppWebhook",
@@ -738,12 +750,16 @@
         "actions": [
           {
             "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+          },
+          {
+            "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', concat(variables('actionGroupName'), '-logicapp'))]"
           }
         ]
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]",
-        "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+        "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]",
+        "[resourceId('Microsoft.Insights/actionGroups', concat(variables('actionGroupName'), '-logicapp'))]"
       ]
     },
     {
@@ -775,12 +791,16 @@
         "actions": [
           {
             "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+          },
+          {
+            "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', concat(variables('actionGroupName'), '-logicapp'))]"
           }
         ]
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]",
-        "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+        "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]",
+        "[resourceId('Microsoft.Insights/actionGroups', concat(variables('actionGroupName'), '-logicapp'))]"
       ]
     },
     {
@@ -812,12 +832,16 @@
         "actions": [
           {
             "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+          },
+          {
+            "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', concat(variables('actionGroupName'), '-logicapp'))]"
           }
         ]
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]",
-        "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+        "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]",
+        "[resourceId('Microsoft.Insights/actionGroups', concat(variables('actionGroupName'), '-logicapp'))]"
       ]
     },
     {
@@ -849,12 +873,16 @@
         "actions": [
           {
             "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+          },
+          {
+            "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', concat(variables('actionGroupName'), '-logicapp'))]"
           }
         ]
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]",
-        "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+        "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]",
+        "[resourceId('Microsoft.Insights/actionGroups', concat(variables('actionGroupName'), '-logicapp'))]"
       ]
     }
   ],
@@ -867,9 +895,9 @@
       "type": "string",
       "value": "[parameters('logicAppName')]"
     },
-    "logicAppTriggerUrl": {
+    "logicAppResourceId": {
       "type": "string",
-      "value": "[listCallbackURL(concat(resourceId('Microsoft.Logic/workflows', parameters('logicAppName')), '/triggers/manual'), '2019-05-01').value]"
+      "value": "[resourceId('Microsoft.Logic/workflows', parameters('logicAppName'))]"
     },
     "applicationInsightsInstrumentationKey": {
       "type": "string",
