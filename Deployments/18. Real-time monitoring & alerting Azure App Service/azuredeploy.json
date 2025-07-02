@@ -58,8 +58,7 @@
     "actionGroupName": "[format('ag-{0}', parameters('appServiceName'))]",
     "availabilityAlertName": "[format('alert-availability-{0}', parameters('appServiceName'))]",
     "responseTimeAlertName": "[format('alert-responsetime-{0}', parameters('appServiceName'))]",
-    "errorRateAlertName": "[format('alert-errorrate-{0}', parameters('appServiceName'))]",
-    "cpuAlertName": "[format('alert-cpu-{0}', parameters('appServiceName'))]"
+    "errorRateAlertName": "[format('alert-errorrate-{0}', parameters('appServiceName'))]"
   },
   "resources": [
     {
@@ -826,47 +825,6 @@
               "operator": "GreaterThan",
               "threshold": "[parameters('errorRateThresholdPercent')]",
               "timeAggregation": "Total"
-            }
-          ]
-        },
-        "actions": [
-          {
-            "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
-          },
-          {
-            "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', concat(variables('actionGroupName'), '-logicapp'))]"
-          }
-        ]
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]",
-        "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]",
-        "[resourceId('Microsoft.Insights/actionGroups', concat(variables('actionGroupName'), '-logicapp'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Insights/metricAlerts",
-      "apiVersion": "2018-03-01",
-      "name": "[variables('cpuAlertName')]",
-      "location": "Global",
-      "properties": {
-        "description": "Alert when CPU usage is too high",
-        "severity": 3,
-        "enabled": true,
-        "scopes": [
-          "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]"
-        ],
-        "evaluationFrequency": "PT1M",
-        "windowSize": "PT5M",
-        "criteria": {
-          "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
-          "allOf": [
-            {
-              "name": "CpuUsageCheck",
-              "metricName": "CpuPercentage",
-              "operator": "GreaterThan",
-              "threshold": 80,
-              "timeAggregation": "Average"
             }
           ]
         },
