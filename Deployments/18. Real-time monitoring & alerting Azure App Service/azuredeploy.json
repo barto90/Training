@@ -473,6 +473,9 @@
                       "inputs": {
                         "method": "POST",
                         "uri": "https://yourteam.webhook.office.com/webhookb2/monitoring-alerts",
+                        "headers": {
+                          "Content-Type": "application/json"
+                        },
                         "body": {
                           "@type": "MessageCard",
                           "summary": "Warning Alert: @{outputs('Parse_Alert_Data')?['alertName']}",
@@ -509,6 +512,9 @@
                         "inputs": {
                           "method": "POST",
                           "uri": "https://outlook.office365.com/webhook/api",
+                          "headers": {
+                            "Content-Type": "application/json"
+                          },
                           "body": {
                             "to": "@parameters('alertEmail')",
                             "subject": "ℹ️ Info: @{outputs('Parse_Alert_Data')?['alertName']}",
@@ -562,6 +568,9 @@
                   "inputs": {
                     "method": "POST",
                     "uri": "https://your-logging-endpoint.com/api/logs",
+                    "headers": {
+                      "Content-Type": "application/json"
+                    },
                     "body": {
                       "alertId": "@{variables('alertId')}",
                       "action": "auto_restart",
@@ -578,6 +587,9 @@
                   "inputs": {
                     "method": "POST",
                     "uri": "https://outlook.office365.com/webhook/api",
+                    "headers": {
+                      "Content-Type": "application/json"
+                    },
                     "body": {
                       "to": "@parameters('alertEmail')",
                       "subject": "🔧 Auto-Remediation: @{outputs('Parse_Alert_Data')?['resourceName']} Restarted",
@@ -615,7 +627,10 @@
                   "type": "Http",
                   "inputs": {
                     "method": "GET",
-                    "uri": "https://management.azure.com/subscriptions/@{outputs('Parse_Alert_Data')?['subscriptionId']}/providers/Microsoft.AlertsManagement/alerts?api-version=2019-05-05-preview&targetResource=@{outputs('Parse_Alert_Data')?['resourceName']}"
+                    "uri": "https://management.azure.com/subscriptions/@{outputs('Parse_Alert_Data')?['subscriptionId']}/providers/Microsoft.AlertsManagement/alerts?api-version=2019-05-05-preview&targetResource=@{outputs('Parse_Alert_Data')?['resourceName']}",
+                    "headers": {
+                      "Authorization": "Bearer @{workflow().environment.token}"
+                    }
                   }
                 },
                 "Escalate_If_Still_Active": {
@@ -681,10 +696,10 @@
                   "status": "@{outputs('Parse_Alert_Data')?['status']}",
                   "notificationsSent": {
                     "email": true,
-                    "teams": "@{if(equals(variables('alertSeverity'), 'Critical'), 'true', 'false')}",
-                    "sms": "@{if(equals(variables('alertSeverity'), 'Critical'), 'true', 'false')}"
+                    "teams": "@{if(equals(variables('alertSeverity'), 'Critical'), true, false)}",
+                    "sms": "@{if(equals(variables('alertSeverity'), 'Critical'), true, false)}"
                   },
-                  "autoRemediationAttempted": "@{if(contains(outputs('Parse_Alert_Data')?['alertName'], 'ResponseTime'), 'true', 'false')}",
+                  "autoRemediationAttempted": "@{if(contains(outputs('Parse_Alert_Data')?['alertName'], 'ResponseTime'), true, false)}",
                   "escalated": "@{variables('escalationRequired')}"
                 }
               }
