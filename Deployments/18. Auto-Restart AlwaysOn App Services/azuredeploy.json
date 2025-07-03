@@ -155,16 +155,27 @@
                     "data": {
                       "type": "object",
                       "properties": {
-                        "context": {
+                        "alertContext": {
                           "type": "object",
                           "properties": {
-                            "activityLog": {
+                            "properties": {
                               "type": "object",
                               "properties": {
                                 "resourceId": { "type": "string" },
-                                "operationName": { "type": "string" },
+                                "operationName": { 
+                                  "type": "object",
+                                  "properties": {
+                                    "value": { "type": "string" }
+                                  }
+                                },
                                 "eventTimestamp": { "type": "string" },
-                                "caller": { "type": "string" }
+                                "caller": { "type": "string" },
+                                "status": {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": { "type": "string" }
+                                  }
+                                }
                               }
                             }
                           }
@@ -181,11 +192,12 @@
               "runAfter": {},
               "type": "Compose",
               "inputs": {
-                "resourceId": "@triggerBody()?['data']?['context']?['activityLog']?['resourceId']",
-                "operationName": "@triggerBody()?['data']?['context']?['activityLog']?['operationName']",
-                "eventTime": "@triggerBody()?['data']?['context']?['activityLog']?['eventTimestamp']",
-                "caller": "@triggerBody()?['data']?['context']?['activityLog']?['caller']",
-                "appName": "@last(split(triggerBody()?['data']?['context']?['activityLog']?['resourceId'], '/'))"
+                "resourceId": "@triggerBody()?['data']?['alertContext']?['properties']?['resourceId']",
+                "operationName": "@triggerBody()?['data']?['alertContext']?['properties']?['operationName']?['value']",
+                "eventTime": "@triggerBody()?['data']?['alertContext']?['properties']?['eventTimestamp']",
+                "caller": "@triggerBody()?['data']?['alertContext']?['properties']?['caller']",
+                "status": "@triggerBody()?['data']?['alertContext']?['properties']?['status']?['value']",
+                "appName": "@if(empty(triggerBody()?['data']?['alertContext']?['properties']?['resourceId']), 'Unknown', last(split(triggerBody()?['data']?['alertContext']?['properties']?['resourceId'], '/')))"
               }
             },
             "Get_App_Service_Tags": {
@@ -223,9 +235,26 @@
                     }
                   }
                 },
-                "Log_Restart_Success": {
+                "Send_Restart_Notification": {
                   "runAfter": {
                     "Restart_App_Service": ["Succeeded"]
+                  },
+                  "type": "Compose",
+                  "inputs": {
+                    "emailSubject": "🔄 App Service Auto-Restarted: @{outputs('Parse_Activity_Log_Data')?['appName']}",
+                    "emailBody": "✅ Auto-Restart Successful\n\nYour App Service '@{outputs('Parse_Activity_Log_Data')?['appName']}' was automatically stopped but has been restarted because it has the 'AlwaysOn' tag set to 'true'.\n\n📋 Details:\n• App Name: @{outputs('Parse_Activity_Log_Data')?['appName']}\n• Stopped At: @{outputs('Parse_Activity_Log_Data')?['eventTime']}\n• Stopped By: @{outputs('Parse_Activity_Log_Data')?['caller']}\n• Restarted At: @{utcNow()}\n• Action Taken: Automatically restarted\n\n✅ Your app is now running again!",
+                    "notificationData": {
+                      "action": "restarted",
+                      "appName": "@{outputs('Parse_Activity_Log_Data')?['appName']}",
+                      "stoppedBy": "@{outputs('Parse_Activity_Log_Data')?['caller']}",
+                      "stoppedAt": "@{outputs('Parse_Activity_Log_Data')?['eventTime']}",
+                      "restartedAt": "@{utcNow()}"
+                    }
+                  }
+                },
+                "Log_Restart_Success": {
+                  "runAfter": {
+                    "Send_Restart_Notification": ["Succeeded", "Failed"]
                   },
                   "type": "Compose",
                   "inputs": {
@@ -233,16 +262,38 @@
                     "timestamp": "@{utcNow()}",
                     "appName": "@{outputs('Parse_Activity_Log_Data')?['appName']}",
                     "originalStopTime": "@{outputs('Parse_Activity_Log_Data')?['eventTime']}",
-                    "restartedBy": "Auto-Restart Logic App"
+                    "restartedBy": "Auto-Restart Logic App",
+                    "notificationSent": "Yes"
                   }
                 }
               },
               "else": {
                 "actions": {
-                  "Log_No_Action_Needed": {
+                  "Send_No_Action_Notification": {
                     "type": "Compose",
                     "inputs": {
-                      "message": "App Service @{outputs('Parse_Activity_Log_Data')?['appName']} was stopped but does not have AlwaysOn tag set to 'true'. No action taken."
+                      "emailSubject": "⚠️ App Service Stopped: @{outputs('Parse_Activity_Log_Data')?['appName']}",
+                      "emailBody": "⚠️ App Service Stopped - No Auto-Restart\n\nYour App Service '@{outputs('Parse_Activity_Log_Data')?['appName']}' was stopped but was NOT automatically restarted because it does not have the 'AlwaysOn' tag set to 'true'.\n\n📋 Details:\n• App Name: @{outputs('Parse_Activity_Log_Data')?['appName']}\n• Stopped At: @{outputs('Parse_Activity_Log_Data')?['eventTime']}\n• Stopped By: @{outputs('Parse_Activity_Log_Data')?['caller']}\n• Action Taken: None (AlwaysOn tag not set)\n\n💡 To enable auto-restart, add the tag: AlwaysOn = true",
+                      "notificationData": {
+                        "action": "no-restart",
+                        "appName": "@{outputs('Parse_Activity_Log_Data')?['appName']}",
+                        "stoppedBy": "@{outputs('Parse_Activity_Log_Data')?['caller']}",
+                        "stoppedAt": "@{outputs('Parse_Activity_Log_Data')?['eventTime']}",
+                        "reason": "AlwaysOn tag not set to true"
+                      }
+                    }
+                  },
+                  "Log_No_Action_Needed": {
+                    "runAfter": {
+                      "Send_No_Action_Notification": ["Succeeded", "Failed"]
+                    },
+                    "type": "Compose",
+                    "inputs": {
+                      "message": "App Service @{outputs('Parse_Activity_Log_Data')?['appName']} was stopped but does not have AlwaysOn tag set to 'true'. No action taken.",
+                      "timestamp": "@{utcNow()}",
+                      "appName": "@{outputs('Parse_Activity_Log_Data')?['appName']}",
+                      "originalStopTime": "@{outputs('Parse_Activity_Log_Data')?['eventTime']}",
+                      "notificationSent": "Yes"
                     }
                   }
                 }
@@ -275,13 +326,7 @@
       "properties": {
         "groupShortName": "AutoRestart",
         "enabled": true,
-        "emailReceivers": [
-          {
-            "name": "AdminEmail",
-            "emailAddress": "[parameters('alertEmail')]",
-            "useCommonAlertSchema": true
-          }
-        ],
+        "emailReceivers": [],
         "webhookReceivers": [
           {
             "name": "LogicAppRestart",
@@ -345,6 +390,84 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Logic/workflows', parameters('logicAppName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "name": "SendActivityLogToLogAnalytics",
+      "scope": "[subscription().id]",
+      "properties": {
+        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
+        "logs": [
+          {
+            "category": "Administrative",
+            "enabled": true,
+            "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+            }
+          },
+          {
+            "category": "Security",
+            "enabled": true,
+            "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+            }
+          },
+          {
+            "category": "ServiceHealth",
+            "enabled": true,
+            "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+            }
+          },
+          {
+            "category": "Alert",
+            "enabled": true,
+            "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+            }
+          },
+          {
+            "category": "Recommendation",
+            "enabled": true,
+            "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+            }
+          },
+          {
+            "category": "Policy",
+            "enabled": true,
+            "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+            }
+          },
+          {
+            "category": "Autoscale",
+            "enabled": true,
+            "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+            }
+          },
+          {
+            "category": "ResourceHealth",
+            "enabled": true,
+            "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+            }
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
       ]
     }
   ],

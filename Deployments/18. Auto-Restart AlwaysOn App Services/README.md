@@ -142,6 +142,27 @@ The Activity Log Alert can be configured to:
 
 ## ❌ **Troubleshooting**
 
+### **Activity Log Not Appearing in Log Analytics**
+**Problem**: Can't query Activity Log with KQL in Log Analytics workspace
+
+**Root Cause**: Activity Log diagnostic settings require subscription-level permissions
+
+**Solutions**:
+1. **Check Diagnostic Settings**: Go to **Subscriptions** → **Monitor** → **Activity Log** → **Diagnostic Settings**
+   - Look for `SendActivityLogToLogAnalytics`
+   - If missing, the ARM template couldn't create it
+
+2. **Manual Setup**: Run the included PowerShell script:
+   ```powershell
+   .\setup-activity-log-diagnostics.ps1 -SubscriptionId "your-sub-id" -ResourceGroupName "your-rg" -LogAnalyticsWorkspaceName "law-your-app-name"
+   ```
+
+3. **Alternative Queries**: Use Azure Portal instead:
+   - **Portal**: **Monitor** → **Activity Log** → Filter by `Microsoft.Web/sites/stop/action`
+   - **PowerShell**: `Get-AzActivityLog` (see README for examples)
+
+**Note**: The auto-restart functionality works regardless of Log Analytics - it uses Activity Log Alerts directly!
+
 ### **Logic App Not Triggering**
 1. **Check Activity Log Alert**: Ensure it's enabled
 2. **Check Action Group**: Verify webhook URL is correct
