@@ -37,8 +37,7 @@
       "metadata": {
         "description": "Slack webhook URL for notifications (optional). Leave empty to disable Slack notifications."
       }
-    },
-
+    }
   },
   "variables": {
     "location": "[resourceGroup().location]",
