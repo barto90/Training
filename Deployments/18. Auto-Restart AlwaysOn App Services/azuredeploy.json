@@ -155,29 +155,28 @@
                     "data": {
                       "type": "object",
                       "properties": {
+                        "essentials": {
+                          "type": "object",
+                          "properties": {
+                            "alertRule": { "type": "string" },
+                            "targetResourceGroup": { "type": "string" },
+                            "severity": { "type": "string" }
+                          }
+                        },
                         "alertContext": {
                           "type": "object",
                           "properties": {
-                            "properties": {
+                            "authorization": {
                               "type": "object",
                               "properties": {
-                                "resourceId": { "type": "string" },
-                                "operationName": { 
-                                  "type": "object",
-                                  "properties": {
-                                    "value": { "type": "string" }
-                                  }
-                                },
-                                "eventTimestamp": { "type": "string" },
-                                "caller": { "type": "string" },
-                                "status": {
-                                  "type": "object",
-                                  "properties": {
-                                    "value": { "type": "string" }
-                                  }
-                                }
+                                "action": { "type": "string" },
+                                "scope": { "type": "string" }
                               }
-                            }
+                            },
+                            "caller": { "type": "string" },
+                            "eventTimestamp": { "type": "string" },
+                            "operationName": { "type": "string" },
+                            "status": { "type": "string" }
                           }
                         }
                       }
@@ -192,12 +191,13 @@
               "runAfter": {},
               "type": "Compose",
               "inputs": {
-                "resourceId": "@triggerBody()?['data']?['alertContext']?['properties']?['resourceId']",
-                "operationName": "@triggerBody()?['data']?['alertContext']?['properties']?['operationName']?['value']",
-                "eventTime": "@triggerBody()?['data']?['alertContext']?['properties']?['eventTimestamp']",
-                "caller": "@triggerBody()?['data']?['alertContext']?['properties']?['caller']",
-                "status": "@triggerBody()?['data']?['alertContext']?['properties']?['status']?['value']",
-                "appName": "@if(empty(triggerBody()?['data']?['alertContext']?['properties']?['resourceId']), 'Unknown', last(split(triggerBody()?['data']?['alertContext']?['properties']?['resourceId'], '/')))"
+                "resourceId": "@triggerBody()?['data']?['alertContext']?['authorization']?['scope']",
+                "operationName": "@triggerBody()?['data']?['alertContext']?['operationName']",
+                "eventTime": "@triggerBody()?['data']?['alertContext']?['eventTimestamp']",
+                "caller": "@triggerBody()?['data']?['alertContext']?['caller']",
+                "status": "@triggerBody()?['data']?['alertContext']?['status']",
+                "resourceGroupName": "@triggerBody()?['data']?['essentials']?['targetResourceGroup']",
+                "appName": "@if(empty(triggerBody()?['data']?['alertContext']?['authorization']?['scope']), 'Unknown', last(split(triggerBody()?['data']?['alertContext']?['authorization']?['scope'], '/')))"
               }
             },
             "Get_App_Service_Tags": {
@@ -376,98 +376,6 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2022-04-01",
-      "name": "[guid(resourceGroup().id, parameters('logicAppName'), 'Website Contributor')]",
-      "properties": {
-        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'de139f84-1756-47ae-9be6-808fbbe84772')]",
-        "principalId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('logicAppName')), '2019-05-01', 'full').identity.principalId]",
-        "principalType": "ServicePrincipal",
-        "description": "Allows Logic App to start/stop App Services for auto-restart functionality"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Logic/workflows', parameters('logicAppName'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Insights/diagnosticSettings",
-      "apiVersion": "2021-05-01-preview",
-      "name": "SendActivityLogToLogAnalytics",
-      "scope": "[subscription().id]",
-      "properties": {
-        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
-        "logs": [
-          {
-            "category": "Administrative",
-            "enabled": true,
-            "retentionPolicy": {
-              "enabled": false,
-              "days": 0
-            }
-          },
-          {
-            "category": "Security",
-            "enabled": true,
-            "retentionPolicy": {
-              "enabled": false,
-              "days": 0
-            }
-          },
-          {
-            "category": "ServiceHealth",
-            "enabled": true,
-            "retentionPolicy": {
-              "enabled": false,
-              "days": 0
-            }
-          },
-          {
-            "category": "Alert",
-            "enabled": true,
-            "retentionPolicy": {
-              "enabled": false,
-              "days": 0
-            }
-          },
-          {
-            "category": "Recommendation",
-            "enabled": true,
-            "retentionPolicy": {
-              "enabled": false,
-              "days": 0
-            }
-          },
-          {
-            "category": "Policy",
-            "enabled": true,
-            "retentionPolicy": {
-              "enabled": false,
-              "days": 0
-            }
-          },
-          {
-            "category": "Autoscale",
-            "enabled": true,
-            "retentionPolicy": {
-              "enabled": false,
-              "days": 0
-            }
-          },
-          {
-            "category": "ResourceHealth",
-            "enabled": true,
-            "retentionPolicy": {
-              "enabled": false,
-              "days": 0
-            }
-          }
-        ]
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
       ]
     }
   ],
