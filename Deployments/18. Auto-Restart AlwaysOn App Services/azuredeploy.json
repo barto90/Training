@@ -235,26 +235,41 @@
                     }
                   }
                 },
-                "Send_Restart_Notification": {
+                "Send_Restart_Email": {
                   "runAfter": {
                     "Restart_App_Service": ["Succeeded"]
                   },
-                  "type": "Compose",
+                  "type": "Http",
                   "inputs": {
-                    "emailSubject": "🔄 App Service Auto-Restarted: @{outputs('Parse_Activity_Log_Data')?['appName']}",
-                    "emailBody": "✅ Auto-Restart Successful\n\nYour App Service '@{outputs('Parse_Activity_Log_Data')?['appName']}' was automatically stopped but has been restarted because it has the 'AlwaysOn' tag set to 'true'.\n\n📋 Details:\n• App Name: @{outputs('Parse_Activity_Log_Data')?['appName']}\n• Stopped At: @{outputs('Parse_Activity_Log_Data')?['eventTime']}\n• Stopped By: @{outputs('Parse_Activity_Log_Data')?['caller']}\n• Restarted At: @{utcNow()}\n• Action Taken: Automatically restarted\n\n✅ Your app is now running again!",
-                    "notificationData": {
-                      "action": "restarted",
-                      "appName": "@{outputs('Parse_Activity_Log_Data')?['appName']}",
-                      "stoppedBy": "@{outputs('Parse_Activity_Log_Data')?['caller']}",
-                      "stoppedAt": "@{outputs('Parse_Activity_Log_Data')?['eventTime']}",
-                      "restartedAt": "@{utcNow()}"
+                    "method": "POST",
+                    "uri": "https://graph.microsoft.com/v1.0/me/sendMail",
+                    "headers": {
+                      "Content-Type": "application/json"
+                    },
+                    "body": {
+                      "message": {
+                        "subject": "🔄 App Service Auto-Restarted: @{outputs('Parse_Activity_Log_Data')?['appName']}",
+                        "body": {
+                          "contentType": "Text",
+                          "content": "✅ Auto-Restart Successful\n\nYour App Service '@{outputs('Parse_Activity_Log_Data')?['appName']}' was automatically stopped but has been restarted because it has the 'AlwaysOn' tag set to 'true'.\n\n📋 Details:\n• App Name: @{outputs('Parse_Activity_Log_Data')?['appName']}\n• Stopped At: @{outputs('Parse_Activity_Log_Data')?['eventTime']}\n• Stopped By: @{outputs('Parse_Activity_Log_Data')?['caller']}\n• Restarted At: @{utcNow()}\n• Action Taken: Automatically restarted\n\n✅ Your app is now running again!"
+                        },
+                        "toRecipients": [
+                          {
+                            "emailAddress": {
+                              "address": "@parameters('alertEmail')"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    "authentication": {
+                      "type": "ManagedServiceIdentity"
                     }
                   }
                 },
                 "Log_Restart_Success": {
                   "runAfter": {
-                    "Send_Restart_Notification": ["Succeeded", "Failed"]
+                    "Send_Restart_Email": ["Succeeded", "Failed"]
                   },
                   "type": "Compose",
                   "inputs": {
@@ -269,23 +284,38 @@
               },
               "else": {
                 "actions": {
-                  "Send_No_Action_Notification": {
-                    "type": "Compose",
+                  "Send_No_Action_Email": {
+                    "type": "Http",
                     "inputs": {
-                      "emailSubject": "⚠️ App Service Stopped: @{outputs('Parse_Activity_Log_Data')?['appName']}",
-                      "emailBody": "⚠️ App Service Stopped - No Auto-Restart\n\nYour App Service '@{outputs('Parse_Activity_Log_Data')?['appName']}' was stopped but was NOT automatically restarted because it does not have the 'AlwaysOn' tag set to 'true'.\n\n📋 Details:\n• App Name: @{outputs('Parse_Activity_Log_Data')?['appName']}\n• Stopped At: @{outputs('Parse_Activity_Log_Data')?['eventTime']}\n• Stopped By: @{outputs('Parse_Activity_Log_Data')?['caller']}\n• Action Taken: None (AlwaysOn tag not set)\n\n💡 To enable auto-restart, add the tag: AlwaysOn = true",
-                      "notificationData": {
-                        "action": "no-restart",
-                        "appName": "@{outputs('Parse_Activity_Log_Data')?['appName']}",
-                        "stoppedBy": "@{outputs('Parse_Activity_Log_Data')?['caller']}",
-                        "stoppedAt": "@{outputs('Parse_Activity_Log_Data')?['eventTime']}",
-                        "reason": "AlwaysOn tag not set to true"
+                      "method": "POST",
+                      "uri": "https://graph.microsoft.com/v1.0/me/sendMail",
+                      "headers": {
+                        "Content-Type": "application/json"
+                      },
+                      "body": {
+                        "message": {
+                          "subject": "⚠️ App Service Stopped: @{outputs('Parse_Activity_Log_Data')?['appName']}",
+                          "body": {
+                            "contentType": "Text",
+                            "content": "⚠️ App Service Stopped - No Auto-Restart\n\nYour App Service '@{outputs('Parse_Activity_Log_Data')?['appName']}' was stopped but was NOT automatically restarted because it does not have the 'AlwaysOn' tag set to 'true'.\n\n📋 Details:\n• App Name: @{outputs('Parse_Activity_Log_Data')?['appName']}\n• Stopped At: @{outputs('Parse_Activity_Log_Data')?['eventTime']}\n• Stopped By: @{outputs('Parse_Activity_Log_Data')?['caller']}\n• Action Taken: None (AlwaysOn tag not set)\n\n💡 To enable auto-restart, add the tag: AlwaysOn = true"
+                          },
+                          "toRecipients": [
+                            {
+                              "emailAddress": {
+                                "address": "@parameters('alertEmail')"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "authentication": {
+                        "type": "ManagedServiceIdentity"
                       }
                     }
                   },
                   "Log_No_Action_Needed": {
                     "runAfter": {
-                      "Send_No_Action_Notification": ["Succeeded", "Failed"]
+                      "Send_No_Action_Email": ["Succeeded", "Failed"]
                     },
                     "type": "Compose",
                     "inputs": {
@@ -326,7 +356,13 @@
       "properties": {
         "groupShortName": "AutoRestart",
         "enabled": true,
-        "emailReceivers": [],
+        "emailReceivers": [
+          {
+            "name": "AdminEmail",
+            "emailAddress": "[parameters('alertEmail')]",
+            "useCommonAlertSchema": true
+          }
+        ],
         "webhookReceivers": [
           {
             "name": "LogicAppRestart",
