@@ -149,7 +149,7 @@
             "alertEmail": {
               "type": "String"
             },
-            "senderEmail": {
+            "slackWebhookUrl": {
               "type": "String"
             }
           },
