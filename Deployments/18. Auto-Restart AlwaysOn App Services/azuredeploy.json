@@ -205,7 +205,7 @@
               "runAfter": {
                 "Get_App_Service_Tags": ["Succeeded"]
               },
-              "type": "Condition",
+              "type": "If",
               "expression": {
                 "equals": [
                   "@body('Get_App_Service_Tags')?['tags']?['AlwaysOn']",
