@@ -30,7 +30,15 @@
       "metadata": {
         "description": "Email address to receive restart notifications."
       }
-    }
+    },
+    "slackWebhookUrl": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Slack webhook URL for notifications (optional). Leave empty to disable Slack notifications."
+      }
+    },
+
   },
   "variables": {
     "location": "[resourceGroup().location]",
@@ -141,6 +149,9 @@
           "parameters": {
             "alertEmail": {
               "type": "String"
+            },
+            "senderEmail": {
+              "type": "String"
             }
           },
           "triggers": {
@@ -235,41 +246,61 @@
                     }
                   }
                 },
-                "Send_Restart_Email": {
+                "Send_Restart_Notification": {
                   "runAfter": {
                     "Restart_App_Service": ["Succeeded"]
                   },
-                  "type": "Http",
-                  "inputs": {
-                    "method": "POST",
-                    "uri": "https://graph.microsoft.com/v1.0/me/sendMail",
-                    "headers": {
-                      "Content-Type": "application/json"
-                    },
-                    "body": {
-                      "message": {
-                        "subject": "🔄 App Service Auto-Restarted: @{outputs('Parse_Activity_Log_Data')?['appName']}",
-                        "body": {
-                          "contentType": "Text",
-                          "content": "✅ Auto-Restart Successful\n\nYour App Service '@{outputs('Parse_Activity_Log_Data')?['appName']}' was automatically stopped but has been restarted because it has the 'AlwaysOn' tag set to 'true'.\n\n📋 Details:\n• App Name: @{outputs('Parse_Activity_Log_Data')?['appName']}\n• Stopped At: @{outputs('Parse_Activity_Log_Data')?['eventTime']}\n• Stopped By: @{outputs('Parse_Activity_Log_Data')?['caller']}\n• Restarted At: @{utcNow()}\n• Action Taken: Automatically restarted\n\n✅ Your app is now running again!"
+                  "type": "If",
+                  "expression": {
+                    "not": {
+                      "equals": [
+                        "@parameters('slackWebhookUrl')",
+                        ""
+                      ]
+                    }
+                  },
+                  "actions": {
+                    "Send_Slack_Restart": {
+                      "type": "Http",
+                      "inputs": {
+                        "method": "POST",
+                        "uri": "@parameters('slackWebhookUrl')",
+                        "headers": {
+                          "Content-Type": "application/json"
                         },
-                        "toRecipients": [
-                          {
-                            "emailAddress": {
-                              "address": "@parameters('alertEmail')"
+                        "body": {
+                          "text": "🔄 App Service Auto-Restarted: @{outputs('Parse_Activity_Log_Data')?['appName']}",
+                          "attachments": [
+                            {
+                              "color": "good",
+                              "title": "✅ Auto-Restart Successful",
+                              "text": "Your App Service '@{outputs('Parse_Activity_Log_Data')?['appName']}' was automatically stopped but has been restarted because it has the 'AlwaysOn' tag set to 'true'.\n\n📋 Details:\n• App Name: @{outputs('Parse_Activity_Log_Data')?['appName']}\n• Stopped At: @{outputs('Parse_Activity_Log_Data')?['eventTime']}\n• Stopped By: @{outputs('Parse_Activity_Log_Data')?['caller']}\n• Restarted At: @{utcNow()}\n• Action Taken: Automatically restarted\n\n✅ Your app is now running again!"
                             }
-                          }
-                        ]
+                          ]
+                        }
                       }
-                    },
-                    "authentication": {
-                      "type": "ManagedServiceIdentity"
+                    }
+                  }
+                },
+                "Log_Restart_Details": {
+                  "runAfter": {
+                    "Send_Restart_Notification": ["Succeeded", "Failed"]
+                  },
+                  "type": "Compose",
+                  "inputs": {
+                    "message": "✅ Successfully restarted App Service: @{outputs('Parse_Activity_Log_Data')?['appName']}",
+                    "details": {
+                      "appName": "@{outputs('Parse_Activity_Log_Data')?['appName']}",
+                      "stoppedBy": "@{outputs('Parse_Activity_Log_Data')?['caller']}",
+                      "stoppedAt": "@{outputs('Parse_Activity_Log_Data')?['eventTime']}",
+                      "restartedAt": "@{utcNow()}",
+                      "action": "Auto-restarted due to AlwaysOn tag"
                     }
                   }
                 },
                 "Log_Restart_Success": {
                   "runAfter": {
-                    "Send_Restart_Email": ["Succeeded", "Failed"]
+                    "Log_Restart_Details": ["Succeeded", "Failed"]
                   },
                   "type": "Compose",
                   "inputs": {
@@ -284,38 +315,58 @@
               },
               "else": {
                 "actions": {
-                  "Send_No_Action_Email": {
-                    "type": "Http",
-                    "inputs": {
-                      "method": "POST",
-                      "uri": "https://graph.microsoft.com/v1.0/me/sendMail",
-                      "headers": {
-                        "Content-Type": "application/json"
-                      },
-                      "body": {
-                        "message": {
-                          "subject": "⚠️ App Service Stopped: @{outputs('Parse_Activity_Log_Data')?['appName']}",
-                          "body": {
-                            "contentType": "Text",
-                            "content": "⚠️ App Service Stopped - No Auto-Restart\n\nYour App Service '@{outputs('Parse_Activity_Log_Data')?['appName']}' was stopped but was NOT automatically restarted because it does not have the 'AlwaysOn' tag set to 'true'.\n\n📋 Details:\n• App Name: @{outputs('Parse_Activity_Log_Data')?['appName']}\n• Stopped At: @{outputs('Parse_Activity_Log_Data')?['eventTime']}\n• Stopped By: @{outputs('Parse_Activity_Log_Data')?['caller']}\n• Action Taken: None (AlwaysOn tag not set)\n\n💡 To enable auto-restart, add the tag: AlwaysOn = true"
+                  "Send_No_Action_Notification": {
+                    "type": "If",
+                    "expression": {
+                      "not": {
+                        "equals": [
+                          "@parameters('slackWebhookUrl')",
+                          ""
+                        ]
+                      }
+                    },
+                    "actions": {
+                      "Send_Slack_No_Action": {
+                        "type": "Http",
+                        "inputs": {
+                          "method": "POST",
+                          "uri": "@parameters('slackWebhookUrl')",
+                          "headers": {
+                            "Content-Type": "application/json"
                           },
-                          "toRecipients": [
-                            {
-                              "emailAddress": {
-                                "address": "@parameters('alertEmail')"
+                          "body": {
+                            "text": "⚠️ App Service Stopped (No Auto-Restart): @{outputs('Parse_Activity_Log_Data')?['appName']}",
+                            "attachments": [
+                              {
+                                "color": "warning",
+                                "title": "⚠️ App Service Stopped - No Auto-Restart",
+                                "text": "Your App Service '@{outputs('Parse_Activity_Log_Data')?['appName']}' was stopped but will NOT be automatically restarted because it does not have the 'AlwaysOn' tag set to 'true'.\n\n📋 Details:\n• App Name: @{outputs('Parse_Activity_Log_Data')?['appName']}\n• Stopped At: @{outputs('Parse_Activity_Log_Data')?['eventTime']}\n• Stopped By: @{outputs('Parse_Activity_Log_Data')?['caller']}\n• Action Taken: No auto-restart (missing AlwaysOn tag)\n\n💡 To enable auto-restart, add the tag 'AlwaysOn' with value 'true' to this App Service."
                               }
-                            }
-                          ]
+                            ]
+                          }
                         }
-                      },
-                      "authentication": {
-                        "type": "ManagedServiceIdentity"
+                      }
+                    }
+                  },
+                  "Log_No_Action_Details": {
+                    "runAfter": {
+                      "Send_No_Action_Notification": ["Succeeded", "Failed"]
+                    },
+                    "type": "Compose",
+                    "inputs": {
+                      "message": "⚠️ App Service stopped but no restart needed",
+                      "details": {
+                        "appName": "@{outputs('Parse_Activity_Log_Data')?['appName']}",
+                        "stoppedBy": "@{outputs('Parse_Activity_Log_Data')?['caller']}",
+                        "stoppedAt": "@{outputs('Parse_Activity_Log_Data')?['eventTime']}",
+                        "reason": "AlwaysOn tag not set to 'true'",
+                        "action": "No restart performed"
                       }
                     }
                   },
                   "Log_No_Action_Needed": {
                     "runAfter": {
-                      "Send_No_Action_Email": ["Succeeded", "Failed"]
+                      "Log_No_Action_Details": ["Succeeded", "Failed"]
                     },
                     "type": "Compose",
                     "inputs": {
@@ -344,6 +395,9 @@
         "parameters": {
           "alertEmail": {
             "value": "[parameters('alertEmail')]"
+          },
+          "slackWebhookUrl": {
+            "value": "[parameters('slackWebhookUrl')]"
           }
         }
       }
@@ -356,13 +410,7 @@
       "properties": {
         "groupShortName": "AutoRestart",
         "enabled": true,
-        "emailReceivers": [
-          {
-            "name": "AdminEmail",
-            "emailAddress": "[parameters('alertEmail')]",
-            "useCommonAlertSchema": true
-          }
-        ],
+        "emailReceivers": [],
         "webhookReceivers": [
           {
             "name": "LogicAppRestart",

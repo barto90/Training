@@ -1,383 +1,152 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auto-Restart AlwaysOn App Services - Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            margin: 20px;
+            background-color: #f5f5f5;
         }
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
-            background-color: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         h1 {
-            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-size: 32px;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 3px solid #0078d4;
-            text-align: center;
-        }
-        .architecture {
-            width: 100%;
-            height: 450px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            margin: 20px 0;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        .flow-container {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            width: 100%;
-            padding: 40px;
-        }
-        .flow-item {
-            text-align: center;
-            flex: 1;
-            margin: 0 10px;
-        }
-        .flow-icon {
-            font-size: 60px;
-            margin-bottom: 10px;
-            display: block;
-        }
-        .flow-arrow {
-            font-size: 30px;
             color: #0078d4;
-            margin: 0 20px;
+            text-align: center;
+            margin-bottom: 30px;
         }
-        .resources {
+        .architecture-diagram {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .features {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
             margin: 30px 0;
         }
-        .resource {
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            padding: 25px;
-            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
-            color: white;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 120, 212, 0.3);
-        }
-        .resource:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 8px 25px rgba(0, 120, 212, 0.4);
-        }
-        .resource h3 {
-            margin-top: 0;
-            color: #fff;
-            font-size: 22px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .resource-icon {
-            font-size: 28px;
-        }
-        .config {
-            background-color: rgba(255,255,255,0.15);
-            padding: 18px;
-            border-radius: 8px;
-            margin-top: 18px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            backdrop-filter: blur(10px);
-        }
-        .config div {
-            margin: 6px 0;
-        }
-        .auto-restart {
-            margin-top: 30px;
-            background: linear-gradient(135deg, #6f42c1 0%, #563d7c 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
-        }
-        .auto-restart h3 {
-            margin-top: 0;
-            font-size: 24px;
-        }
-        .auto-restart ul {
-            columns: 2;
-            column-gap: 40px;
-        }
-        .logic-features {
-            background: linear-gradient(135deg, #20c997 0%, #198754 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 12px;
-            margin-top: 30px;
-            box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);
-        }
-        .logic-features h3 {
-            margin-top: 0;
-            font-size: 24px;
-        }
-        .logic-flow {
-            background-color: rgba(255,255,255,0.15);
+        .feature-card {
+            background: #f8f9fa;
             padding: 20px;
             border-radius: 8px;
-            margin-top: 18px;
-            backdrop-filter: blur(10px);
+            border-left: 4px solid #0078d4;
         }
-        .logic-step {
-            margin: 12px 0;
-            padding: 10px;
-            background-color: rgba(255,255,255,0.1);
-            border-radius: 6px;
-            border-left: 3px solid #ffd700;
-        }
-        .alerting-features {
-            background: linear-gradient(135deg, #fd7e14 0%, #dc6507 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 12px;
-            margin-top: 30px;
-            box-shadow: 0 4px 15px rgba(253, 126, 20, 0.3);
-        }
-        .alerting-features h3 {
+        .feature-card h3 {
+            color: #0078d4;
             margin-top: 0;
-            font-size: 24px;
         }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-top: 25px;
-        }
-        .stat-item {
-            background-color: rgba(255,255,255,0.15);
-            padding: 20px;
+        .slack-notification {
+            background: #4A154B;
+            color: white;
+            padding: 15px;
             border-radius: 8px;
-            text-align: center;
-            backdrop-filter: blur(10px);
+            margin: 20px 0;
+            font-family: 'Slack-Lato', sans-serif;
         }
-        .stat-number {
-            font-size: 28px;
-            font-weight: bold;
-            display: block;
-        }
-        .security-info {
-            background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 12px;
-            margin-top: 30px;
-            box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
-        }
-        .security-info h3 {
-            margin-top: 0;
-            font-size: 24px;
+        .slack-notification .emoji {
+            font-size: 1.2em;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🔄 Auto-Restart AlwaysOn App Services</h1>
-        
-        <!-- Architecture Flow -->
-        <div class="architecture">
+        <p style="text-align: center; font-size: 1.1em; color: #666;">
+            Automatically restart App Services tagged with "AlwaysOn: true" when stopped
+        </p>
+
+        <div class="architecture-diagram">
             <h2>🏗️ Architecture Overview</h2>
-            <p style="font-size: 18px; color: #666; margin-bottom: 30px;">App Service Stop → Activity Alert → Action Group → Logic App → Auto Restart</p>
-            <div class="flow-container">
-                <div class="flow-item">
-                    <span class="flow-icon">🛑</span>
-                    <div><strong>App Service Stops</strong></div>
-                    <div style="font-size: 14px; color: #666;">Manual or System</div>
-                </div>
-                <div class="flow-arrow">➡️</div>
-                <div class="flow-item">
-                    <span class="flow-icon">🚨</span>
-                    <div><strong>Activity Alert</strong></div>
-                    <div style="font-size: 14px; color: #666;">Real-time Detection</div>
-                </div>
-                <div class="flow-arrow">➡️</div>
-                <div class="flow-item">
-                    <span class="flow-icon">📧</span>
-                    <div><strong>Action Group</strong></div>
-                    <div style="font-size: 14px; color: #666;">Notification & Trigger</div>
-                </div>
-                <div class="flow-arrow">➡️</div>
-                <div class="flow-item">
-                    <span class="flow-icon">⚡</span>
-                    <div><strong>Logic App</strong></div>
-                    <div style="font-size: 14px; color: #666;">Tag Check & Restart</div>
-                </div>
+            <div class="mermaid">
+                graph TD
+                    A[App Service Stop Event] --> B[Activity Log Alert]
+                    B --> C[Action Group]
+                    C --> D[Logic App Trigger]
+                    D --> E{Check AlwaysOn Tag}
+                    E -->|AlwaysOn = true| F[Restart App Service]
+                    E -->|AlwaysOn ≠ true| G[No Action]
+                    F --> H[Send Slack Notification]
+                    G --> I[Send Slack Notification]
+                    
+                    style A fill:#ff9999
+                    style B fill:#99ccff
+                    style C fill:#99ccff
+                    style D fill:#99ff99
+                    style E fill:#ffcc99
+                    style F fill:#99ff99
+                    style G fill:#ffcc99
+                    style H fill:#4A154B,color:#fff
+                    style I fill:#4A154B,color:#fff
             </div>
         </div>
 
-        <div class="resources">
-            <div class="resource">
-                <h3><span class="resource-icon">🌐</span>App Service</h3>
-                <p>Protected web application with AlwaysOn capability and automatic restart protection.</p>
-                <div class="config">
-                    <div><strong>SKU:</strong> Standard S1</div>
-                    <div><strong>Tag:</strong> AlwaysOn: true</div>
-                    <div><strong>Identity:</strong> System Assigned</div>
-                    <div><strong>HTTPS:</strong> Only</div>
-                </div>
+        <div class="features">
+            <div class="feature-card">
+                <h3>🏷️ Tag-Based Logic</h3>
+                <p>Only App Services with <code>AlwaysOn: "true"</code> tag are automatically restarted. Others are left stopped with a notification.</p>
             </div>
-
-            <div class="resource">
-                <h3><span class="resource-icon">🚨</span>Activity Log Alert</h3>
-                <p>Monitors for App Service stop events in real-time with immediate notification.</p>
-                <div class="config">
-                    <div><strong>Operation:</strong> Microsoft.Web/sites/stop/action</div>
-                    <div><strong>Scope:</strong> Resource-specific</div>
-                    <div><strong>Status:</strong> Any</div>
-                    <div><strong>Response:</strong> Immediate</div>
-                </div>
+            <div class="feature-card">
+                <h3>📱 Slack Integration</h3>
+                <p>Beautiful Slack notifications with emojis and detailed information about the restart action or why no action was taken.</p>
             </div>
-
-            <div class="resource">
-                <h3><span class="resource-icon">📧</span>Action Group</h3>
-                <p>Coordinates notification and automation responses for detected events.</p>
-                <div class="config">
-                    <div><strong>Email:</strong> Instant notification</div>
-                    <div><strong>Logic App:</strong> Parallel trigger</div>
-                    <div><strong>Scope:</strong> Global</div>
-                    <div><strong>Actions:</strong> Multiple supported</div>
-                </div>
+            <div class="feature-card">
+                <h3>🔒 Secure & Reliable</h3>
+                <p>Uses Azure Activity Log (very reliable) and Managed Identity for secure authentication. No stored credentials.</p>
             </div>
-
-            <div class="resource">
-                <h3><span class="resource-icon">⚡</span>Logic App</h3>
-                <p>Smart automation engine with conditional restart logic and tag validation.</p>
-                <div class="config">
-                    <div><strong>Trigger:</strong> HTTP Webhook</div>
-                    <div><strong>Validation:</strong> AlwaysOn tag check</div>
-                    <div><strong>Authentication:</strong> Managed Identity</div>
-                    <div><strong>API:</strong> Azure REST</div>
-                </div>
-            </div>
-
-            <div class="resource">
-                <h3><span class="resource-icon">📊</span>Log Analytics</h3>
-                <p>Centralized logging and activity monitoring workspace for audit trails.</p>
-                <div class="config">
-                    <div><strong>SKU:</strong> PerGB2018</div>
-                    <div><strong>Retention:</strong> 30 days</div>
-                    <div><strong>Logs:</strong> Activity captured</div>
-                    <div><strong>Permissions:</strong> Resource-based</div>
-                </div>
-            </div>
-
-            <div class="resource">
-                <h3><span class="resource-icon">📈</span>Application Insights</h3>
-                <p>Performance monitoring and telemetry collection for comprehensive observability.</p>
-                <div class="config">
-                    <div><strong>Type:</strong> Web application</div>
-                    <div><strong>Connection:</strong> Log Analytics</div>
-                    <div><strong>Metrics:</strong> Real-time</div>
-                    <div><strong>Telemetry:</strong> Custom supported</div>
-                </div>
+            <div class="feature-card">
+                <h3>⚡ Scalable</h3>
+                <p>Automatically monitors all App Services in the Resource Group. Just add the AlwaysOn tag to any app to protect it.</p>
             </div>
         </div>
 
-        <div class="auto-restart">
-            <h3>🔄 Auto-Restart Capabilities</h3>
-            <p>This solution provides intelligent automatic restart functionality for Azure App Services:</p>
-            <ul>
-                <li>Real-time detection of App Service stop events via Activity Log alerts</li>
-                <li>Tag-based protection - only restarts services marked with "AlwaysOn: true"</li>
-                <li>Immediate email notifications when restart actions are taken</li>
-                <li>Managed Identity for secure Azure API access without storing credentials</li>
-                <li>Logic App conditional logic prevents unnecessary restarts</li>
-                <li>Works for manual stops, scale-down events, and maintenance windows</li>
-                <li>Comprehensive logging and monitoring of all restart actions</li>
-                <li>Parallel execution of notifications and restart logic</li>
-            </ul>
+        <div class="slack-notification">
+            <h3>📱 Example Slack Notification</h3>
+            <div class="emoji">🔄 App Service Auto-Restarted: myapp-alwayson-001</div>
+            <br>
+            <strong>✅ Auto-Restart Successful</strong><br><br>
+            Your App Service 'myapp-alwayson-001' was automatically stopped but has been restarted because it has the 'AlwaysOn' tag set to 'true'.<br><br>
+            <strong>📋 Details:</strong><br>
+            • App Name: myapp-alwayson-001<br>
+            • Stopped At: 2024-01-15T14:30:00Z<br>
+            • Stopped By: user@company.com<br>
+            • Restarted At: 2024-01-15T14:32:00Z<br>
+            • Action Taken: Automatically restarted<br><br>
+            <div class="emoji">✅ Your app is now running again!</div>
         </div>
 
-        <div class="logic-features">
-            <h3>⚡ Logic App Workflow</h3>
-            <p>The Logic App implements a sophisticated conditional restart process:</p>
-            <div class="logic-flow">
-                <div class="logic-step">
-                    <strong>1. Trigger Reception:</strong> Receives webhook from Activity Log Alert containing stop event details
-                </div>
-                <div class="logic-step">
-                    <strong>2. Data Parsing:</strong> Extracts resource ID, operation name, timestamp, and app name from alert payload
-                </div>
-                <div class="logic-step">
-                    <strong>3. Tag Validation:</strong> Queries Azure REST API to retrieve App Service tags using Managed Identity
-                </div>
-                <div class="logic-step">
-                    <strong>4. Conditional Check:</strong> Verifies if "AlwaysOn" tag exists and equals "true"
-                </div>
-                <div class="logic-step">
-                    <strong>5. Restart Action:</strong> If tag validation passes, sends start command to App Service via Azure REST API
-                </div>
-                <div class="logic-step">
-                    <strong>6. Status Response:</strong> Returns success/failure status with detailed information for monitoring
-                </div>
-            </div>
+        <div style="margin-top: 30px; padding: 20px; background: #e8f4fd; border-radius: 8px;">
+            <h3>🚀 Quick Start</h3>
+            <ol>
+                <li><strong>Test Slack:</strong> <code>.\test-slack-webhook.ps1</code></li>
+                <li><strong>Deploy:</strong> <code>.\deploy.ps1</code></li>
+                <li><strong>Test:</strong> Stop an App Service with AlwaysOn tag</li>
+                <li><strong>Verify:</strong> Check Slack for notification and app restart</li>
+            </ol>
         </div>
 
-        <div class="alerting-features">
-            <h3>📨 Notification & Alerting</h3>
-            <p>Comprehensive notification system keeps you informed of all restart activities:</p>
-            <div class="stats">
-                <div class="stat-item">
-                    <span class="stat-number">&lt;30s</span>
-                    <span>Detection Time</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number">&lt;60s</span>
-                    <span>Restart Time</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number">100%</span>
-                    <span>Email Reliability</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number">24/7</span>
-                    <span>Monitoring</span>
-                </div>
-            </div>
-            <p><strong>Email notifications include:</strong> Timestamp, App Service name, reason for restart, success/failure status, and links to Azure portal for further investigation.</p>
-        </div>
-
-        <div class="security-info">
-            <h3>🔒 Security & Compliance</h3>
-            <p>Built-in security features ensure safe and compliant operations:</p>
-            <ul>
-                <li>System-assigned Managed Identity eliminates credential storage</li>
-                <li>Role-based access control with minimal required permissions</li>
-                <li>HTTPS-only communication for all components</li>
-                <li>TLS 1.2 minimum version enforcement</li>
-                <li>Tag-based protection prevents unauthorized restarts</li>
-                <li>Activity Log integration for full audit trail</li>
-                <li>Log Analytics workspace for centralized security monitoring</li>
-                <li>Application Insights for performance and security telemetry</li>
-                <li>Azure Resource Manager template for consistent deployments</li>
-                <li>No hard-coded secrets or credentials in configuration</li>
-                <li>Resource-specific alert scoping prevents cross-contamination</li>
-                <li>Built-in error handling and graceful failure modes</li>
-            </ul>
+        <div style="margin-top: 20px; text-align: center; color: #666;">
+            <p>🎯 <strong>Why This Solution Rocks:</strong> Simple, Reliable, Secure, Scalable, and Cost-Effective!</p>
         </div>
     </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            }
+        });
+    </script>
 </body>
 </html> 

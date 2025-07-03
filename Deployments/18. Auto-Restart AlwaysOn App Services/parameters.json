@@ -10,6 +10,9 @@
     },
     "alertEmail": {
       "value": "admin@yourcompany.com"
+    },
+    "slackWebhookUrl": {
+      "value": "https://hooks.slack.com/services/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"
     }
   }
 } 

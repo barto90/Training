@@ -8,7 +8,7 @@ A simple and reliable Azure solution that automatically restarts App Services ta
 2. **👁️ Monitors** for App Service stop events
 3. **🔍 Checks** if stopped app has the `AlwaysOn` tag
 4. **🚀 Automatically restarts** the app if tagged
-5. **📧 Sends email notification** about the restart
+5. **📧 Sends Slack notification** about the restart (optional)
 
 ## 🏗️ **Architecture**
 
@@ -24,7 +24,7 @@ App Service Stop Event → Activity Log Alert → Action Group → Logic App
 |-----------|---------|
 | **App Service** | Web app with `AlwaysOn: "true"` tag |
 | **Activity Log Alert** | Detects `Microsoft.Web/sites/stop/action` events |
-| **Action Group** | Routes alerts to Logic App + sends email |
+| **Action Group** | Routes alerts to Logic App |
 | **Logic App** | Smart restart logic with tag checking |
 | **Role Assignment** | Grants Logic App permission to restart apps |
 
@@ -35,7 +35,12 @@ App Service Stop Event → Activity Log Alert → Action Group → Logic App
 - Resource Group created
 - Unique App Service name (globally unique)
 
-### **Step 1: Update Parameters**
+### **Step 1: Slack Integration (Pre-configured)**
+✅ **Slack webhook is already configured** in `parameters.json`  
+✅ **Test your webhook**: Run `.\test-slack-webhook.ps1` to verify it works  
+✅ **Customize if needed**: Update the webhook URL in `parameters.json`
+
+### **Step 2: Update Parameters**
 Edit `parameters.json`:
 ```json
 {
@@ -44,6 +49,7 @@ Edit `parameters.json`:
   "alertEmail": {"value": "your-email@company.com"}
 }
 ```
+**Note**: Slack webhook is already configured with your URL!
 
 ### **Step 2: Deploy**
 ```bash
@@ -64,12 +70,18 @@ New-AzResourceGroupDeployment `
 
 ## 🧪 **Testing**
 
+### **Test Slack Integration First**
+```powershell
+.\test-slack-webhook.ps1
+```
+This will send a test message to your Slack channel to verify the webhook works.
+
 ### **Test the Auto-Restart**
 1. **✅ Verify Deployment**: Check that all resources are deployed
 2. **🛑 Stop the App**: Go to Azure Portal → App Service → Stop
 3. **⏰ Wait 2-3 minutes**: Activity log alert has a small delay
 4. **🔍 Check Logic App**: Go to Logic App → Runs history
-5. **📧 Check Email**: You should receive restart notification
+5. **📱 Check Slack**: You should receive restart notification in your Slack channel
 6. **✅ Verify App**: App Service should be running again
 
 ### **Test Tag Dependency**
@@ -89,19 +101,21 @@ New-AzResourceGroupDeployment `
 - Go to **Activity Log** → Filter by "Stop web app"
 - See who stopped apps and when
 
-### **Email Notifications**
-Example email content:
+### **Slack Notifications**
+Example Slack message:
 ```
-Subject: 🔄 App Service Auto-Restarted: myapp-alwayson-001
+🔄 App Service Auto-Restarted: myapp-alwayson-001
 
-Your App Service 'myapp-alwayson-001' was automatically stopped 
-but has been restarted because it has the 'AlwaysOn' tag set to 'true'.
+✅ Auto-Restart Successful
+
+Your App Service 'myapp-alwayson-001' was automatically stopped but has been restarted because it has the 'AlwaysOn' tag set to 'true'.
 
 📋 Details:
-- App Name: myapp-alwayson-001
-- Stopped At: 2024-01-15T14:30:00Z
-- Stopped By: user@company.com
-- Action Taken: Automatically restarted
+• App Name: myapp-alwayson-001
+• Stopped At: 2024-01-15T14:30:00Z
+• Stopped By: user@company.com
+• Restarted At: 2024-01-15T14:32:00Z
+• Action Taken: Automatically restarted
 
 ✅ Your app is now running again!
 ```
@@ -118,10 +132,11 @@ To stop auto-restart for an app:
 1. **Remove the tag**: Delete the `AlwaysOn` tag
 2. **Or set to false**: `AlwaysOn: "false"`
 
-### **Change Email**
-To update the notification email:
+### **Change Slack Webhook**
+To update the Slack notifications:
 1. **Update Logic App parameter**: Go to Logic App → Parameters
 2. **Or redeploy**: Update `parameters.json` and redeploy
+3. **Disable notifications**: Set `slackWebhookUrl` to empty string `""`
 
 ## 🔧 **Customization**
 
@@ -131,7 +146,7 @@ You can modify the Logic App to:
 - Create ServiceNow tickets
 - Log to custom systems
 - Add delays before restart
-- Send different emails based on who stopped the app
+- Send different notifications based on who stopped the app
 
 ### **Advanced Filtering**
 The Activity Log Alert can be configured to:
@@ -173,10 +188,10 @@ The Activity Log Alert can be configured to:
 2. **Check Role Assignment**: Logic App needs restart permissions
 3. **Check Logs**: View Logic App run history for errors
 
-### **No Email Received**
-1. **Check Spam Folder**: Emails might be filtered
-2. **Check Action Group**: Verify email address is correct
-3. **Check Common Alert Schema**: Should be enabled
+### **No Slack Notification Received**
+1. **Check Webhook URL**: Verify the Slack webhook URL is correct
+2. **Check Slack Channel**: Ensure the webhook is posting to the right channel
+3. **Check Logic App**: View Logic App run history for webhook errors
 
 ## 💡 **Best Practices**
 
