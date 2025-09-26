@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PowerShell Object-Oriented Scripting - Enhanced Training Course</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #272838;
+            background: linear-gradient(135deg, #ECF8FD 0%, #AFCBD5 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(39, 40, 56, 0.15);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+            background: linear-gradient(135deg, #272838 0%, #815355 100%);
+            color: white;
+            border-radius: 15px;
+            margin: -20px -20px 40px -20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: #ECF8FD;
+            border-radius: 10px;
+            border-left: 5px solid #F2B418;
+        }
+
+        .section h2 {
+            color: #272838;
+            font-size: 2em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-icon {
+            font-size: 1.2em;
+            margin-right: 15px;
+        }
+
+        .section-intro {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid #F2B418;
+        }
+
+        .section-intro h3 {
+            color: #815355;
+            margin-bottom: 10px;
+        }
+
+        .code-panel {
+            background: #272838;
+            color: #ECF8FD;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow-x: auto;
+            position: relative;
+            border: 1px solid #AFCBD5;
+        }
+
+        .code-panel::before {
+            content: "PowerShell";
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background: #F2B418;
+            color: #272838;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .code-panel pre {
+            margin: 0;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            line-height: 1.4;
+        }
+
+        .steps-container {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .step {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .step:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .step h4 {
+            color: #272838;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #ECF8FD;
+            border-radius: 5px;
+            border: 1px solid #AFCBD5;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+            accent-color: #F2B418;
+        }
+
+        .checkbox-container label {
+            font-weight: 600;
+            color: #815355;
+            cursor: pointer;
+        }
+
+        .resource-links {
+            background: #AFCBD5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .resource-links h4 {
+            color: #272838;
+            margin-bottom: 15px;
+        }
+
+        .resource-links a {
+            display: inline-block;
+            background: #F2B418;
+            color: #272838;
+            padding: 8px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px 10px 5px 0;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .resource-links a:hover {
+            background: #815355;
+            color: white;
+        }
+
+        .flowchart {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            border: 2px dashed #AFCBD5;
+        }
+
+        .flowchart-box {
+            display: inline-block;
+            background: #272838;
+            color: #ECF8FD;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 8px;
+            border: 2px solid #F2B418;
+        }
+
+        .arrow {
+            font-size: 1.5em;
+            color: #F2B418;
+            margin: 0 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #AFCBD5;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #F2B418, #815355);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: 600;
+            color: #272838;
+        }
+
+        .tip-box {
+            background: #F2B418;
+            border: 1px solid #815355;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #272838;
+        }
+
+        .tip-box::before {
+            content: "💡 ";
+            font-size: 1.2em;
+        }
+
+        .warning-box {
+            background: #815355;
+            border: 1px solid #272838;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #ECF8FD;
+        }
+
+        .warning-box::before {
+            content: "⚠️ ";
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 PowerShell Object-Oriented Scripting</h1>
+            <p>Enhanced Training Course - Master Classes, Strong Types, Functions & More!</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">Progress: 0% Complete</div>
+
+        <!-- Section 1: PowerShell Classes -->
+        <div class="section">
+            <h2><span class="section-icon">🏗️</span>PowerShell Classes</h2>
+            
+            <div class="section-intro">
+                <h3>What are PowerShell Classes?</h3>
+                <p>PowerShell classes are user-defined data types that encapsulate data (properties) and functions (methods) that operate on that data. Think of them as blueprints for creating objects with specific characteristics and behaviors. Classes bring true object-oriented programming capabilities to PowerShell, allowing you to create more structured, maintainable, and reusable code.</p>
+            </div>
+
+            <div class="flowchart">
+                <h4>Class Structure Flow</h4>
+                <div class="flowchart-box">Define Class</div>
+                <span class="arrow">→</span>
+                <div class="flowchart-box">Add Properties</div>
+                <span class="arrow">→</span>
+                <div class="flowchart-box">Add Methods</div>
+                <span class="arrow">→</span>
+                <div class="flowchart-box">Create Instance</div>
+            </div>
+
+            <div class="tip-box">
+                <strong>Why Use Classes?</strong> Classes help you organize related data and functions together, making your scripts more maintainable and your logic more reusable. They're perfect for modeling real-world entities in your automation scripts!
+            </div>
+
+            <div class="code-panel">
+                <pre><code># Basic PowerShell Class Example
+class Server {
+    # Properties (data)
+    [string]$Name
+    [string]$IPAddress
+    [int]$Port
+    [bool]$IsOnline
+
+    # Constructor - runs when creating a new instance
+    Server([string]$serverName, [string]$ip) {
+        $this.Name = $serverName
+        $this.IPAddress = $ip
+        $this.Port = 443
+        $this.IsOnline = $false
+    }
+
+    # Method - function that belongs to the class
+    [void]Connect() {
+        Write-Host "Connecting to $($this.Name) at $($this.IPAddress):$($this.Port)"
+        $this.IsOnline = $true
+    }
+
+    # Method with return value
+    [string]GetStatus() {
+        if ($this.IsOnline) {
+            return "Server $($this.Name) is online"
+        } else {
+            return "Server $($this.Name) is offline"
+        }
+    }
+}
+
+# Creating and using the class
+$webServer = [Server]::new("WebServer01", "192.168.1.100")
+$webServer.Connect()
+Write-Host $webServer.GetStatus()</code></pre>
+            </div>
+
+            <div class="steps-container">
+                <h3>🎯 Hands-On Steps</h3>
+                
+                <div class="step">
+                    <h4>Step 1: Create Your First Class</h4>
+                    <p>Create a simple "Computer" class with properties for Name, OS, and Memory. Add a constructor that accepts these values.</p>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="class-step1" onchange="updateProgress()">
+                        <label for="class-step1">✅ I've created my first PowerShell class</label>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h4>Step 2: Add Methods to Your Class</h4>
+                    <p>Add a method called "GetInfo()" that returns a formatted string with all the computer information, and a "Restart()" method that simulates rebooting.</p>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="class-step2" onchange="updateProgress()">
+                        <label for="class-step2">✅ I've added methods to my class</label>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h4>Step 3: Create Multiple Instances</h4>
+                    <p>Create at least 3 different computer objects using your class and test all the methods you've created.</p>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="class-step3" onchange="updateProgress()">
+                        <label for="class-step3">✅ I've created and tested multiple class instances</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="resource-links">
+                <h4>📚 Learn More About Classes</h4>
+                <a href="https://bartpasmans.tech/start-scripting-like-a-pro-1/" target="_blank">Scripting like a pro (Part 1)</a>
+                <a href="https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_classes?view=powershell-7.5 target="_blank">PowerShell Classes</a>
+            </div>
+        </div>
+
+        <!-- Section 2: Strongly Typed Variables -->
+        <div class="section">
+            <h2><span class="section-icon">🎯</span>Strongly Typed Variables</h2>
+            
+            <div class="section-intro">
+                <h3>What are Strongly Typed Variables?</h3>
+                <p>Strongly typed variables in PowerShell are variables that are explicitly declared with a specific data type. This means the variable can only hold values of that particular type, which helps prevent errors, improves performance, and makes your code more predictable and self-documenting. It's like putting a label on a box that says "only strings allowed here!"</p>
+            </div>
+
+            <div class="warning-box">
+                <strong>Important:</strong> While PowerShell is dynamically typed by default, using strong typing is a best practice for production scripts as it catches errors early and makes your intentions clear.
+            </div>
+
+            <div class="code-panel">
+                <pre><code># Strongly Typed Variable Examples
+
+# Basic type declarations
+[string]$userName = "BartPasmans"
+[int]$serverCount = 42
+[bool]$isProduction = $true
+[datetime]$deploymentDate = Get-Date
+
+# Array types
+[string[]]$serverNames = @("Web01", "Web02", "DB01")
+[int[]]$portNumbers = @(80, 443, 8080)
+
+# Complex types
+[System.Collections.ArrayList]$dynamicList = @()
+[hashtable]$serverConfig = @{
+    "Environment" = "Production"
+    "Region" = "EastUS"
+    "Tier" = "Standard"
+}
+
+# Custom object type
+[PSCustomObject]$serverInfo = [PSCustomObject]@{
+    Name = "WebServer01"
+    IP = "192.168.1.100"
+    Status = "Running"
+}
+
+# Demonstrating type safety
+try {
+    [int]$number = "This will fail"  # This will throw an error!
+} catch {
+    Write-Host "Error: Cannot convert string to integer" -ForegroundColor Red
+}
+
+# Correct usage
+[int]$validNumber = 123
+Write-Host "Valid number: $validNumber" -ForegroundColor Green</code></pre>
+            </div>
+
+            <div class="flowchart">
+                <h4>Type Safety Benefits</h4>
+                <div class="flowchart-box">Declare Type</div>
+                <span class="arrow">→</span>
+                <div class="flowchart-box">Early Error Detection</div>
+                <span class="arrow">→</span>
+                <div class="flowchart-box">Better Performance</div>
+                <span class="arrow">→</span>
+                <div class="flowchart-box">Self-Documenting Code</div>
+            </div>
+
+            <div class="steps-container">
+                <h3>🎯 Hands-On Steps</h3>
+                
+                <div class="step">
+                    <h4>Step 1: Practice Basic Type Declarations</h4>
+                    <p>Create strongly typed variables for: a person's name (string), age (int), height in meters (double), and whether they're an admin (bool).</p>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="types-step1" onchange="updateProgress()">
+                        <label for="types-step1">✅ I've created basic strongly typed variables</label>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h4>Step 2: Work with Typed Arrays</h4>
+                    <p>Create typed arrays for server names (string array) and their corresponding port numbers (int array). Practice adding and removing elements.</p>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="types-step2" onchange="updateProgress()">
+                        <label for="types-step2">✅ I've worked with strongly typed arrays</label>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h4>Step 3: Experiment with Type Conversion Errors</h4>
+                    <p>Intentionally try to assign wrong types to your variables and observe the error messages. Then fix them properly.</p>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="types-step3" onchange="updateProgress()">
+                        <label for="types-step3">✅ I understand type conversion and error handling</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <strong>Pro Tip:</strong> Use strongly typed variables in function parameters too! It makes your functions more robust and provides better IntelliSense support in PowerShell ISE and VS Code.
+            </div>
+
+            <div class="resource-links">
+                <h4>📚 Deep Dive into PowerShell Types</h4>
+                <a href="https://bartpasmans.tech/start-scripting-like-a-pro-2/ target="_blank">My Guide to PowerShell Type System</a>         
+            </div>
+        </div>
+
+        <!-- Section 3: Functions with Strong Typing -->
+        <div class="section">
+            <h2><span class="section-icon">⚡</span>Functions with Strong Typing</h2>
+            
+            <div class="section-intro">
+                <h3>What are Strongly Typed Functions?</h3>
+                <p>Functions with strong typing in PowerShell specify exact data types for parameters and return values. This creates more reliable, predictable functions that catch errors early and provide better documentation for other developers. Think of it as creating a contract that clearly states what goes in and what comes out!</p>
+            </div>
+
+            <div class="code-panel">
+                <pre><code># Advanced Function with Strong Typing
+function New-ServerConnection {
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ServerName,
+        
+        [Parameter(Mandatory = $true)]
+        [ValidatePattern('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$')]
+        [string]$IPAddress,
+        
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 65535)]
+        [int]$Port = 443,
+        
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("HTTP", "HTTPS", "TCP", "UDP")]
+        [string]$Protocol = "HTTPS",
+        
+        [Parameter(Mandatory = $false)]
+        [bool]$EnableSSL = $true
+    )
+    
+    # Function logic with type safety
+    $connectionResult = [PSCustomObject]@{
+        ServerName = $ServerName
+        IPAddress = $IPAddress
+        Port = $Port
+        Protocol = $Protocol
+        SSLEnabled = $EnableSSL
+        ConnectionTime = Get-Date
+        IsConnected = $false
+    }
+    
+    try {
+        # Simulate connection logic
+        Write-Verbose "Attempting to connect to $ServerName ($IPAddress):$Port"
+        Start-Sleep -Milliseconds 500  # Simulate connection time
+        $connectionResult.IsConnected = $true
+        Write-Host "✅ Successfully connected to $ServerName" -ForegroundColor Green
+    }
+    catch {
+        Write-Error "❌ Failed to connect to $ServerName`: $($_.Exception.Message)"
+        $connectionResult.IsConnected = $false
+    }
+    
+    # Return strongly typed object
+    return $connectionResult
+}
+
+# Function with different parameter sets
+function Get-SystemInfo {
+    [CmdletBinding(DefaultParameterSetName = "Local")]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(ParameterSetName = "Remote", Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ComputerName,
+        
+        [Parameter(ParameterSetName = "Remote")]
+        [System.Management.Automation.PSCredential]$Credential,
+        
+        [Parameter(ParameterSetName = "Local")]
+        [Parameter(ParameterSetName = "Remote")]
+        [ValidateSet("Basic", "Detailed", "Performance")]
+        [string]$InfoLevel = "Basic"
+    )
+    
+    $systemInfo = @{}
+    
+    switch ($InfoLevel) {
+        "Basic" {
+            $systemInfo = @{
+                ComputerName = if ($ComputerName) { $ComputerName } else { $env:COMPUTERNAME }
+                OS = (Get-CimInstance Win32_OperatingSystem).Caption
+                TotalMemoryGB = [Math]::Round((Get-CimInstance Win32_PhysicalMemory | Measure-Object Capacity -Sum).Sum / 1GB, 2)
+            }
+        }
+        "Detailed" {
+            # More detailed information gathering
+            $systemInfo.ProcessorCount = (Get-CimInstance Win32_Processor).Count
+            $systemInfo.Architecture = (Get-CimInstance Win32_Processor)[0].Architecture
+        }
+        "Performance" {
+            # Performance metrics
+            $systemInfo.CPUUsage = (Get-Counter "\Processor(_Total)\% Processor Time").CounterSamples[0].CookedValue
+        }
+    }
+    
+    return $systemInfo
+}
+
+# Usage examples
+$connection = New-ServerConnection -ServerName "WebServer01" -IPAddress "192.168.1.100" -Port 8080 -Protocol "HTTPS"
+$localInfo = Get-SystemInfo -InfoLevel "Detailed"
+$remoteInfo = Get-SystemInfo -ComputerName "RemoteServer" -InfoLevel "Basic"</code></pre>
+            </div>
+
+            <div class="flowchart">
+                <h4>Function Design Pattern</h4>
+                <div class="flowchart-box">Define Parameters</div>
+                <span class="arrow">→</span>
+                <div class="flowchart-box">Add Validation</div>
+                <span class="arrow">→</span>
+                <div class="flowchart-box">Process Logic</div>
+                <span class="arrow">→</span>
+                <div class="flowchart-box">Return Typed Result</div>
+            </div>
+
+            <div class="steps-container">
+                <h3>🎯 Hands-On Steps</h3>
+                
+                <div class="step">
+                    <h4>Step 1: Create a Basic Typed Function</h4>
+                    <p>Write a function called "Calculate-ServerMetrics" that takes server name (string) and memory (int) as parameters, and returns a PSCustomObject with calculated values.</p>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="func-step1" onchange="updateProgress()">
+                        <label for="func-step1">✅ I've created my first strongly typed function</label>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h4>Step 2: Add Parameter Validation</h4>
+                    <p>Enhance your function with parameter validation: mandatory parameters, value ranges, and input patterns. Test with both valid and invalid inputs.</p>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="func-step2" onchange="updateProgress()">
+                        <label for="func-step2">✅ I've added comprehensive parameter validation</label>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h4>Step 3: Create Advanced Function with Multiple Parameter Sets</h4>
+                    <p>Build a function with different parameter sets (like connecting locally vs remotely) and implement proper error handling.</p>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="func-step3" onchange="updateProgress()">
+                        <label for="func-step3">✅ I've mastered advanced function patterns</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <strong>Best Practice:</strong> Always use [CmdletBinding()] in your advanced functions - it gives you access to common parameters like -Verbose, -Debug, and -ErrorAction automatically!
+            </div>
+
+            <div class="resource-links">
+                <h4>📚 Master PowerShell Functions</h4>
+                <a href="https://bartpasmans.tech/start-scripting-like-a-pro-3/" target="_blank">My Advanced Function Patterns</a>
+                <a href="https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.5" target="_blank">CmdletBinding Attribute</a>
+            </div>
+        </div>
+
+        <!-- Section 4: Return Values and Output Types -->
+        <div class="section">
+            <h2><span class="section-icon">📤</span>Return Values & Output Types</h2>
+            
+            <div class="section-intro">
+                <h3>What are Return Values and Output Types?</h3>
+                <p>Return values and output types in PowerShell determine what your functions send back to the caller. By specifying output types, you create predictable functions that other developers (including future you!) can rely on. It's like promising "I will always give you back a specific type of result" - and PowerShell helps you keep that promise!</p>
+            </div>
+
+            <div class="code-panel">
+                <pre><code># Different ways to handle return values and output types
+
+# Function with explicit output type declaration
+function Get-ServerStatus {
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string[]]$ServerNames
+    )
+    
+    $results = @()
+    
+    foreach ($server in $ServerNames) {
+        $status = [PSCustomObject]@{
+            ServerName = $server
+            Status = if ((Test-Connection $server -Count 1 -Quiet)) { "Online" } else { "Offline" }
+            LastChecked = Get-Date
+            ResponseTime = if ((Test-Connection $server -Count 1 -Quiet)) { 
+                (Test-Connection $server -Count 1).ResponseTime 
+            } else { 
+                $null 
+            }
+        }
+        $results += $status
+    }
+    
+    # Explicit return (optional in PowerShell)
+    return $results
+}
+
+# Function with multiple possible output types
+function Get-UserInfo {
+    [CmdletBinding()]
+    [OutputType([PSCustomObject], [string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Username,
+        
+        [switch]$AsString
+    )
+    
+    try {
+        $user = Get-ADUser $Username -Properties DisplayName, EmailAddress, Department -ErrorAction Stop
+        
+        if ($AsString) {
+            # Return string format
+            return "$($user.DisplayName) ($($user.EmailAddress)) - $($user.Department)"
+        } else {
+            # Return object format
+            return [PSCustomObject]@{
+                Username = $user.SamAccountName
+                DisplayName = $user.DisplayName
+                Email = $user.EmailAddress
+                Department = $user.Department
+                Retrieved = Get-Date
+            }
+        }
+    }
+    catch {
+        Write-Error "User '$Username' not found: $($_.Exception.Message)"
+        return $null
+    }
+}
+
+# Function demonstrating pipeline output
+function Get-ProcessInfo {
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param(
+        [Parameter(ValueFromPipeline = $true)]
+        [string[]]$ProcessName = "*"
+    )
+    
+    process {
+        foreach ($name in $ProcessName) {
+            Get-Process $name -ErrorAction SilentlyContinue | ForEach-Object {
+                # Each object is automatically added to output
+                [PSCustomObject]@{
+                    ProcessName = $_.ProcessName
+                    PID = $_.Id
+                    MemoryMB = [Math]::Round($_.WorkingSet / 1MB, 2)
+                    StartTime = $_.StartTime
+                    CPUTime = $_.TotalProcessorTime
+                }
+            }
+        }
+    }
+}
+
+# Function with conditional return types
+function Invoke-ServerAction {
+    [CmdletBinding()]
+    [OutputType([bool], [PSCustomObject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ServerName,
+        
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("Start", "Stop", "Restart", "Status")]
+        [string]$Action,
+        
+        [switch]$Detailed
+    )
+    
+    switch ($Action) {
+        "Start" {
+            # Simulate starting a server
+            Write-Host "Starting server $ServerName..." -ForegroundColor Yellow
+            Start-Sleep 2
+            if ($Detailed) {
+                return [PSCustomObject]@{
+                    Action = "Start"
+                    ServerName = $ServerName
+                    Success = $true
+                    Message = "Server started successfully"
+                    Timestamp = Get-Date
+                }
+            } else {
+                return $true
+            }
+        }
+        
+        "Stop" {
+            Write-Host "Stopping server $ServerName..." -ForegroundColor Red
+            Start-Sleep 1
+            return if ($Detailed) {
+                [PSCustomObject]@{
+                    Action = "Stop"
+                    ServerName = $ServerName
+                    Success = $true
+                    Message = "Server stopped successfully"
+                    Timestamp = Get-Date
+                }
+            } else {
+                $true
+            }
+        }
+        
+        "Status" {
+            # Always return detailed object for status
+            return [PSCustomObject]@{
+                ServerName = $ServerName
+                Status = "Running"
+                Uptime = New-TimeSpan -Days 5 -Hours 3 -Minutes 42
+                LastReboot = (Get-Date).AddDays(-5)
+                CPUUsage = 23.5
+                MemoryUsageGB = 8.2
+            }
+        }
+        
+        default {
+            return $false
+        }
+    }
+}
+
+# Usage examples demonstrating different return types
+$serverStatuses = Get-ServerStatus -ServerNames @("Web01", "DB01", "Cache01")
+$userObject = Get-UserInfo -Username "jdoe"
+$userString = Get-UserInfo -Username "jdoe" -AsString
+$processes = "notepad", "explorer" | Get-ProcessInfo
+$startResult = Invoke-ServerAction -ServerName "Web01" -Action "Start" -Detailed</code></pre>
+            </div>
+
+            <div class="warning-box">
+                <strong>Remember:</strong> In PowerShell, anything that's not captured or assigned becomes part of the output stream. Be careful with Write-Host vs Write-Output vs return statements!
+            </div>
+
+            <div class="flowchart">
+                <h4>Output Type Strategy</h4>
+                <div class="flowchart-box">Plan Output</div>
+                <span class="arrow">→</span>
+                <div class="flowchart-box">Declare [OutputType]</div>
+                <span class="arrow">→</span>
+                <div class="flowchart-box">Consistent Returns</div>
+                <span class="arrow">→</span>
+                <div class="flowchart-box">Reliable Pipeline</div>
+            </div>
+
+            <div class="steps-container">
+                <h3>🎯 Hands-On Steps</h3>
+                
+                <div class="step">
+                    <h4>Step 1: Create Functions with Declared Output Types</h4>
+                    <p>Write two functions: one that returns a simple [string] and another that returns a [PSCustomObject]. Test both and verify the output types.</p>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="return-step1" onchange="updateProgress()">
+                        <label for="return-step1">✅ I've created functions with declared output types</label>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h4>Step 2: Build Pipeline-Compatible Functions</h4>
+                    <p>Create a function that accepts pipeline input and produces pipeline output. Test it by piping arrays through your function.</p>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="return-step2" onchange="updateProgress()">
+                        <label for="return-step2">✅ I've mastered pipeline input and output</label>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h4>Step 3: Implement Conditional Return Types</h4>
+                    <p>Build a function that can return different types based on parameters (like a switch for detailed vs simple output).</p>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="return-step3" onchange="updateProgress()">
+                        <label for="return-step3">✅ I can handle multiple output scenarios</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <strong>Pro Tip:</strong> Use [OutputType] attributes even if they're not enforced - they serve as excellent documentation and help IDEs provide better IntelliSense!
+            </div>
+
+            <div class="resource-links">
+                <h4>📚 Advanced Output Handling</h4>
+                <a href="https://bartpasmans.tech/start-scripting-like-a-pro-2/" target="_blank">My Pipeline Mastery Guide</a>
+                <a href="https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_pipelines?view=powershell-7.5" target="_blank">Pipelines explained</a>
+            </div>
+        </div>
+
+        <!-- Final Section: Putting It All Together -->
+        <div class="section">
+            <h2><span class="section-icon">🎯</span>Putting It All Together: Real-World Example</h2>
+            
+            <div class="section-intro">
+                <h3>A Complete Object-Oriented PowerShell Solution</h3>
+                <p>Now that you've learned about classes, strong typing, functions, and return values, let's combine everything into a real-world scenario. We'll build a complete server management system that demonstrates all the concepts we've covered!</p>
+            </div>
+
+            <div class="code-panel">
+                <pre><code># Complete Server Management System - Object-Oriented PowerShell
+
+# Define the Server class with all OOP principles
+class Server {
+    # Strongly typed properties
+    [string]$Name
+    [string]$IPAddress
+    [int]$Port
+    [string]$Environment
+    [bool]$IsOnline
+    [datetime]$LastChecked
+    [System.Collections.ArrayList]$Services
+
+    # Constructor with parameter validation
+    Server([string]$name, [string]$ipAddress, [string]$environment) {
+        if ([string]::IsNullOrWhiteSpace($name)) {
+            throw "Server name cannot be empty"
+        }
+        if (-not ($ipAddress -match '^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$')) {
+            throw "Invalid IP address format"
+        }
+        
+        $this.Name = $name
+        $this.IPAddress = $ipAddress
+        $this.Environment = $environment
+        $this.Port = 443
+        $this.IsOnline = $false
+        $this.LastChecked = Get-Date
+        $this.Services = [System.Collections.ArrayList]::new()
+    }
+
+    # Method with strong typing and return value
+    [bool]TestConnection() {
+        try {
+            $this.IsOnline = Test-Connection -ComputerName $this.IPAddress -Count 1 -Quiet
+            $this.LastChecked = Get-Date
+            return $this.IsOnline
+        }
+        catch {
+            $this.IsOnline = $false
+            $this.LastChecked = Get-Date
+            return $false
+        }
+    }
+
+    # Method returning strongly typed object
+    [PSCustomObject]GetStatus() {
+        $this.TestConnection()
+        
+        return [PSCustomObject]@{
+            ServerName = $this.Name
+            IPAddress = $this.IPAddress
+            Environment = $this.Environment
+            IsOnline = $this.IsOnline
+            LastChecked = $this.LastChecked
+            ServiceCount = $this.Services.Count
+            Status = if ($this.IsOnline) { "Healthy" } else { "Unreachable" }
+        }
+    }
+
+    # Method with parameters and return value
+    [bool]AddService([string]$serviceName, [int]$port) {
+        if ([string]::IsNullOrWhiteSpace($serviceName)) {
+            Write-Warning "Service name cannot be empty"
+            return $false
+        }
+
+        $service = [PSCustomObject]@{
+            Name = $serviceName
+            Port = $port
+            Added = Get-Date
+        }
+
+        $this.Services.Add($service) | Out-Null
+        return $true
+    }
+}
+
+# Advanced function using the Server class
+function New-ServerInventory {
+    [CmdletBinding()]
+    [OutputType([System.Collections.ArrayList])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ConfigFile,
+        
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("Development", "Testing", "Production")]
+        [string]$Environment = "Development"
+    )
+
+    $inventory = [System.Collections.ArrayList]::new()
+
+    try {
+        $serverData = Get-Content $ConfigFile | ConvertFrom-Json
+        
+        foreach ($serverInfo in $serverData) {
+            $server = [Server]::new($serverInfo.Name, $serverInfo.IP, $Environment)
+            
+            # Add services if they exist
+            if ($serverInfo.Services) {
+                foreach ($service in $serverInfo.Services) {
+                    $server.AddService($service.Name, $service.Port)
+                }
+            }
+            
+            $inventory.Add($server) | Out-Null
+        }
+    }
+    catch {
+        Write-Error "Failed to create server inventory: $($_.Exception.Message)"
+        return $null
+    }
+
+    return $inventory
+}
+
+# Function demonstrating pipeline usage with strong typing
+function Test-ServerHealth {
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param(
+        [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
+        [Server[]]$Servers,
+        
+        [Parameter(Mandatory = $false)]
+        [bool]$DetailedReport = $true
+    )
+
+    process {
+        foreach ($server in $Servers) {
+            $status = $server.GetStatus()
+            
+            if ($DetailedReport) {
+                # Return detailed health report
+                [PSCustomObject]@{
+                    ServerName = $server.Name
+                    IPAddress = $server.IPAddress
+                    Environment = $server.Environment
+                    HealthStatus = $status.Status
+                    IsOnline = $status.IsOnline
+                    LastChecked = $status.LastChecked
+                    ServiceCount = $status.ServiceCount
+                    ResponseTime = if ($server.IsOnline) { 
+                        (Test-Connection -ComputerName $server.IPAddress -Count 1).ResponseTime 
+                    } else { 
+                        $null 
+                    }
+                    HealthScore = if ($server.IsOnline) { 100 } else { 0 }
+                }
+            } else {
+                # Return simple status
+                [PSCustomObject]@{
+                    ServerName = $server.Name
+                    Status = $status.Status
+                    LastChecked = $status.LastChecked
+                }
+            }
+        }
+    }
+}
+
+# Function with multiple output types based on parameters
+function Export-ServerReport {
+    [CmdletBinding()]
+    [OutputType([string], [PSCustomObject[]])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [Server[]]$Servers,
+        
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("JSON", "CSV", "Object")]
+        [string]$Format = "Object",
+        
+        [Parameter(Mandatory = $false)]
+        [string]$OutputPath
+    )
+
+    $healthReports = $Servers | Test-ServerHealth -DetailedReport $true
+
+    switch ($Format) {
+        "JSON" {
+            $jsonOutput = $healthReports | ConvertTo-Json -Depth 3
+            if ($OutputPath) {
+                $jsonOutput | Out-File -FilePath $OutputPath
+                return "Report exported to: $OutputPath"
+            } else {
+                return $jsonOutput
+            }
+        }
+        
+        "CSV" {
+            if ($OutputPath) {
+                $healthReports | Export-Csv -Path $OutputPath -NoTypeInformation
+                return "CSV report exported to: $OutputPath"
+            } else {
+                return ($healthReports | ConvertTo-Csv -NoTypeInformation)
+            }
+        }
+        
+        default {
+            return $healthReports
+        }
+    }
+}
+
+# Usage example bringing it all together
+Write-Host "🚀 Object-Oriented PowerShell Server Management Demo" -ForegroundColor Cyan
+
+# Create server instances using our class
+$servers = @(
+    [Server]::new("WebServer01", "192.168.1.100", "Production"),
+    [Server]::new("DBServer01", "192.168.1.101", "Production"),
+    [Server]::new("CacheServer01", "192.168.1.102", "Production")
+)
+
+# Add services to servers
+$servers[0].AddService("IIS", 80)
+$servers[0].AddService("IIS-SSL", 443)
+$servers[1].AddService("SQL Server", 1433)
+$servers[2].AddService("Redis", 6379)
+
+# Test server health using pipeline
+Write-Host "`nTesting server health..." -ForegroundColor Yellow
+$healthReport = $servers | Test-ServerHealth -DetailedReport $true
+
+# Display results
+$healthReport | Format-Table -AutoSize
+
+# Export report in different formats
+$jsonReport = Export-ServerReport -Servers $servers -Format "JSON"
+Write-Host "`nJSON Report Preview:" -ForegroundColor Green
+Write-Host $jsonReport.Substring(0, [Math]::Min(200, $jsonReport.Length)) + "..."</code></pre>
+            </div>
+
+            <div class="steps-container">
+                <h3>🎯 Final Challenge: Build Your Own System</h3>
+                
+                <div class="step">
+                    <h4>Challenge 1: Extend the Server Class</h4>
+                    <p>Add new properties and methods to the Server class: Memory usage tracking, restart functionality, and service health checking.</p>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="final-step1" onchange="updateProgress()">
+                        <label for="final-step1">✅ I've extended the Server class with new features</label>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h4>Challenge 2: Create a Complete Application</h4>
+                    <p>Build a new class (maybe "Application" or "Database") with its own methods and properties, and integrate it with the Server management system.</p>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="final-step2" onchange="updateProgress()">
+                        <label for="final-step2">✅ I've created an integrated multi-class system</label>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h4>Challenge 3: Advanced Function Implementation</h4>
+                    <p>Create advanced functions with parameter sets, pipeline support, and multiple output types. Include comprehensive error handling.</p>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="final-step3" onchange="updateProgress()">
+                        <label for="final-step3">✅ I've mastered advanced PowerShell OOP concepts</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <strong>Congratulations!</strong> You've now learned the fundamentals of Object-Oriented PowerShell programming. These concepts will make your scripts more maintainable, reusable, and professional.
+            </div>
+
+            <div class="resource-links">
+                <h4>🎓 Continue Your PowerShell Journey</h4>
+                <a href="https://bartpasmans.tech/" target="_blank">My personal website</a>
+                <a href="https://learn.microsoft.com/en-us/powershell/scripting/learn/ps101/00-introduction?view=powershell-7.5" target="_blank">PowerShell 101 Micrososft</a>
+                <a href="https://www.linkedin.com/in/bart-pasmans-6533094b/" target="_blank">My LinkedIn</a>
+            </div>
+        </div>
+
+        <div class="section" style="background: linear-gradient(135deg, #F2B418, #815355); color: #272838;">
+            <h2 style="color: #272838;"><span class="section-icon">🎉</span>Course Complete!</h2>
+            <div style="text-align: center; padding: 20px;">
+                <h3>You've mastered Object-Oriented PowerShell!</h3>
+                <p style="font-size: 1.2em; margin: 20px 0;">
+                    From classes to strong typing, from functions to return values - you now have the skills to write professional, maintainable PowerShell code.
+                </p>
+                <div style="background: rgba(39, 40, 56, 0.1); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <h4>What You've Accomplished:</h4>
+                    <ul style="text-align: left; display: inline-block;">
+                        <li>✅ Created and used PowerShell classes</li>
+                        <li>✅ Implemented strongly typed variables and parameters</li>
+                        <li>✅ Built advanced functions with validation</li>
+                        <li>✅ Mastered return values and output types</li>
+                        <li>✅ Combined all concepts in real-world scenarios</li>
+                    </ul>
+                </div>
+                <p style="font-size: 1.1em;">
+                    Keep practicing and exploring! The world of PowerShell automation awaits your newfound object-oriented skills.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const checkedBoxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            const progress = (checkedBoxes.length / checkboxes.length) * 100;
+            
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `Progress: ${Math.round(progress)}% Complete (${checkedBoxes.length}/${checkboxes.length} tasks)`;
+            
+            // Save progress to localStorage
+            const checkedIds = Array.from(checkedBoxes).map(cb => cb.id);
+            localStorage.setItem('powershell-oop-progress', JSON.stringify(checkedIds));
+            
+            // Celebration effect when complete
+            if (progress === 100) {
+                document.getElementById('progressText').innerHTML = '🎉 Congratulations! Course Complete! 🎉';
+                document.getElementById('progressFill').style.background = 'linear-gradient(90deg, #F2B418, #815355)';
+            }
+        }
+
+        // Load saved progress
+        window.addEventListener('load', function() {
+            const savedProgress = localStorage.getItem('powershell-oop-progress');
+            if (savedProgress) {
+                const checkedIds = JSON.parse(savedProgress);
+                checkedIds.forEach(id => {
+                    const checkbox = document.getElementById(id);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+                });
+                updateProgress();
+            }
+        });
+
+        // Add smooth scrolling to sections
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Add click effects to checkboxes
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    this.parentElement.style.transform = 'scale(1.05)';
+                    this.parentElement.style.background = '#F2B418';
+                    this.parentElement.style.borderColor = '#815355';
+                    setTimeout(() => {
+                        this.parentElement.style.transform = 'scale(1)';
+                    }, 200);
+                } else {
+                    this.parentElement.style.background = '#ECF8FD';
+                    this.parentElement.style.borderColor = '#AFCBD5';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
