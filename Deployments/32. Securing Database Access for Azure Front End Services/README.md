@@ -22,6 +22,7 @@ This solution deploys a secure Azure SQL Database with PowerShell Azure Function
 - **Storage Account** - Backend storage for Functions runtime
 - **Application Insights** - Monitoring and logging for function execution
 - **Firewall Rule** - Allows Azure services to access SQL Server
+- **CORS Configuration** - Pre-configured to allow testing from Azure Portal (https://portal.azure.com)
 
 ## 🔑 Key Security Features
 
@@ -32,6 +33,7 @@ This solution deploys a secure Azure SQL Database with PowerShell Azure Function
 - ✅ **Granular Permissions** - db_datareader and db_datawriter roles
 - ✅ **Audit Trail** - All access logged with identity information
 - ✅ **HTTPS Only** - Function App enforces HTTPS
+- ✅ **CORS Enabled** - Pre-configured for Azure Portal testing
 
 ## 📋 Prerequisites
 
@@ -181,7 +183,55 @@ func azure functionapp publish <your-function-app-name>
 3. Right-click on the Function App in Azure panel
 4. Select "Deploy to Function App"
 
+## ⚙️ Technical Details
+
+### Lightweight SQL Connectivity
+
+The function uses **System.Data.SqlClient** directly (built into .NET runtime) instead of the SqlServer PowerShell module. This approach:
+- ✅ **No module installation** required (saves 45MB+ download)
+- ✅ **Faster cold starts** (no module import overhead)
+- ✅ **Works on Consumption plan** (no disk space issues)
+- ✅ **More efficient** (direct .NET API usage)
+
+### Managed Identity Token Flow
+
+```powershell
+# 1. Request Azure AD token
+$resourceURI = "https://database.windows.net/"
+$tokenResponse = Invoke-RestMethod -Uri $tokenAuthURI
+
+# 2. Create SQL connection with token
+$connection = New-Object System.Data.SqlClient.SqlConnection
+$connection.AccessToken = $tokenResponse.access_token
+
+# 3. Execute queries - no credentials needed!
+```
+
 ## 🧪 Testing the Solution
+
+### Test in Azure Portal (Easiest)
+
+The Function App is pre-configured with CORS to allow testing directly from the Azure Portal:
+
+1. Navigate to: Azure Portal → Function App → Functions → DatabaseQuery
+2. Click **Test/Run** tab
+3. Select HTTP method (GET or POST)
+4. For GET request:
+   - Add Query parameter: `action` = `read`
+   - Click **Run**
+5. For POST request:
+   - Add Query parameter: `action` = `write`
+   - Request body:
+   ```json
+   {
+     "name": "Test User",
+     "email": "test@example.com"
+   }
+   ```
+   - Click **Run**
+6. View results in the Output section
+
+The CORS configuration (`https://portal.azure.com`) allows the portal to call your function for testing.
 
 ### Get the Function URL
 
@@ -467,6 +517,16 @@ WHERE dp.name = 'myfunction-app';
 **Solutions:**
 1. Create the Users table (see Step 2)
 2. Verify you're connected to the correct database
+
+### Issue: "Not enough space on the disk"
+
+**Symptoms:** Error during module installation (if using old code)
+
+**Solutions:**
+- **This has been fixed** - The latest version uses System.Data.SqlClient directly
+- No module installation required (saves 45MB+ and disk space)
+- Update your function code to the latest run.ps1 from the repository
+- The new version has faster cold starts and works perfectly on Consumption plan
 
 ### Debug SQL Connections
 

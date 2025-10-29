@@ -178,6 +178,10 @@
                 Application Insights for comprehensive telemetry
             </div>
             <div class="feature-item">
+                <strong>🌐 CORS Enabled</strong><br>
+                Pre-configured for Azure Portal testing
+            </div>
+            <div class="feature-item">
                 <strong>💰 Cost Effective</strong><br>
                 Pay-per-execution consumption plan
             </div>
@@ -330,7 +334,11 @@ SELECT * FROM Users;
                 <li>Connect to Azure SQL Database without credentials</li>
                 <li>Execute queries with read/write permissions</li>
                 <li>Return results as JSON</li>
+                <li><strong>Uses built-in .NET classes</strong> (no 45MB module download required)</li>
             </ul>
+            <div class="note">
+                <strong>💡 Optimized for Consumption Plan:</strong> The function uses System.Data.SqlClient directly (built into .NET runtime) instead of the SqlServer PowerShell module. This means faster cold starts, no disk space issues, and no module installation overhead!
+            </div>
         </div>
 
         <div class="success">
@@ -339,8 +347,8 @@ SELECT * FROM Users;
             <ol>
                 <li>Ensure the managed identity has been granted database access (Step 3)</li>
                 <li>Deploy the function code to your Function App</li>
-                <li>Get the function URL from the Azure Portal</li>
-                <li>Call the function endpoint to query the database</li>
+                <li><strong>Test in Azure Portal:</strong> Use the Test/Run tab (CORS pre-configured for portal.azure.com)</li>
+                <li>Or get the function URL and call it with PowerShell/curl</li>
                 <li>Check Application Insights for execution logs</li>
                 <li>Verify no connection strings or passwords are stored</li>
             </ol>

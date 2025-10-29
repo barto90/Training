@@ -21,14 +21,9 @@ $body = @{
 }
 
 try {
-    # Install SqlServer module if not already installed
-    if (-not (Get-Module -ListAvailable -Name SqlServer)) {
-        Write-Host "📦 Installing SqlServer module..."
-        Install-Module -Name SqlServer -Scope CurrentUser -Force -AllowClobber -Repository PSGallery
-    }
-    
-    Import-Module SqlServer -ErrorAction Stop
-    Write-Host "✅ SqlServer module loaded"
+    # No need to install SqlServer module - we'll use System.Data.SqlClient directly
+    # This avoids the 45MB module download and disk space issues on Consumption plan
+    Write-Host "✅ Using built-in System.Data.SqlClient for database connectivity"
 
     # Get managed identity access token for Azure SQL Database
     Write-Host "🔑 Requesting Azure AD access token for SQL Database..."
