@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploy Securing Database Access for Azure Front End Services</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        h1 {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            border-bottom: 3px solid #0078d4;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+        .deploy-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 120, 212, 0.4);
+        }
+        .deploy-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 120, 212, 0.6);
+        }
+        .deploy-button img {
+            vertical-align: middle;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            border-left: 4px solid #0078d4;
+            font-size: 14px;
+        }
+        .note {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-left: 4px solid #2196f3;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .warning {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 20%);
+            border-left: 4px solid #ff9800;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .success {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            border-left: 4px solid #4caf50;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .critical {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            border-left: 4px solid #f44336;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+        .feature-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #0078d4;
+            transition: transform 0.3s ease;
+        }
+        .feature-item:hover {
+            transform: translateY(-5px);
+        }
+        code {
+            background-color: #f1f3f4;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .step {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border-left: 4px solid #9c27b0;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Securing Database Access for Azure Front End Services</h1>
+        
+        <p>This template deploys a secure Azure SQL Database solution with PowerShell Azure Functions using Managed Identity for passwordless database authentication:</p>
+        
+        <div class="feature-list">
+            <div class="feature-item">
+                <strong>🗄️ Azure SQL Server</strong><br>
+                Managed relational database with enterprise security
+            </div>
+            <div class="feature-item">
+                <strong>💾 SQL Database</strong><br>
+                Scalable database with automatic backups
+            </div>
+            <div class="feature-item">
+                <strong>⚡ PowerShell Functions</strong><br>
+                Serverless compute with PowerShell 7.4 runtime
+            </div>
+            <div class="feature-item">
+                <strong>🔑 Managed Identity</strong><br>
+                No credentials or connection strings needed
+            </div>
+            <div class="feature-item">
+                <strong>✅ Database Permissions</strong><br>
+                Granular read & write access control
+            </div>
+            <div class="feature-item">
+                <strong>🔐 Azure AD Auth</strong><br>
+                Token-based database authentication
+            </div>
+            <div class="feature-item">
+                <strong>📊 Monitoring</strong><br>
+                Application Insights for comprehensive telemetry
+            </div>
+            <div class="feature-item">
+                <strong>💰 Cost Effective</strong><br>
+                Pay-per-execution consumption plan
+            </div>
+        </div>
+
+        <h2>🚀 Deploy to Azure</h2>
+        <p>Click the button below to deploy this secure database solution to your Azure subscription:</p>
+        
+        <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fbarto90%2FTraining%2Fmain%2FDeployments%2F32.%20Securing%20Database%20Access%20for%20Azure%20Front%20End%20Services%2Fazuredeploy.json" target="_blank" class="deploy-button">
+            <img src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure">
+        </a>
+
+        <div class="note">
+            <strong>💡 Note:</strong> The deployment creates all infrastructure components. After deployment, you'll need to configure managed identity permissions and add the PowerShell function code.
+        </div>
+
+        <h2>📋 Required Parameters</h2>
+        <table>
+            <tr>
+                <th>Parameter</th>
+                <th>Description</th>
+                <th>Example</th>
+            </tr>
+            <tr>
+                <td><code>sqlServerName</code></td>
+                <td>Name for the Azure SQL Server</td>
+                <td>mysqlserver-prod</td>
+            </tr>
+            <tr>
+                <td><code>sqlAdministratorLogin</code></td>
+                <td>SQL Server admin username</td>
+                <td>sqladmin</td>
+            </tr>
+            <tr>
+                <td><code>sqlAdministratorPassword</code></td>
+                <td>SQL Server admin password (secure)</td>
+                <td>P@ssw0rd123!</td>
+            </tr>
+            <tr>
+                <td><code>functionAppName</code></td>
+                <td>Name for the Azure Function App</td>
+                <td>myfunction-app</td>
+            </tr>
+            <tr>
+                <td><code>storageAccountName</code></td>
+                <td>Name for the storage account</td>
+                <td>mystorageaccount123</td>
+            </tr>
+            <tr>
+                <td><code>sqlDatabaseName</code></td>
+                <td>SQL database name (optional)</td>
+                <td>AppDatabase</td>
+            </tr>
+            <tr>
+                <td><code>sqlDatabaseSku</code></td>
+                <td>Database tier (optional)</td>
+                <td>Basic</td>
+            </tr>
+            <tr>
+                <td><code>appServicePlanSku</code></td>
+                <td>Function App plan tier (optional)</td>
+                <td>Y1 (Consumption)</td>
+            </tr>
+        </table>
+
+        <h2>🛠️ Post-Deployment Setup</h2>
+        
+        <div class="critical">
+            <h3>⚠️ CRITICAL STEP: Grant Managed Identity Database Access</h3>
+            <p>After deployment completes, you MUST run the following SQL script to grant the Function App's managed identity access to the database.</p>
+        </div>
+
+        <div class="step">
+            <h3>Step 1: Get Function App's Managed Identity Principal ID</h3>
+            <p>After deployment, retrieve the managed identity information:</p>
+            <pre><code># Via Azure Portal
+1. Go to Function App → Identity
+2. Copy the Object (principal) ID
+
+# Or from deployment outputs
+Check the output "functionAppManagedIdentityPrincipalId"</code></pre>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Connect to SQL Database</h3>
+            <p>Connect to your Azure SQL Database using SQL Server Management Studio, Azure Data Studio, or Azure Portal Query Editor as the SQL admin user.</p>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Run SQL Script to Grant Access</h3>
+            <p>Execute this SQL script to create a database user for the managed identity and grant permissions:</p>
+            <pre><code>-- Create user for the managed identity (use the Function App name)
+CREATE USER [your-function-app-name] FROM EXTERNAL PROVIDER;
+
+-- Grant read and write permissions
+ALTER ROLE db_datareader ADD MEMBER [your-function-app-name];
+ALTER ROLE db_datawriter ADD MEMBER [your-function-app-name];
+
+-- Optionally grant execute permissions for stored procedures
+-- ALTER ROLE db_executor ADD MEMBER [your-function-app-name];
+
+-- Verify the user was created
+SELECT name, type_desc, authentication_type_desc 
+FROM sys.database_principals 
+WHERE name = 'your-function-app-name';
+</code></pre>
+            <div class="warning">
+                <strong>Important:</strong> Replace <code>your-function-app-name</code> with your actual Function App name (not the principal ID).
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>Step 4: Create Sample Database Table</h3>
+            <p>Create a sample table for testing:</p>
+            <pre><code>-- Create a sample table
+CREATE TABLE Users (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Name NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(255) NOT NULL,
+    CreatedDate DATETIME2 DEFAULT GETDATE()
+);
+
+-- Insert sample data
+INSERT INTO Users (Name, Email) VALUES 
+    ('John Doe', 'john.doe@example.com'),
+    ('Jane Smith', 'jane.smith@example.com'),
+    ('Bob Johnson', 'bob.johnson@example.com');
+
+-- Verify data
+SELECT * FROM Users;
+</code></pre>
+        </div>
+
+        <div class="step">
+            <h3>Step 5: Create the PowerShell Function</h3>
+            <p>After database setup, create a new HTTP-triggered function in your Function App:</p>
+            <pre><code>1. Go to Azure Portal → Function Apps → [Your Function App]
+2. Click "Functions" → "Create"
+3. Choose "HTTP trigger"
+4. Set the function name: "DatabaseQuery"
+5. Authorization level: "Function"</code></pre>
+        </div>
+
+        <div class="step">
+            <h3>Step 6: Add PowerShell Function Code</h3>
+            <p>Replace the default function code with the PowerShell script provided in the repository (see <code>DatabaseQuery/run.ps1</code>).</p>
+            <p>The function will:</p>
+            <ul>
+                <li>Authenticate using the managed identity</li>
+                <li>Connect to Azure SQL Database without credentials</li>
+                <li>Execute queries with read/write permissions</li>
+                <li>Return results as JSON</li>
+            </ul>
+        </div>
+
+        <div class="success">
+            <h3>🎯 Testing Your Solution</h3>
+            <p>To test your secure database solution:</p>
+            <ol>
+                <li>Ensure the managed identity has been granted database access (Step 3)</li>
+                <li>Deploy the function code to your Function App</li>
+                <li>Get the function URL from the Azure Portal</li>
+                <li>Call the function endpoint to query the database</li>
+                <li>Check Application Insights for execution logs</li>
+                <li>Verify no connection strings or passwords are stored</li>
+            </ol>
+        </div>
+
+        <div class="warning">
+            <h3>⚠️ Important Notes</h3>
+            <ul>
+                <li>Resource names must be globally unique (especially storage account and SQL server)</li>
+                <li>SQL admin password must meet complexity requirements (8+ chars, uppercase, lowercase, numbers, symbols)</li>
+                <li>The managed identity MUST be granted database access before the function can connect</li>
+                <li>Azure SQL firewall is configured to allow Azure services</li>
+                <li>Consider using virtual network integration for enhanced security in production</li>
+                <li>Use Azure Key Vault for storing the SQL admin password in production</li>
+            </ul>
+        </div>
+
+        <h2>🔑 Managed Identity Benefits</h2>
+        <div class="success">
+            <p>Using managed identity for database access provides:</p>
+            <ul>
+                <li><strong>No Credential Management:</strong> No passwords or connection strings to store</li>
+                <li><strong>Automatic Token Rotation:</strong> Azure AD handles token lifecycle</li>
+                <li><strong>Azure AD Integration:</strong> Centralized identity and access management</li>
+                <li><strong>Audit Trail:</strong> All database access is logged with identity information</li>
+                <li><strong>Reduced Attack Surface:</strong> No credentials to steal or leak</li>
+                <li><strong>Compliance:</strong> Meets security best practices and compliance requirements</li>
+            </ul>
+        </div>
+
+        <h2>📊 Monitoring and Troubleshooting</h2>
+        <div class="note">
+            <p><strong>Function Logs:</strong> Monitor function execution in Azure Portal → Function App → Functions → [Function Name] → Monitor</p>
+            <p><strong>SQL Metrics:</strong> Monitor database performance in Azure Portal → SQL Database → Metrics</p>
+            <p><strong>Application Insights:</strong> Detailed telemetry including SQL queries and execution times</p>
+            <p><strong>SQL Audit Logs:</strong> Enable SQL auditing to track all database access</p>
+        </div>
+
+        <h2>🔒 Security Best Practices</h2>
+        <div class="note">
+            <ol>
+                <li><strong>Least Privilege:</strong> Grant only required permissions (db_datareader, db_datawriter)</li>
+                <li><strong>Network Security:</strong> Use virtual network integration and private endpoints in production</li>
+                <li><strong>SQL Admin Password:</strong> Store in Azure Key Vault, not in parameters file</li>
+                <li><strong>Firewall Rules:</strong> Restrict IP ranges to only necessary sources</li>
+                <li><strong>TLS Encryption:</strong> Always use TLS 1.2 or higher</li>
+                <li><strong>Auditing:</strong> Enable SQL auditing and threat detection</li>
+                <li><strong>Backup:</strong> Configure automated backups and geo-replication</li>
+            </ol>
+        </div>
+
+        <h2>💰 Cost Optimization</h2>
+        <div class="success">
+            <p>This solution is designed for cost efficiency:</p>
+            <ul>
+                <li><strong>Consumption Plan:</strong> Pay only for function executions</li>
+                <li><strong>Basic SQL Tier:</strong> Cost-effective for dev/test workloads</li>
+                <li><strong>Standard_LRS Storage:</strong> Locally redundant storage for cost savings</li>
+                <li><strong>Application Insights:</strong> Free tier with 1GB monthly data</li>
+                <li><strong>No VPN Gateway:</strong> Reduce costs with Azure service communication</li>
+            </ul>
+        </div>
+
+        <h2>🔧 Sample SQL Queries</h2>
+        <div class="step">
+            <p>Example queries your function can execute:</p>
+            <pre><code>-- Read data
+SELECT * FROM Users WHERE Email LIKE '%@example.com';
+
+-- Write data
+INSERT INTO Users (Name, Email) VALUES ('New User', 'new@example.com');
+
+-- Update data
+UPDATE Users SET Email = 'updated@example.com' WHERE Id = 1;
+
+-- Complex query
+SELECT 
+    Name, 
+    Email, 
+    CreatedDate,
+    DATEDIFF(day, CreatedDate, GETDATE()) as DaysSinceCreated
+FROM Users
+WHERE CreatedDate > DATEADD(day, -30, GETDATE())
+ORDER BY CreatedDate DESC;
+</code></pre>
+        </div>
+    </div>
+</body>
+</html>
+
