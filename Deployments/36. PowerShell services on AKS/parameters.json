@@ -15,7 +15,7 @@
       "value": "Standard_B2s"
     },
     "kubernetesVersion": {
-      "value": "1.28.5"
+      "value": "1.34.1"
     },
     "containerRegistryName": {
       "value": "myacrdev123"
@@ -30,7 +30,7 @@
       "value": 1
     },
     "enableHttpApplicationRouting": {
-      "value": true
+      "value": false
     },
     "networkPlugin": {
       "value": "kubenet"
