@@ -19,3 +19,5 @@ ENV ASPNETCORE_URLS=http://+:8080
 CMD ["pwsh", "-File", "/app/server.ps1"]
 
 
+
+

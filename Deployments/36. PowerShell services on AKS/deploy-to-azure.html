@@ -178,7 +178,7 @@
             </div>
             <div class="feature-item">
                 <strong>📊 Log Analytics</strong><br>
-                Container Insights and monitoring
+                Optional monitoring (enable after deployment)
             </div>
             <div class="feature-item">
                 <strong>🔒 Security</strong><br>
@@ -194,7 +194,7 @@
             </div>
             <div class="feature-item">
                 <strong>💰 Cost-Effective</strong><br>
-                ~$50/month for dev/test workloads
+                ~$40-50/month for dev/test workloads
             </div>
         </div>
 
@@ -222,9 +222,9 @@
                     <td>~$5</td>
                 </tr>
                 <tr>
-                    <td>Log Analytics</td>
+                    <td>Log Analytics (Optional)</td>
                     <td>30-day retention</td>
-                    <td>~$10</td>
+                    <td>~$10 (if enabled)</td>
                 </tr>
                 <tr>
                     <td>Networking</td>
@@ -232,8 +232,12 @@
                     <td>~$5</td>
                 </tr>
                 <tr>
-                    <th colspan="2"><strong>Total</strong></th>
-                    <th><strong>~$50/month</strong></th>
+                    <th colspan="2"><strong>Total (without monitoring)</strong></th>
+                    <th><strong>~$40/month</strong></th>
+                </tr>
+                <tr>
+                    <td colspan="2"><em>With monitoring enabled:</em></td>
+                    <td><em>~$50/month</em></td>
                 </tr>
             </table>
         </div>
@@ -241,12 +245,12 @@
         <h2>🚀 Deploy to Azure</h2>
         <p>Click the button below to deploy this AKS cluster to your Azure subscription:</p>
         
-        <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fbarto90%2FTraining%2Fmain%2FDeployments%2F36.%20PowerShell%20services%20on%20AKS%2Fazuredeploy.json" target="_blank" class="deploy-button">
+        <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fbarto90%2FTraining%2Fmain%2FDeployments%2F36.%20PowerShell%20services%20on%20AKS%2Fazuredeploy-no-monitoring.json" target="_blank" class="deploy-button">
             <img src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure">
         </a>
 
         <div class="note">
-            <strong>💡 Note:</strong> The deployment creates the AKS cluster, container registry, and monitoring infrastructure. After deployment, you'll need to attach ACR to AKS and deploy your PowerShell containers.
+            <strong>💡 Note:</strong> The deployment creates the AKS cluster and container registry (monitoring can be enabled later). After deployment, you'll need to attach ACR to AKS and deploy your PowerShell containers. To enable monitoring after deployment, use: <code>az aks enable-addons --addons monitoring</code>
         </div>
 
         <h2>📋 Required Parameters</h2>
@@ -410,8 +414,10 @@ Start-PodeServer {
 
         <h2>📊 Monitoring and Management</h2>
         <div class="note">
-            <p><strong>Container Insights:</strong> View metrics in Azure Portal → AKS → Monitoring → Insights</p>
-            <p><strong>Log Analytics:</strong> Query container logs and metrics using KQL</p>
+            <p><strong>Enable Monitoring (Optional):</strong> After deployment, enable Container Insights with:</p>
+            <pre><code>az aks enable-addons --resource-group myResourceGroup --name myaks-dev --addons monitoring</code></pre>
+            <p><strong>Container Insights:</strong> View metrics in Azure Portal → AKS → Monitoring → Insights (after enabling)</p>
+            <p><strong>Log Analytics:</strong> Query container logs and metrics using KQL (after enabling)</p>
             <p><strong>kubectl Commands:</strong></p>
             <pre><code># View all resources
 kubectl get all
@@ -493,5 +499,6 @@ kubectl scale deployment powershell-service --replicas=3</code></pre>
     </div>
 </body>
 </html>
+
 
 
