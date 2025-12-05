@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "clusterName": {
+      "value": "myaks-dev"
+    },
+    "dnsPrefix": {
+      "value": "myaks-dev"
+    },
+    "nodeCount": {
+      "value": 1
+    },
+    "nodeVMSize": {
+      "value": "Standard_B2s"
+    },
+    "kubernetesVersion": {
+      "value": "1.28.5"
+    },
+    "containerRegistryName": {
+      "value": "myacrdev123"
+    },
+    "enableAutoScaling": {
+      "value": false
+    },
+    "maxNodeCount": {
+      "value": 3
+    },
+    "minNodeCount": {
+      "value": 1
+    },
+    "enableHttpApplicationRouting": {
+      "value": true
+    },
+    "networkPlugin": {
+      "value": "kubenet"
+    }
+  }
+}
+
+

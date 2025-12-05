@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: powershell-service-config
+data:
+  # Application configuration
+  LOG_LEVEL: "Information"
+  API_VERSION: "1.0.0"
+  
+  # Environment settings
+  ENVIRONMENT: "Development"
+  
+  # Custom settings
+  MAX_RETRIES: "3"
+  TIMEOUT_SECONDS: "30"
+  
+  # Feature flags
+  ENABLE_AZURE_INTEGRATION: "false"
+  ENABLE_DETAILED_LOGGING: "true"
+
+
